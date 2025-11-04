@@ -1,0 +1,857 @@
+# DTF Salary Tracker - Speckit Constitution
+# 项目管理原则和开发指南
+# Version: 1.0
+# Last Updated: 2025-11-04
+
+## 核心原则 (Core Principles)
+
+### 1. 问题驱动开发 (Problem-Driven Development)
+**原则**: 每个功能必须解决明确的用户痛点
+- ❌ 不做：预设"大小周模式"、固定班次分类
+- ✅ 必做：基于真实排班表设计灵活系统
+- **验证方式**: 功能上线前，至少3个真实用户确认需要
+
+### 2. AI优先实现 (AI-First Implementation)
+**原则**: 能用AI解决的不手动输入
+- 核心差异化：拍照识别排班表
+- OCR准确率目标：90%+
+- 降本目标：月成本<$5 (100用户内)
+- **技术选型**: GPT-4 Vision API (必须)
+
+### 3. MVP思维 (MVP Mindset)
+**原则**: V1.0只做核心功能，快速验证假设
+- P0功能：OCR、日历、打卡、工资计算
+- P1功能：MC追踪、图片查看器
+- ⛔ V1.0不做：主管VI、多工作、社区功能
+- **交付标准**: 21天内可用完整流程
+
+### 4. 数据准确性优先 (Accuracy First)
+**原则**: 工资计算必须100%准确
+- 遵循新加坡MOM标准
+- 时薪计算: baseSalary / 190.67
+- OT倍数: 1.5x (工作日/休息日), 2.0x (公共假期)
+- **验证方式**: 与实际工资单对比，误差<$1
+
+---
+
+## 开发规范 (Development Standards)
+
+### 代码组织 (Code Organization)
+
+#### 目录结构 (Directory Structure)
+```
+/src
+├── features/              # 按功能模块组织
+│   ├── ocr/              # OCR识别模块
+│   │   ├── components/   # UI组件
+│   │   ├── services/     # 业务逻辑
+│   │   └── utils/        # 工具函数
+│   ├── calendar/         # 日历视图
+│   ├── timesheet/        # 打卡记录
+│   ├── salary/           # 工资计算
+│   └── mc/               # MC追踪
+├── shared/               # 共享资源
+│   ├── components/       # 通用组件
+│   ├── hooks/            # 自定义Hooks
+│   ├── types/            # TypeScript类型
+│   └── utils/            # 工具函数
+└── lib/                  # 第三方集成
+    ├── supabase.ts       # DB客户端
+    ├── openai.ts         # GPT-4 Vision
+    └── mom-rules.ts      # MOM法规引擎
+```
+
+#### 命名规范 (Naming Conventions)
+- **组件**: PascalCase (e.g., `ScheduleRecognizer.tsx`)
+- **函数**: camelCase (e.g., `recognizeSchedule()`)
+- **常量**: UPPER_SNAKE_CASE (e.g., `OVERTIME_MULTIPLIER`)
+- **类型**: PascalCase + 类型后缀 (e.g., `ScheduleType`, `SalaryRecord`)
+
+### TypeScript强制使用 (TypeScript Required)
+
+#### 核心类型定义 (Core Type Definitions)
+```typescript
+// 必须严格遵守的类型
+enum ScheduleType {
+  WORK = "work",
+  REST = "rest",
+  OFF = "off",
+  OVERTIME_ON_OFF_DAY = "overtime_on_off_day",
+  LEAVE = "leave",
+  PUBLIC_HOLIDAY = "public_holiday",
+  TRAINING = "training",
+  SUPPORT_INCOMING = "support_incoming",
+  SUPPORT_OUTGOING = "support_outgoing",
+  CO = "co",
+  UNKNOWN = "unknown"
+}
+
+interface ScheduleRecord {
+  type: ScheduleType;
+  plannedStartTime: string | null;  // HH:MM格式
+  plannedEndTime: string | null;
+  notes: string;
+  isConfirmed: boolean;
+  targetOutlet?: string;            // 支援分店代码
+}
+
+interface TimeRecord {
+  id: string;
+  date: string;                     // YYYY-MM-DD格式
+  scheduleType: ScheduleType;
+  actualStartTime: string;
+  actualEndTime: string;
+  restHours: number;
+  totalHours: number;
+  normalHours: number;
+  overtimeHours: number;
+  overtimePay: number;
+  notes: string;
+}
+```
+
+### 工资计算规范 (Salary Calculation Standards)
+
+#### MOM法规强制遵守 (MOM Compliance Required)
+```typescript
+// 不可修改的计算常量
+const MOM_CONSTANTS = {
+  HOURS_PER_MONTH: 190.67,          // MOM标准月工时
+  OVERTIME_MULTIPLIER: 1.5,         // 工作日/休息日OT
+  PUBLIC_HOLIDAY_MULTIPLIER: 2.0,   // 公共假期OT
+  STANDARD_WORK_HOURS: 8,           // 标准工作日时长
+  DEFAULT_REST_HOURS: 1              // 默认休息时长
+};
+
+// 勤工奖规则
+function calculateAttendanceBonus(
+  baseBonusAmount: number,
+  mcDays: number
+): number {
+  if (mcDays <= 1) return baseBonusAmount;     // 全额
+  if (mcDays <= 3) return baseBonusAmount / 2; // 减半
+  return 0;                                     // 取消
+}
+```
+
+#### 计算逻辑测试覆盖率 (Test Coverage)
+- **必须100%覆盖**: `MOMCompliantSalaryCalculator`
+- **测试用例要求**:
+  ```typescript
+  // 示例测试用例
+  test("工作日OT计算", () => {
+    const result = calculator.calculateDailyPay({
+      type: "work",
+      actualStartTime: "10:00",
+      actualEndTime: "19:30",
+      restHours: 1
+    });
+    expect(result.normalHours).toBe(8);
+    expect(result.overtimeHours).toBe(0.5);
+  });
+
+  test("休息日加班整天OT", () => {
+    const result = calculator.calculateDailyPay({
+      type: "overtime_on_off_day",
+      actualStartTime: "10:00",
+      actualEndTime: "19:00",
+      restHours: 1
+    });
+    expect(result.normalHours).toBe(0);
+    expect(result.overtimeHours).toBe(8);
+  });
+  ```
+
+---
+
+## UI/UX规范 (UI/UX Standards)
+
+### 设计原则 (Design Principles)
+
+#### 1. 移动优先 (Mobile-First)
+- 目标用户主要在手机上使用
+- 关键操作≤3次点击
+- 字体大小≥16px (避免缩放)
+- 按钮高度≥44px (易于点击)
+
+#### 2. 零学习成本 (Zero Learning Curve)
+- 首次使用无需教程
+- 表单预填充排班数据
+- 实时显示计算结果
+- 清晰的视觉反馈
+
+#### 3. 信任建立 (Trust Building)
+- 显示计算公式来源 (MOM标准)
+- 允许用户验证每一步
+- 提供详细工资拆解
+- 支持导出记录
+
+### 颜色系统 (Color System)
+```css
+/* 语义化颜色 - 严格遵守 */
+:root {
+  /* 排班状态色 */
+  --color-work: #3B82F6;        /* 蓝色 - 工作日 */
+  --color-rest: #EF4444;        /* 红色 - REST */
+  --color-off: #F97316;         /* 橙色 - OFF */
+  --color-leave: #8B5CF6;       /* 紫色 - AL年假 */
+  --color-training: #10B981;    /* 绿色 - 培训 */
+  --color-support: #06B6D4;     /* 青色 - 支援 */
+  --color-overtime: #F59E0B;    /* 琥珀色 - 加班 */
+
+  /* 工资显示色 */
+  --color-salary-base: #6B7280;     /* 灰色 - 基本工资 */
+  --color-salary-bonus: #10B981;    /* 绿色 - 勤工奖 */
+  --color-salary-overtime: #F59E0B; /* 琥珀色 - 加班费 */
+  --color-salary-warning: #EF4444;  /* 红色 - 警告(减少) */
+}
+```
+
+### 交互规范 (Interaction Standards)
+
+#### 表单预填充规则 (Form Auto-fill Rules)
+- 打卡表单必须预填充排班表时间
+- 休息时间默认1小时
+- 支持快速修改(tap to edit)
+- 修改后立即重算工资
+
+#### 加载状态 (Loading States)
+```typescript
+// OCR识别进度提示
+const OCR_LOADING_MESSAGES = [
+  "📸 正在读取图片...",
+  "🔍 识别员工姓名...",
+  "📅 提取排班日期...",
+  "✅ 识别完成！"
+];
+
+// 每个步骤显示2秒，总计约8秒
+```
+
+---
+
+## 数据规范 (Data Standards)
+
+### Supabase表结构 (Database Schema)
+
+#### 表设计原则 (Table Design Principles)
+- 使用UUID作主键
+- 所有时间用ISO 8601格式
+- 软删除(deleted_at字段)
+- 必须RLS策略保护
+
+#### 核心表定义 (Core Tables)
+```sql
+-- 用户配置表
+CREATE TABLE user_profiles (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users NOT NULL,
+  employee_name TEXT NOT NULL,
+  employee_id TEXT,
+  position TEXT,
+  base_salary DECIMAL(10,2) NOT NULL,
+  attendance_bonus DECIMAL(10,2) NOT NULL,
+  pay_day INTEGER NOT NULL DEFAULT 7,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- 排班表
+CREATE TABLE schedules (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users NOT NULL,
+  month TEXT NOT NULL,              -- YYYY-MM格式
+  date DATE NOT NULL,                -- YYYY-MM-DD格式
+  type TEXT NOT NULL,                -- ScheduleType枚举值
+  planned_start_time TIME,
+  planned_end_time TIME,
+  target_outlet TEXT,                -- 支援分店
+  notes TEXT,
+  is_confirmed BOOLEAN DEFAULT false,
+  original_image_url TEXT,           -- 排班表图片URL
+  created_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(user_id, date)
+);
+
+-- 打卡记录表
+CREATE TABLE time_records (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users NOT NULL,
+  date DATE NOT NULL,
+  schedule_type TEXT NOT NULL,
+  actual_start_time TIME NOT NULL,
+  actual_end_time TIME NOT NULL,
+  rest_hours DECIMAL(3,1) DEFAULT 1.0,
+  total_hours DECIMAL(4,2),
+  normal_hours DECIMAL(4,2),
+  overtime_hours DECIMAL(4,2),
+  overtime_pay DECIMAL(10,2),
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(user_id, date)
+);
+
+-- MC记录表
+CREATE TABLE mc_records (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users NOT NULL,
+  date DATE NOT NULL,
+  duration INTEGER NOT NULL DEFAULT 1,
+  certificate_number TEXT,
+  reason TEXT,
+  is_paid BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- RLS策略 (必须启用)
+ALTER TABLE schedules ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "用户只能访问自己的数据" ON schedules
+  FOR ALL USING (auth.uid() = user_id);
+```
+
+### 数据验证规范 (Data Validation Standards)
+
+#### 客户端验证 (Client-side Validation)
+```typescript
+// 必须验证的字段
+const VALIDATION_RULES = {
+  baseSalary: {
+    min: 1400,  // 新加坡最低工资
+    max: 10000,
+    message: "基本工资必须在$1400-$10000之间"
+  },
+  attendanceBonus: {
+    min: 0,
+    max: 500,
+    message: "勤工奖不能超过$500"
+  },
+  startTime: {
+    format: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/,
+    message: "时间格式必须为HH:MM"
+  },
+  restHours: {
+    min: 0,
+    max: 2,
+    step: 0.5,
+    message: "休息时间为0-2小时，步进0.5小时"
+  }
+};
+```
+
+---
+
+## OCR识别规范 (OCR Recognition Standards)
+
+### GPT-4 Vision提示词标准 (Prompt Standards)
+
+#### 必须包含的元素 (Required Elements)
+1. **任务描述**: 明确是鼎泰丰排班表识别
+2. **格式说明**: 详细解释时间格式(1000→10:00)
+3. **状态枚举**: 列出所有可能的排班类型
+4. **JSON Schema**: 规定返回格式
+5. **错误处理**: 要求标注低置信度项
+
+#### 提示词版本控制 (Prompt Versioning)
+```typescript
+// 提示词必须版本化，便于AB测试
+const OCR_PROMPTS = {
+  v1_0: "...",  // 初始版本
+  v1_1: "...",  // 修正分店代码识别
+  v1_2: "...",  // 优化时间格式解析
+};
+
+// 当前生产版本
+const CURRENT_OCR_PROMPT_VERSION = "v1_2";
+```
+
+### 识别结果处理 (Recognition Result Processing)
+
+#### 置信度阈值 (Confidence Thresholds)
+```typescript
+const CONFIDENCE_THRESHOLDS = {
+  AUTO_CONFIRM: 0.95,   // ≥0.95自动确认
+  MANUAL_REVIEW: 0.70,  // 0.70-0.95需人工审核
+  REJECT: 0.70          // <0.70直接拒绝
+};
+
+// 处理逻辑
+function processRecognitionResult(result: RecognitionResult) {
+  if (result.confidence >= CONFIDENCE_THRESHOLDS.AUTO_CONFIRM) {
+    return { status: "auto_confirmed", data: result };
+  } else if (result.confidence >= CONFIDENCE_THRESHOLDS.MANUAL_REVIEW) {
+    return { status: "needs_review", data: result };
+  } else {
+    return { status: "rejected", message: "识别失败，请重新拍照" };
+  }
+}
+```
+
+#### 异常情况处理 (Error Handling)
+- **图片模糊**: 提示用户重新拍照，显示拍摄技巧
+- **姓名不匹配**: 让用户手动选择正确行
+- **日期缺失**: 根据上下文推断日期
+- **未知标记**: 标记为`UNKNOWN`，提示手动修正
+
+---
+
+## 性能标准 (Performance Standards)
+
+### 页面加载性能 (Page Load Performance)
+- **首屏渲染 (FCP)**: <1.5s
+- **完全可交互 (TTI)**: <3s
+- **Lighthouse评分**: >90 (Mobile)
+
+### API响应时间 (API Response Time)
+- **OCR识别**: <10s (包含GPT-4 Vision调用)
+- **工资计算**: <100ms
+- **日历渲染**: <200ms
+- **数据保存**: <500ms
+
+### 优化策略 (Optimization Strategies)
+
+#### 图片压缩 (Image Compression)
+```typescript
+// 上传前压缩图片
+const COMPRESSION_CONFIG = {
+  maxWidth: 1920,
+  maxHeight: 1920,
+  quality: 0.8,
+  format: "webp"  // 节省50%存储空间
+};
+```
+
+#### 懒加载 (Lazy Loading)
+- 日历组件按需加载月份数据
+- MC记录分页加载(每页20条)
+- 图片查看器延迟加载
+
+#### 缓存策略 (Caching Strategy)
+```typescript
+// Supabase查询缓存
+const CACHE_CONFIG = {
+  schedules: { ttl: 3600 },      // 排班1小时缓存
+  timeRecords: { ttl: 300 },     // 打卡5分钟缓存
+  salaryCalculation: { ttl: 60 } // 工资1分钟缓存
+};
+```
+
+---
+
+## 测试规范 (Testing Standards)
+
+### 测试覆盖率要求 (Coverage Requirements)
+- **工资计算模块**: 100%
+- **OCR识别服务**: 80%
+- **UI组件**: 60%
+- **整体覆盖率**: >70%
+
+### 关键测试用例 (Critical Test Cases)
+
+#### 工资计算测试 (Salary Calculation Tests)
+```typescript
+describe("MOMCompliantSalaryCalculator", () => {
+  test("正常工作日无加班", () => {
+    // 10:00-19:00, 休息1小时 = 8小时正常工作
+    expect(overtimeHours).toBe(0);
+  });
+
+  test("工作日加班0.5小时", () => {
+    // 10:00-19:30, 休息1小时 = 8.5小时
+    expect(overtimeHours).toBe(0.5);
+    expect(overtimePay).toBeCloseTo(6.96, 2); // $9.28 × 0.5 × 1.5
+  });
+
+  test("休息日加班整天1.5倍", () => {
+    // OFF/OT: 10:00-19:00, 休息1小时 = 8小时
+    expect(normalHours).toBe(0);
+    expect(overtimeHours).toBe(8);
+    expect(overtimePay).toBeCloseTo(111.36, 2); // $9.28 × 8 × 1.5
+  });
+
+  test("公共假期加班2倍", () => {
+    // PH: 10:00-19:00, 休息1小时 = 8小时
+    expect(overtimePay).toBeCloseTo(148.48, 2); // $9.28 × 8 × 2.0
+  });
+
+  test("勤工奖规则", () => {
+    expect(calculateAttendanceBonus(200, 0)).toBe(200);  // MC=0, 全额
+    expect(calculateAttendanceBonus(200, 1)).toBe(200);  // MC=1, 全额
+    expect(calculateAttendanceBonus(200, 2)).toBe(100);  // MC=2, 减半
+    expect(calculateAttendanceBonus(200, 4)).toBe(0);    // MC=4, 取消
+  });
+});
+```
+
+#### OCR测试 (OCR Recognition Tests)
+```typescript
+describe("ScheduleRecognitionService", () => {
+  test("识别标准排班表", async () => {
+    const result = await service.recognizeSchedule(
+      "test-images/standard-schedule.jpg",
+      "KELLY TEIN ROU YI"
+    );
+    expect(result.success).toBe(true);
+    expect(result.confidence).toBeGreaterThan(0.9);
+    expect(Object.keys(result.data.schedule)).toHaveLength(31); // 10月31天
+  });
+
+  test("识别兼职员工双时间", async () => {
+    // 单元格内容: "1200 2100"
+    const result = await service.recognizeSchedule(...);
+    const oct15 = result.data.schedule["2025-10-15"];
+    expect(oct15.startTime).toBe("12:00");
+    expect(oct15.endTime).toBe("21:00");
+  });
+
+  test("识别OFF/OT休息日加班", async () => {
+    const result = await service.recognizeSchedule(...);
+    const oct20 = result.data.schedule["2025-10-20"];
+    expect(oct20.type).toBe("overtime_on_off_day");
+  });
+});
+```
+
+### E2E测试场景 (E2E Test Scenarios)
+1. **完整用户流程**:
+   - 注册 → 设置工资 → 导入排班 → 打卡 → 查看工资
+2. **异常场景**:
+   - OCR识别失败重试
+   - 网络断开后数据恢复
+   - 修改历史打卡记录
+
+---
+
+## 安全规范 (Security Standards)
+
+### 数据保护 (Data Protection)
+
+#### 敏感信息加密 (Sensitive Data Encryption)
+- ✅ 工资数据仅存储用户侧
+- ✅ Supabase RLS强制启用
+- ✅ API密钥环境变量管理
+- ❌ 不存储身份证号/银行账号
+
+#### 隐私政策 (Privacy Policy)
+```markdown
+# 我们收集的数据
+- 员工姓名、工号、职位
+- 排班表图片(用于OCR)
+- 打卡时间记录
+- 月工资金额
+
+# 我们不收集的数据
+- 身份证号
+- 银行账号
+- 家庭住址
+- 其他个人敏感信息
+
+# 数据使用
+- 仅用于工资计算
+- 不与第三方分享
+- 用户可随时删除所有数据
+```
+
+### API密钥管理 (API Key Management)
+```typescript
+// 必须使用环境变量
+const REQUIRED_ENV_VARS = [
+  "NEXT_PUBLIC_SUPABASE_URL",
+  "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+  "OPENAI_API_KEY"  // 仅服务端使用
+];
+
+// 启动时检查
+REQUIRED_ENV_VARS.forEach(key => {
+  if (!process.env[key]) {
+    throw new Error(`Missing required env var: ${key}`);
+  }
+});
+```
+
+---
+
+## 发布流程 (Release Process)
+
+### 版本号规范 (Versioning)
+- 遵循语义化版本: `MAJOR.MINOR.PATCH`
+- V1.0: 初始MVP
+- V1.1: 功能增强(MC追踪、图片查看器)
+- V2.0: 主管模式、VI分红
+
+### 发布检查清单 (Release Checklist)
+
+#### V1.0 MVP发布前必须完成 (Pre-release V1.0)
+- [ ] 所有P0功能实现并测试
+- [ ] OCR准确率测试≥90% (50张真实排班表)
+- [ ] 工资计算与工资单对比无误差
+- [ ] 3个真实用户试用1周无严重bug
+- [ ] Lighthouse评分>85 (Mobile)
+- [ ] Supabase RLS策略启用
+- [ ] 环境变量文档完整
+- [ ] 用户指南编写完成
+- [ ] 隐私政策页面上线
+
+#### 发布步骤 (Deployment Steps)
+1. **代码审查**: 核心模块Code Review
+2. **测试通过**: 所有自动化测试绿灯
+3. **性能检查**: Lighthouse评分达标
+4. **Staging部署**: 在Vercel预览环境测试
+5. **生产发布**: 合并到main分支自动部署
+6. **监控确认**: Posthog埋点正常工作
+7. **回滚准备**: 保留上一版本快照
+
+---
+
+## 监控与分析 (Monitoring & Analytics)
+
+### 关键指标追踪 (Key Metrics Tracking)
+
+#### 产品指标 (Product Metrics)
+```typescript
+// Posthog事件追踪
+const TRACK_EVENTS = {
+  // 用户注册流程
+  "signup_started": {},
+  "signup_completed": { baseSalary: number },
+
+  // OCR识别
+  "ocr_started": {},
+  "ocr_success": { confidence: number, duration: number },
+  "ocr_failed": { reason: string },
+  "ocr_manual_correction": { fieldsCorrected: number },
+
+  // 打卡记录
+  "timesheet_created": { overtimeHours: number },
+  "timesheet_edited": {},
+
+  // 工资查看
+  "salary_viewed": { totalSalary: number, month: string },
+  "salary_exported": { format: "pdf" | "csv" },
+
+  // 留存
+  "daily_active_user": {},
+  "weekly_active_user": {}
+};
+```
+
+#### 技术指标 (Technical Metrics)
+- **API错误率**: <1%
+- **OCR超时率**: <5%
+- **DB查询延迟**: P95 < 200ms
+- **崩溃率**: <0.1%
+
+### 错误追踪 (Error Tracking)
+```typescript
+// Sentry集成 (可选，预算允许时)
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  environment: process.env.NODE_ENV,
+  tracesSampleRate: 0.1,  // 10%请求追踪
+  beforeSend(event) {
+    // 移除敏感信息
+    if (event.user) {
+      delete event.user.email;
+      delete event.user.ip_address;
+    }
+    return event;
+  }
+});
+```
+
+---
+
+## 文档规范 (Documentation Standards)
+
+### 代码注释 (Code Comments)
+
+#### 必须注释的内容 (Required Comments)
+```typescript
+/**
+ * 根据MOM标准计算休息日加班费
+ *
+ * @param totalHours - 实际工作总时长(已扣除休息时间)
+ * @param hourlyRate - 时薪(baseSalary / 190.67)
+ * @returns 加班费金额
+ *
+ * @remarks
+ * 休息日加班整天都算1.5倍工资,无补休
+ * 参考: MOM Employment Act Section 38(4)
+ *
+ * @example
+ * ```typescript
+ * calculateOffDayOT(8, 9.28) // 返回111.36
+ * ```
+ */
+function calculateOffDayOT(
+  totalHours: number,
+  hourlyRate: number
+): number {
+  return totalHours * hourlyRate * 1.5;
+}
+```
+
+#### 不需要注释的内容 (No Comments Needed)
+- 自解释的代码
+- 简单的Getter/Setter
+- 标准的React组件Props
+
+### API文档 (API Documentation)
+
+#### Supabase RPC函数必须文档化
+```sql
+-- Function: 计算月度工资汇总
+-- Parameters:
+--   p_user_id: UUID - 用户ID
+--   p_month: TEXT - 月份(YYYY-MM格式)
+-- Returns: JSON - 工资详情
+-- Example:
+--   SELECT calculate_monthly_salary(
+--     'user-uuid',
+--     '2025-10'
+--   );
+CREATE OR REPLACE FUNCTION calculate_monthly_salary(
+  p_user_id UUID,
+  p_month TEXT
+) RETURNS JSON AS $$
+  -- 实现...
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+```
+
+---
+
+## 协作规范 (Collaboration Standards)
+
+### Git工作流 (Git Workflow)
+
+#### 分支策略 (Branch Strategy)
+```
+main            - 生产环境,仅接受来自release的合并
+├── develop     - 开发主分支
+    ├── feature/ocr-recognition
+    ├── feature/salary-calculator
+    └── hotfix/fix-overtime-bug
+```
+
+#### Commit消息规范 (Commit Message Convention)
+```
+<type>(<scope>): <subject>
+
+type:
+- feat: 新功能
+- fix: bug修复
+- refactor: 重构
+- test: 测试
+- docs: 文档
+- style: 格式(不影响代码运行)
+- perf: 性能优化
+
+示例:
+feat(ocr): 支持识别分店代码(CO/TCP/NP)
+fix(salary): 修正休息日加班费计算错误
+test(calculator): 添加公共假期OT测试用例
+```
+
+### Code Review清单 (Code Review Checklist)
+- [ ] 代码符合TypeScript类型规范
+- [ ] 工资计算逻辑经过测试验证
+- [ ] 敏感信息未硬编码
+- [ ] 无明显性能问题
+- [ ] UI响应式适配移动端
+- [ ] 错误处理完善
+- [ ] 关键函数有注释
+
+---
+
+## 成本控制 (Cost Control)
+
+### 开发成本 (Development Cost)
+- **AI工具费用**: $20/月 (Cursor Pro)
+- **测试成本**: $50 (GPT-4 API开发测试)
+- **域名**: $10/年
+- **总计**: ~$70 (首次)
+
+### 运营成本监控 (Operational Cost Monitoring)
+```typescript
+// 成本预警阈值
+const COST_ALERTS = {
+  daily_ocr_calls: 100,      // 每天OCR调用>100次预警
+  monthly_cost: 20,          // 月成本>$20预警
+  db_storage: 500_000_000    // DB存储>500MB预警
+};
+
+// 实时追踪OpenAI API使用
+async function trackOpenAICost() {
+  const usage = await openai.usage.retrieve();
+  if (usage.total_cost > COST_ALERTS.monthly_cost) {
+    sendAlert("OpenAI月成本超限");
+  }
+}
+```
+
+### 成本优化策略 (Cost Optimization)
+1. **图片压缩**: WebP格式,质量80% → 节省50%存储
+2. **OCR缓存**: 相同图片不重复识别
+3. **DB查询优化**: 索引优化,减少全表扫描
+4. **CDN使用**: Vercel自带CDN,无额外成本
+
+---
+
+## 附录 (Appendix)
+
+### 术语表 (Glossary)
+
+| 术语 | 英文 | 解释 |
+|------|------|------|
+| OT | Overtime | 加班 |
+| REST | Rest Day | 小周休息日(绿色) |
+| OFF | Off Day | 大周休息日(橙色) |
+| AL | Annual Leave | 年假 |
+| MC | Medical Certificate | 病假证明 |
+| CO | Compensation Off / Compass One | 补休 或 分店代码(需根据上下文) |
+| PH | Public Holiday | 公共假期 |
+| MOM | Ministry of Manpower | 新加坡人力部 |
+| VI | Variable Income | 主管变动收入(分红) |
+| TCP | The Centrepoint | 鼎泰丰Orchard分店 |
+| NP | Northpoint | 鼎泰丰Yishun分店 |
+
+### 参考资料 (References)
+
+#### 法规文档 (Legal Documents)
+- [MOM Employment Act](https://sso.agc.gov.sg/Act/EmPA1968)
+- [Overtime Payment Guidelines](https://www.mom.gov.sg/employment-practices/hours-of-work-overtime-and-rest-days)
+- [Annual Leave Entitlement](https://www.mom.gov.sg/employment-practices/leave/annual-leave)
+
+#### 技术文档 (Technical Docs)
+- [GPT-4 Vision API Docs](https://platform.openai.com/docs/guides/vision)
+- [Supabase RLS Guide](https://supabase.com/docs/guides/auth/row-level-security)
+- [React Best Practices](https://react.dev/learn)
+
+### 变更日志 (Change Log)
+
+#### v1.0 (2025-11-04)
+- 初始版本
+- 基于PRD v2.0创建
+- 定义核心开发原则和规范
+
+---
+
+## 结语 (Conclusion)
+
+本宪章是DTF Salary Tracker项目的核心指导文件,所有开发决策必须符合以下优先级:
+
+1. **用户价值** > 技术炫技
+2. **数据准确性** > 功能丰富度
+3. **快速迭代** > 完美主义
+4. **成本控制** > 过度优化
+
+当遇到决策困境时,回归核心问题:
+> **"这个功能是否帮助轮班制员工更准确、更轻松地追踪工资?"**
+
+如果答案是"是",且符合MVP范围,则做。
+否则,推迟到V2.0。
+
+---
+
+**Maintained by**: DTF Salary Tracker Team
+**Contact**: [项目GitHub Issues](https://github.com/yourusername/dtf-salary-tracker/issues)
+**Last Review**: 2025-11-04

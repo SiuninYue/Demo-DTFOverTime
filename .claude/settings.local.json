@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(skills_mother)",
+      "Skill(ann_ai)",
+      "Bash(git fetch:*)",
+      "Bash(git init:*)",
+      "Bash(.specify/scripts/bash/create-new-feature.sh:*)",
+      "Bash(chmod:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
