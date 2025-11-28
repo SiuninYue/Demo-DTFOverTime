@@ -1,16 +1,64 @@
-# React + Vite
+# DTF Over Time
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+DTF Over Time is a React + Vite playground for iterating on salary tracking ideas described in `specs/001-dtf-salary-tracker-mvp/`. The app ships with hot module reload, React 19, and eslint-based linting.
 
-Currently, two official plugins are available:
+## Prerequisites
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Node.js 18+ (recommended)
+- npm 9+
 
-## React Compiler
+Install dependencies after cloning:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+npm install
+```
 
-## Expanding the ESLint configuration
+## Development
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Start a hot-reloading dev server on http://localhost:5173:
+
+```bash
+npm run dev
+```
+
+The helper script wraps the same command:
+
+```bash
+./scripts/dev.sh
+```
+
+> Note: The provided `.env.local` defaults to a mock Supabase client so you can register/login locally without a cloud project. Replace `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` in `.env.local` (this file overrides `.env`), set `VITE_SUPABASE_USE_MOCK=false`, and restart `npm run dev` when you have a real Supabase instance. If you previously used the mock client, clear browser `localStorage` keys `mock-supabase-db-v1` and `mock-supabase-auth-v1` so old fake data/auth do not stick around.
+
+## Quality Checks
+
+Run eslint across the project:
+
+```bash
+npm run lint
+```
+
+Execute the minimal pytest smoke suite (ensures tooling expectations are met):
+
+```bash
+pytest
+```
+
+Or use the wrapper script that runs lint and pytest together:
+
+```bash
+./scripts/test.sh
+```
+
+## Production Build
+
+Produce optimized assets in `dist/`:
+
+```bash
+npm run build
+```
+
+Serve the production bundle locally for smoke tests:
+
+```bash
+npm run preview
+```

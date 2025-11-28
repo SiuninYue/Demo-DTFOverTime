@@ -11,3 +11,9 @@
 项目放在 WSL 文件系统，不在 /mnt/c。
 
 若需原生依赖，请给出 apt 安装清单与 build-essential 等前置依赖。
+
+## Active Technologies
+- JavaScript (React 19.1.1) + TypeScript (for type safety in calculation engine), Node.js 18+ for serverless functions (001-dtf-salary-tracker-mvp)
+
+## Recent Changes
+- 001-dtf-salary-tracker-mvp: Added JavaScript (React 19.1.1) + TypeScript (for type safety in calculation engine), Node.js 18+ for serverless functions

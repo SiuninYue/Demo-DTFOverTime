@@ -2,24 +2,31 @@
   =============================================================================
   SYNC IMPACT REPORT
   =============================================================================
-  Version: 1.0.0 → 1.0.0 (Initial Constitution)
+  Version: 1.0.0 → 1.1.0 (MOM Regulation Refinement)
 
-  Modified Principles: None (initial creation)
-  Added Sections:
-    - Core Principles (5 principles)
-    - Technical Constraints
-    - Development Workflow
-    - Governance
+  Modified Principles:
+    - §IV User Data Accuracy: 细化加班计算规则以完全符合MOM Part IV实际法规
+
+  Rationale:
+    - 原1.0.0版本使用简化倍率（PH=2.0×, REST=1.5×整天）
+    - 实际MOM规定使用分段计算（基础报酬+额外OT）
+    - 简化方式可能导致计薪误差>1%，违反§IV准确性原则（99%+ accurate）
+    - Spec.md已详细研究MOM官方文档（附录C），确认复杂规则必要性
+    - 与audit remediation决策对齐（C1&C2方案A，ME批准2025-11-06）
+
+  Added Sections: None
 
   Removed Sections: None
 
   Templates Requiring Updates:
-    ✅ plan-template.md - Reviewed, aligned with constitution principles
-    ✅ spec-template.md - Reviewed, user story approach compatible
-    ✅ tasks-template.md - Reviewed, task organization compatible
-    ✅ Command files - Reviewed, no outdated agent-specific references
+    ✅ spec.md - 已对齐MOM规则（无需修改，仅修正第155行内部冲突）
+    ⚠️ plan.md - 需更新Constitution Check结果至v1.1.0
+    ⚠️ tasks.md - 需添加REST/PH测试场景（T029-T030新增）
 
-  Follow-up TODOs: None
+  Follow-up TODOs:
+    - [ ] 验证Codex实现calculateRestDayPay()分雇主/员工要求逻辑
+    - [ ] 验证Codex实现calculatePHPay()额外1日薪+OT逻辑
+    - [ ] 确保所有salary tests通过（含新增REST/PH场景）
   =============================================================================
 -->
 
@@ -68,11 +75,15 @@
 **Principle**: Salary calculations MUST be 99%+ accurate and comply with Singapore MOM regulations.
 
 **Rules**:
-- Hourly rate calculation: `baseSalary / 190.67` (MOM标准)
-- Overtime multipliers:
-  - 正常工作日加班: 1.5x
-  - 休息日加班 (OFF/OT): 1.5x (整天)
-  - 公共假期: 2.0x
+- Hourly rate calculation: `baseSalary / 190.67` (MOM标准，基于52週×44小時÷12個月)
+- Daily rate calculation: `baseSalary / 当月实际工作日数` (根据工作制度动态计算，禁用固定÷26)
+- Overtime calculations (MOM Part IV compliant):
+  - 正常工作日OT: 超过正常工时部分 × 时薪 × 1.5
+  - 法定休息日 (Statutory Rest Day):
+    * 雇主要求: 工作≤半日→1日薪，>半日→2日薪，超正常工时→额外1.5×OT
+    * 员工要求: 工作≤半日→0.5日薪，≤正常工时→1日薪，超时→额外1.5×OT
+  - 非法定休息日: 按正常工作日OT规则（超时1.5×）
+  - 公共假期 (PH): 额外1日基本薪 + 超正常工时部分1.5×OT（非整天2倍）
 - Attendance bonus calculation:
   - MC ≤1天: 100%
   - MC 2-3天: 50%
@@ -204,4 +215,4 @@
 - Constitution conflicts → Document in plan.md, propose amendment
 - Technical blockers → Escalate to user for guidance
 
-**Version**: 1.0.0 | **Ratified**: 2025-11-04 | **Last Amended**: 2025-11-04
+**Version**: 1.1.0 | **Ratified**: 2025-11-04 | **Last Amended**: 2025-11-06

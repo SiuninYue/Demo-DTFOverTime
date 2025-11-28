@@ -1,0 +1,533 @@
+openapi: 3.0.3
+info:
+  title: DTF Salary Tracker API
+  description: |
+    API specification for DTF Salary Tracker serverless functions (Vercel).
+
+    Most CRUD operations use Supabase auto-generated REST API.
+    This spec only covers custom serverless endpoints.
+  version: 1.0.0
+  contact:
+    name: DTF Salary Tracker Team
+
+servers:
+  - url: https://dtf-salary-tracker.vercel.app/api
+    description: Production (Vercel)
+  - url: http://localhost:3000/api
+    description: Local development
+
+security:
+  - SupabaseAuth: []
+
+paths:
+  /ocr/recognize:
+    post:
+      summary: Recognize schedule from image using GPT-4 Vision
+      description: |
+        Uploads schedule image and uses GPT-4 Vision API to extract employee schedule data.
+        Primary OCR method with high accuracy (≥90%).
+      operationId: recognizeSchedule
+      tags:
+        - OCR
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - image
+                - userName
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: Schedule image file (max 5MB)
+                userName:
+                  type: string
+                  example: "KELLY TEIN ROU YI"
+                  description: Employee name for OCR matching
+                month:
+                  type: string
+                  pattern: '^\d{4}-\d{2}$'
+                  example: "2025-10"
+                  description: Target month (optional, auto-detected if not provided)
+      responses:
+        '200':
+          description: Recognition successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OCRResult'
+        '400':
+          description: Invalid request (image too large, unsupported format)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: GPT-4 Vision API error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Service temporarily unavailable, use fallback OCR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /ocr/recognize/tesseract:
+    post:
+      summary: Fallback OCR using Tesseract.js (client-side)
+      description: |
+        Client-side OCR fallback when GPT-4 Vision is unavailable.
+        Lower accuracy but free and offline-capable.
+        Note: This endpoint is CLIENT-SIDE only, not a serverless function.
+      operationId: recognizeScheduleTesseract
+      tags:
+        - OCR
+      x-implementation: client-side
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - image
+                - userName
+              properties:
+                image:
+                  type: string
+                  format: binary
+                userName:
+                  type: string
+                month:
+                  type: string
+      responses:
+        '200':
+          description: Recognition completed (may have lower accuracy)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OCRResult'
+
+  /salary/calculate:
+    post:
+      summary: Calculate monthly salary with MOM compliance
+      description: |
+        Server-side salary calculation ensuring MOM compliance.
+        Used for double-verification of client-side calculations.
+      operationId: calculateSalary
+      tags:
+        - Salary
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SalaryCalculationRequest'
+      responses:
+        '200':
+          description: Calculation successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalaryResult'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Validation error (e.g., overtime exceeds 72 hours)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+components:
+  securitySchemes:
+    SupabaseAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Supabase session JWT token
+
+  schemas:
+    OCRResult:
+      type: object
+      required:
+        - employeeName
+        - month
+        - schedule
+        - recognitionConfidence
+      properties:
+        employeeName:
+          type: string
+          example: "KELLY TEIN ROU YI"
+          description: Recognized employee name
+        recognitionConfidence:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 1
+          example: 0.95
+          description: Overall recognition confidence (0-1)
+        month:
+          type: string
+          pattern: '^\d{4}-\d{2}$'
+          example: "2025-10"
+          description: Recognized month
+        schedule:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/DaySchedule'
+          description: Daily schedule data (key: date in YYYY-MM-DD format)
+        warnings:
+          type: array
+          items:
+            type: string
+          example: ["2025-10-18單元格內容模糊，建議人工確認"]
+          description: Recognition warnings for manual review
+        metadata:
+          type: object
+          properties:
+            recognitionMethod:
+              type: string
+              enum: [GPT4_VISION, TESSERACT]
+            processingTime:
+              type: number
+              description: Recognition time in milliseconds
+
+    DaySchedule:
+      type: object
+      required:
+        - type
+        - isStatutoryRestDay
+        - isConfirmed
+      properties:
+        type:
+          $ref: '#/components/schemas/ScheduleType'
+        startTime:
+          type: string
+          pattern: '^\d{2}:\d{2}$'
+          example: "10:00"
+          nullable: true
+        endTime:
+          type: string
+          pattern: '^\d{2}:\d{2}$'
+          example: "19:00"
+          nullable: true
+          description: Only for part-time employees
+        isStatutoryRestDay:
+          type: boolean
+          description: Is this a statutory rest day (MOM requires one per week)
+        notes:
+          type: string
+          example: "OFF/OT - 休息日加班"
+        isConfirmed:
+          type: boolean
+          default: true
+        targetOutlet:
+          type: string
+          example: "TCP"
+          description: Target outlet code (for support_out type)
+        outletFullName:
+          type: string
+          example: "The Centrepoint"
+        confidence:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 1
+          example: 0.98
+          description: Confidence for this specific day
+
+    ScheduleType:
+      type: string
+      enum:
+        - work                # 正常工作日
+        - rest                # REST休息日
+        - off                 # OFF大周休息日
+        - overtime_on_off_day # OFF/OT休息日加班
+        - leave               # AL年假
+        - public_holiday      # PH公眾假期
+        - training            # C上課培訓
+        - support_incoming    # 其他店員工來我們店
+        - support_outgoing    # 本店去支援其他店
+        - co                  # 補休
+        - unknown             # 無法識別
+      description: Schedule type enum
+
+    SalaryCalculationRequest:
+      type: object
+      required:
+        - employee
+        - records
+        - mcDays
+        - month
+      properties:
+        employee:
+          $ref: '#/components/schemas/EmployeeInfo'
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeRecord'
+        mcDays:
+          type: integer
+          minimum: 0
+          maximum: 31
+          example: 2
+        unpaidLeaveDays:
+          type: integer
+          minimum: 0
+          default: 0
+        month:
+          type: object
+          required:
+            - year
+            - month
+          properties:
+            year:
+              type: integer
+              example: 2025
+            month:
+              type: integer
+              minimum: 1
+              maximum: 12
+              example: 10
+
+    EmployeeInfo:
+      type: object
+      required:
+        - id
+        - name
+        - baseSalary
+        - workScheduleType
+        - isWorkman
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        position:
+          type: string
+        baseSalary:
+          type: number
+          format: double
+          example: 1770.00
+        attendanceBonusScheme:
+          type: object
+          properties:
+            fullAmount:
+              type: number
+              example: 200.00
+            rules:
+              type: array
+              items:
+                type: object
+                properties:
+                  maxMcDays:
+                    type: integer
+                  bonusAmount:
+                    type: number
+        workScheduleType:
+          type: string
+          enum: [FIVE_DAY, FIVE_HALF_DAY, SIX_DAY, FOUR_DAY, CUSTOM]
+        normalWorkHours:
+          type: number
+          default: 8.0
+        outletCode:
+          type: string
+        isWorkman:
+          type: boolean
+          description: Determines Part IV applicability
+
+    TimeRecord:
+      type: object
+      required:
+        - date
+        - dayType
+      properties:
+        date:
+          type: string
+          format: date
+          example: "2025-10-01"
+        dayType:
+          type: string
+          enum:
+            - NORMAL_WORK_DAY
+            - REST_DAY
+            - PUBLIC_HOLIDAY
+            - ANNUAL_LEAVE
+            - MEDICAL_LEAVE
+            - OFF_DAY
+        startTime:
+          type: string
+          pattern: '^\d{2}:\d{2}$'
+        endTime:
+          type: string
+          pattern: '^\d{2}:\d{2}$'
+        restHours:
+          type: number
+          format: double
+          default: 1.0
+        isEmployerRequested:
+          type: boolean
+          default: true
+          description: For REST_DAY type - employer vs employee requested
+        spansMidnight:
+          type: boolean
+          default: false
+
+    SalaryResult:
+      type: object
+      required:
+        - baseSalary
+        - attendanceBonus
+        - overtimePay
+        - totalGross
+        - netPay
+        - calculationDetails
+      properties:
+        baseSalary:
+          type: number
+          format: double
+        attendanceBonus:
+          type: number
+          format: double
+        overtimePay:
+          type: number
+          format: double
+        publicHolidayPay:
+          type: number
+          format: double
+        restDayPay:
+          type: number
+          format: double
+        totalGross:
+          type: number
+          format: double
+        deductions:
+          type: number
+          format: double
+        netPay:
+          type: number
+          format: double
+        breakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/DailyBreakdown'
+        compliance:
+          type: object
+          properties:
+            isCompliant:
+              type: boolean
+            warnings:
+              type: array
+              items:
+                $ref: '#/components/schemas/ComplianceWarning'
+        calculationDetails:
+          type: object
+          properties:
+            hourlyRate:
+              type: number
+            dailyRate:
+              type: number
+            totalOvertimeHours:
+              type: number
+            totalRestDayHours:
+              type: number
+            totalPHHours:
+              type: number
+            workScheduleType:
+              type: string
+            monthlyWorkingDays:
+              type: integer
+
+    DailyBreakdown:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        dayType:
+          type: string
+        hoursWorked:
+          type: number
+        pay:
+          type: object
+          properties:
+            basePay:
+              type: number
+            overtimePay:
+              type: number
+            totalPay:
+              type: number
+            explanation:
+              type: string
+            momReference:
+              type: string
+              format: uri
+
+    ComplianceWarning:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [DAILY_LIMIT, MONTHLY_OT_LIMIT, REST_DAY_VIOLATION]
+        message:
+          type: string
+        severity:
+          type: string
+          enum: [low, medium, high]
+        momReference:
+          type: string
+          format: uri
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          example: "OCR_FAILED"
+        message:
+          type: string
+          example: "圖片不夠清晰，請重新拍照"
+        details:
+          type: object
+          additionalProperties: true
+
+    ValidationError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "VALIDATION_ERROR"
+        message:
+          type: string
+        violations:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+              value:
+                type: string
+
+tags:
+  - name: OCR
+    description: Schedule OCR recognition endpoints
+  - name: Salary
+    description: Salary calculation endpoints

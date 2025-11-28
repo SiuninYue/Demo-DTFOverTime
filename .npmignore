@@ -1,0 +1,12 @@
+node_modules/
+dist/
+build/
+coverage/
+logs/
+*.log
+.env
+.env.*
+specs/
+docs/
+tests/
+public/sample-*.jpg

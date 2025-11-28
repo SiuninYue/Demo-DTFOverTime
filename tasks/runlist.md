@@ -1,0 +1,5 @@
+- 檢查並補全 README 的本地啟動與測試步驟
+- 若缺少開發腳本，建立 scripts/dev.sh、scripts/test.sh（加可執行權限）
+- 若缺少測試，為核心模組生成最小 pytest 範例並確保通過
+- 執行：格式化 + 靜態檢查 + 測試，輸出 logs/ 與 report.md
+- 所有變更僅限於本倉庫（遵守 .codex-guard.rules）
