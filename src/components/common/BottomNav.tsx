@@ -10,18 +10,23 @@ export interface BottomNavItem {
 export interface BottomNavProps {
   items?: BottomNavItem[]
   className?: string
+  hideOnDesktop?: boolean
 }
 
 const defaultItems: BottomNavItem[] = [
   { to: '/', label: 'Home', icon: '🏠', exact: true },
-  { to: '/calendar', label: 'Calendar', icon: '🗓' },
+  { to: '/calendar', label: 'Calendar', icon: '🗓️' },
   { to: '/salary', label: 'Salary', icon: '💰' },
-  { to: '/settings', label: 'Settings', icon: '⚙️' },
+  { to: '/more', label: 'More', icon: '⋮' },
 ]
 
-function BottomNav({ items = defaultItems, className = '' }: BottomNavProps) {
+function BottomNav({ items = defaultItems, className = '', hideOnDesktop = true }: BottomNavProps) {
   return (
-    <nav className={['bottom-nav', className].filter(Boolean).join(' ')} aria-label="Primary tabs">
+    <nav
+      className={['bottom-nav', className].filter(Boolean).join(' ')}
+      aria-label="Primary tabs"
+      data-hide-desktop={hideOnDesktop}
+    >
       {items.map((item) => (
         <NavLink
           key={item.to}

@@ -233,7 +233,7 @@ function SettingsPage() {
           <p>Keep these values accurate to unlock reliable MOM-compliant calculations.</p>
         </div>
         <div className="settings-page__meta">
-          <p>Status: {status === 'loading' ? 'Syncing…' : 'Ready'}</p>
+          <p aria-live="polite">Status: {status === 'loading' ? 'Syncing...' : 'Ready'}</p>
           <p>Last saved: {lastSavedAt ? new Date(lastSavedAt).toLocaleString() : 'Not saved yet'}</p>
         </div>
       </header>
@@ -248,12 +248,12 @@ function SettingsPage() {
 
       {(loadError || saveError) && (
         <div className="settings-alert settings-alert--error">
-          ⚠️ {loadError ?? saveError}
+          Error: {loadError ?? saveError}
         </div>
       )}
 
       {isRecalculating && (
-        <div className="settings-alert settings-alert--info">Recalculating cached salary data…</div>
+        <div className="settings-alert settings-alert--info">Recalculating cached salary data...</div>
       )}
 
       <div className="settings-grid">
@@ -283,12 +283,16 @@ function SettingsPage() {
           <div className="language-selector">
             <button
               className={`language-button ${i18n.language === 'en' ? 'active' : ''}`}
+              type="button"
+              aria-pressed={i18n.language === 'en'}
               onClick={() => handleLanguageChange('en')}
             >
               English
             </button>
             <button
               className={`language-button ${i18n.language === 'zh' ? 'active' : ''}`}
+              type="button"
+              aria-pressed={i18n.language === 'zh'}
               onClick={() => handleLanguageChange('zh')}
             >
               中文

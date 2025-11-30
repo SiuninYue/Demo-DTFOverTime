@@ -7,6 +7,7 @@ import TimecardPage from '@/pages/Timecard'
 import SalaryPage from '@/pages/Salary'
 import MCPage from '@/pages/MC'
 import SettingsPage from '@/pages/Settings'
+import MorePage from '@/pages/More'
 import LoginPage from '@/pages/Login'
 import RegisterPage from '@/pages/Register'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
@@ -53,6 +54,10 @@ const router = createBrowserRouter(
         {
           path: 'settings',
           element: <SettingsPage />,
+        },
+        {
+          path: 'more',
+          element: <MorePage />,
         },
       ],
     },

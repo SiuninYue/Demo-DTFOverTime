@@ -53,7 +53,7 @@ function CalendarPage() {
     }
   }, [employeeId, loadMonthRecords, monthId, timecardStatus])
 
-  const { schedule, isLoading, error, isOffline, refresh, hasData } = useSchedule({
+  const { schedule, isLoading, error, isOffline, hasData, refresh } = useSchedule({
     employeeId,
     month: monthId,
   })
@@ -62,6 +62,12 @@ function CalendarPage() {
   const [isDetailOpen, setDetailOpen] = useState(false)
   const [isViewerOpen, setViewerOpen] = useState(false)
   const { showToast } = useToast()
+
+  useEffect(() => {
+    if (!hasData) {
+      refresh()
+    }
+  }, [hasData, refresh])
 
   const selectedEntry = useMemo(() => {
     if (!detailDate || !schedule) return undefined
@@ -229,13 +235,10 @@ function CalendarPage() {
           <button type="button" className="ghost" onClick={() => handleMonthChange('next')}>
             Next ▶
           </button>
-          <button type="button" onClick={refresh} disabled={isLoading}>
-            {isLoading ? 'Refreshing…' : 'Refresh'}
-          </button>
         </div>
       </div>
 
-      {error && <p className="upload-error">⚠️ {error}</p>}
+      {error && <p className="upload-error">Error: {error}</p>}
       {isLoading && <Loading label="Refreshing roster" description="Fetching schedule data" />}
 
       {!isLoading && !hasData && (
@@ -256,15 +259,6 @@ function CalendarPage() {
         onQuickAction={handleQuickAction}
         onMonthChange={handleMonthChange}
       />
-
-      <div className="calendar-footer">
-        <button type="button" className="secondary" onClick={() => setViewerOpen(true)}>
-          View Original Image
-        </button>
-        <button type="button" className="ghost" onClick={handleImportRedirect}>
-          Import Another Month
-        </button>
-      </div>
 
       <DayDetailModal
         date={detailDate ?? ''}

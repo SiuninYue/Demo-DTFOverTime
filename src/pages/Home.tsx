@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import SalarySummaryCard from '@/components/salary/SalarySummaryCard'
 import SalaryBreakdown from '@/components/salary/SalaryBreakdown'
@@ -26,6 +26,13 @@ function HomePage() {
   })
   const scheduleState = useSchedule({ employeeId, month, autoFetch: true })
 
+  useEffect(() => {
+    refresh()
+    scheduleState.refresh()
+    // intentionally run once on entry to keep data fresh
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const upcomingEntries = useMemo(() => {
     const schedule = scheduleState.schedule
     if (!schedule) {
@@ -35,20 +42,19 @@ function HomePage() {
     return Object.entries(schedule.scheduleData)
       .filter(([date]) => date >= todayKey)
       .sort(([a], [b]) => a.localeCompare(b))
-      .slice(0, 5)
+      .slice(0, 3)
       .map(([date, entry]) => ({ date, entry }))
   }, [scheduleState.schedule])
 
   const quickActions = [
     { label: 'Import roster', action: () => navigate('/schedule/import'), className: 'secondary' },
     { label: 'Record today', action: () => navigate(`/timecard/${getTodayKey()}`), className: 'button' },
-    { label: 'View salary', action: () => navigate(salaryRoute), className: 'ghost' },
   ]
 
   return (
     <section className="home-page">
-      {error && <p className="upload-error">⚠️ {error}</p>}
-      {scheduleState.error && <p className="upload-error">⚠️ {scheduleState.error}</p>}
+      {error && <p className="upload-error">Error: {error}</p>}
+      {scheduleState.error && <p className="upload-error">Error: {scheduleState.error}</p>}
 
       <div className="home-grid">
         <div className="home-grid__main">
@@ -69,9 +75,6 @@ function HomePage() {
           <div className="home-card">
             <div className="home-card__header">
               <h3>Quick actions</h3>
-              <button type="button" className="ghost" onClick={() => refresh()} disabled={isLoading}>
-                Refresh
-              </button>
             </div>
             <div className="home-quick-actions">
               {quickActions.map((action) => (
@@ -90,7 +93,7 @@ function HomePage() {
           <div className="home-card">
             <div className="home-card__header">
               <h3>Upcoming schedule</h3>
-              {scheduleState.isLoading && <span className="text-muted">Syncing…</span>}
+              {scheduleState.isLoading && <span className="text-muted">Syncing...</span>}
             </div>
             {!upcomingEntries.length && !scheduleState.isLoading && (
               <p className="text-muted">No upcoming shifts on file. Import a roster to populate this list.</p>

@@ -33,7 +33,20 @@
       "Bash(src/types/supabase.ts)",
       "Bash(echo:*)",
       "Bash(git check-ignore:*)",
-      "Bash(! grep -E '(ACCESS_TOKEN|SERVICE_ROLE_KEY)=' .env.local)"
+      "Bash(! grep -E '(ACCESS_TOKEN|SERVICE_ROLE_KEY)=' .env.local)",
+      "Bash(sudo apt update:*)",
+      "Bash(find:*)",
+      "Bash(tree:*)",
+      "Bash(ls:*)",
+      "Bash(grep:*)",
+      "mcp__plugin_testing-suite_playwright-server__browser_snapshot",
+      "Bash(wsl -e bash -c \"cd ~/projects/AI-CODE-PROJECTS/DTFOverTime && npm run dev\")",
+      "mcp__plugin_testing-suite_playwright-server__browser_navigate",
+      "mcp__plugin_testing-suite_playwright-server__browser_wait_for",
+      "mcp__plugin_testing-suite_playwright-server__browser_take_screenshot",
+      "mcp__plugin_testing-suite_playwright-server__browser_resize",
+      "mcp__plugin_testing-suite_playwright-server__browser_type",
+      "mcp__plugin_testing-suite_playwright-server__browser_click"
     ],
     "deny": [],
     "ask": []

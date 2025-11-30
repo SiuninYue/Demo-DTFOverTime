@@ -137,10 +137,10 @@ function TimecardPage() {
         </div>
         <div className="timecard-controls">
           <button type="button" className="ghost" onClick={() => navigate(`/timecard/${shiftDate(date, -1)}`)}>
-            ◀ Previous Day
+            Previous Day
           </button>
           <button type="button" className="ghost" onClick={() => navigate(`/timecard/${shiftDate(date, 1)}`)}>
-            Next Day ▶
+            Next Day
           </button>
           <button type="button" className="ghost" onClick={() => resetToSchedule()} disabled={isLoading}>
             Reset to Schedule
@@ -148,7 +148,7 @@ function TimecardPage() {
         </div>
       </div>
 
-      {error && <p className="upload-error">⚠️ {error}</p>}
+      {error && <p className="upload-error">Error: {error}</p>}
 
       <form
         className="timecard-form"

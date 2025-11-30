@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import SalarySummaryCard from '@/components/salary/SalarySummaryCard'
 import SalaryBreakdown from '@/components/salary/SalaryBreakdown'
@@ -22,8 +23,15 @@ function SalaryPage() {
   const hasInvalidParam = Boolean(params.monthId && !isValidMonthKey(params.monthId))
   const month = isValidMonthKey(params.monthId) ? params.monthId : defaultMonth
   const employeeId = useAuthStore((state) => state.user?.id) ?? DEMO_EMPLOYEE_ID
-  const { summary, isLoading, isPersisting, isRefreshing, error, refresh, exportCsv, exportPdf } =
-    useSalary({ employeeId, month })
+  const { summary, isLoading, isPersisting, error, exportCsv, exportPdf, refresh } = useSalary({
+    employeeId,
+    month,
+  })
+
+  useEffect(() => {
+    refresh()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <section className="salary-page">
@@ -33,9 +41,6 @@ function SalaryPage() {
           <h1>{summary?.monthLabel ?? 'Salary overview'}</h1>
         </div>
         <div className="salary-page__actions">
-          <button type="button" className="ghost" onClick={() => refresh()} disabled={isRefreshing || isLoading}>
-            Refresh
-          </button>
           <button type="button" className="ghost" onClick={exportCsv} disabled={!summary}>
             Export CSV
           </button>
@@ -46,9 +51,9 @@ function SalaryPage() {
       </header>
 
       {hasInvalidParam && (
-        <p className="upload-error">⚠️ Invalid month in URL. Showing the latest month instead.</p>
+        <p className="upload-error">Invalid month in URL. Showing the latest month instead.</p>
       )}
-      {error && <p className="upload-error">⚠️ {error}</p>}
+      {error && <p className="upload-error">Error: {error}</p>}
       {isLoading && <Loading label="Calculating salary" description="Applying MOM compliance rules" />}
 
       <SalarySummaryCard summary={summary} isLoading={isLoading} isPersisting={isPersisting} />

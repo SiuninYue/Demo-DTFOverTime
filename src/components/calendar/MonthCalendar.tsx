@@ -115,15 +115,15 @@ function MonthCalendar({
         <div>
           <p className="calendar-panel__label">Monthly Schedule</p>
           <h2>
-            {year}年 {String(monthPart).padStart(2, '0')}月
+            {year} / {String(monthPart).padStart(2, '0')}
           </h2>
         </div>
         <div className="calendar-panel__controls">
           <button type="button" className="ghost" onClick={() => onMonthChange?.('prev')}>
-            ◀
+            Prev
           </button>
           <button type="button" className="ghost" onClick={() => onMonthChange?.('next')}>
-            ▶
+            Next
           </button>
         </div>
       </header>
