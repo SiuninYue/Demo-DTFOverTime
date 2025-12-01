@@ -22,6 +22,10 @@ import { evaluatePartIV } from '@/utils/partIV'
 
 type DraftProfile = EmployeeUpsertInput
 
+const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+const isValidUuid = (value: string | undefined | null): boolean =>
+  typeof value === 'string' && uuidRegex.test(value)
+
 const buildDefaultProfile = (employeeId = DEMO_EMPLOYEE_ID): DraftProfile => ({
   id: employeeId,
   email: 'demo@dtf.sg',
@@ -97,10 +101,6 @@ function SettingsPage() {
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
   const [recalcReport, setRecalcReport] = useState<SettingsPropagationResult | null>(null)
 
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-  const isValidUuid = (value: string | undefined | null): boolean =>
-    typeof value === 'string' && uuidRegex.test(value)
-
   const employeeId = user?.id ?? draft.id ?? DEMO_EMPLOYEE_ID
 
   const handleLanguageChange = (lang: string) => {
@@ -134,7 +134,7 @@ function SettingsPage() {
         const message = error instanceof Error ? error.message : 'Unable to load profile.'
         setLoadError(message)
       })
-  }, [employeeId, loadProfile, profile, status, isValidUuid])
+  }, [employeeId, loadProfile, profile, status])
 
   const evaluation = useMemo(
     () =>
@@ -166,9 +166,9 @@ function SettingsPage() {
       if (profile?.id && isValidUuid(profile.id)) {
         persistedProfile = await updateEmployee(profile.id, payload)
       } else {
-        const createPayload = { ...payload }
+        const createPayload: DraftProfile = { ...payload }
         if (!isValidUuid(createPayload.id)) {
-          delete (createPayload as any).id
+          createPayload.id = undefined
         }
         persistedProfile = await createEmployee(createPayload)
       }

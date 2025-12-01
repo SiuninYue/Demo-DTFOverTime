@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useParams } from 'react-router-dom'
+import PullToRefresh from '@/components/common/PullToRefresh'
 import SalarySummaryCard from '@/components/salary/SalarySummaryCard'
 import SalaryBreakdown from '@/components/salary/SalaryBreakdown'
 import OvertimeWarning from '@/components/salary/OvertimeWarning'
@@ -33,45 +34,51 @@ function SalaryPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  const handleRefresh = async () => {
+    await refresh()
+  }
+
   return (
-    <section className="salary-page">
-      <header className="salary-page__header">
-        <div>
-          <p className="text-muted">Monthly summary</p>
-          <h1>{summary?.monthLabel ?? 'Salary overview'}</h1>
+    <PullToRefresh onRefresh={handleRefresh}>
+      <section className="salary-page">
+        <header className="salary-page__header">
+          <div>
+            <p className="text-muted">Monthly summary</p>
+            <h1>{summary?.monthLabel ?? 'Salary overview'}</h1>
+          </div>
+          <div className="salary-page__actions">
+            <button type="button" className="ghost" onClick={exportCsv} disabled={!summary}>
+              Export CSV
+            </button>
+            <button type="button" className="secondary" onClick={exportPdf} disabled={!summary}>
+              Export PDF
+            </button>
+          </div>
+        </header>
+
+        {hasInvalidParam && (
+          <p className="upload-error">Invalid month in URL. Showing the latest month instead.</p>
+        )}
+        {error && <p className="upload-error">Error: {error}</p>}
+        {isLoading && <Loading label="Calculating salary" description="Applying MOM compliance rules" />}
+
+        <SalarySummaryCard summary={summary} isLoading={isLoading} isPersisting={isPersisting} />
+
+        <div className="salary-layout">
+          <SalaryBreakdown summary={summary} isLoading={isLoading} />
+          <OvertimeWarning summary={summary} />
+          <CalculationTransparency summary={summary} />
         </div>
-        <div className="salary-page__actions">
-          <button type="button" className="ghost" onClick={exportCsv} disabled={!summary}>
-            Export CSV
-          </button>
-          <button type="button" className="secondary" onClick={exportPdf} disabled={!summary}>
-            Export PDF
-          </button>
-        </div>
-      </header>
 
-      {hasInvalidParam && (
-        <p className="upload-error">Invalid month in URL. Showing the latest month instead.</p>
-      )}
-      {error && <p className="upload-error">Error: {error}</p>}
-      {isLoading && <Loading label="Calculating salary" description="Applying MOM compliance rules" />}
-
-      <SalarySummaryCard summary={summary} isLoading={isLoading} isPersisting={isPersisting} />
-
-      <div className="salary-layout">
-        <SalaryBreakdown summary={summary} isLoading={isLoading} />
-        <OvertimeWarning summary={summary} />
-        <CalculationTransparency summary={summary} />
-      </div>
-
-      <section className="salary-detail-section">
-        <div className="salary-detail-section__header">
-          <h3>Daily breakdown</h3>
-          <span className="text-muted">{summary?.result.breakdown.length ?? 0} entries</span>
-        </div>
-        <SalaryDetailTable breakdown={summary?.result.breakdown ?? []} isLoading={isLoading} />
+        <section className="salary-detail-section">
+          <div className="salary-detail-section__header">
+            <h3>Daily breakdown</h3>
+            <span className="text-muted">{summary?.result.breakdown.length ?? 0} entries</span>
+          </div>
+          <SalaryDetailTable breakdown={summary?.result.breakdown ?? []} isLoading={isLoading} />
+        </section>
       </section>
-    </section>
+    </PullToRefresh>
   )
 }
 

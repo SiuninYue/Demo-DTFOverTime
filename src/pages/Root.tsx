@@ -2,11 +2,13 @@ import { Outlet, useLocation, useNavigation } from 'react-router-dom'
 import BottomNav from '@/components/common/BottomNav'
 import '@/App.css'
 
+import { CalendarDays, Home, PanelsTopLeft, Wallet2 } from 'lucide-react'
+
 const bottomNavItems = [
-  { to: '/', label: 'Home', icon: '🏠', exact: true },
-  { to: '/calendar', label: 'Calendar', icon: '🗓️' },
-  { to: '/salary', label: 'Salary', icon: '💰' },
-  { to: '/more', label: 'More', icon: '⋮' },
+  { to: '/', label: 'Home', icon: <Home className="h-6 w-6" strokeWidth={2.4} />, exact: true },
+  { to: '/calendar', label: 'Calendar', icon: <CalendarDays className="h-6 w-6" strokeWidth={2.3} /> },
+  { to: '/salary', label: 'Salary', icon: <Wallet2 className="h-6 w-6" strokeWidth={2.3} /> },
+  { to: '/more', label: 'More', icon: <PanelsTopLeft className="h-6 w-6" strokeWidth={2.3} /> },
 ]
 
 const resolveSectionTitle = (pathname: string) => {

@@ -1,12 +1,13 @@
 import { useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import PullToRefresh from '@/components/common/PullToRefresh'
 import SalarySummaryCard from '@/components/salary/SalarySummaryCard'
 import SalaryBreakdown from '@/components/salary/SalaryBreakdown'
 import OvertimeWarning from '@/components/salary/OvertimeWarning'
 import { useSalary, DEMO_EMPLOYEE_ID } from '@/hooks/useSalary'
 import { useSchedule } from '@/hooks/useSchedule'
-import { formatDate } from '@/utils/formatting'
 import { useAuthStore } from '@/store/authStore'
+import { formatDate } from '@/utils/formatting'
 
 const getCurrentMonthKey = () => {
   const now = new Date()
@@ -15,106 +16,230 @@ const getCurrentMonthKey = () => {
 
 const getTodayKey = () => new Date().toISOString().slice(0, 10)
 
+const SkeletonCard = () => (
+  <div className="animate-pulse rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+    <div className="mb-6 h-4 w-32 rounded bg-slate-100" />
+    <div className="mb-2 h-8 w-48 rounded bg-slate-100" />
+    <div className="space-y-3">
+      <div className="h-3 rounded bg-slate-100" />
+      <div className="h-3 rounded bg-slate-100" />
+      <div className="h-3 w-1/2 rounded bg-slate-100" />
+    </div>
+  </div>
+)
+
+const SkeletonListItem = () => (
+  <div className="flex items-center gap-4 rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm animate-pulse">
+    <div className="h-12 w-12 rounded-xl bg-slate-100" />
+    <div className="flex-1 space-y-2">
+      <div className="h-3 w-1/3 rounded bg-slate-100" />
+      <div className="h-3 w-1/2 rounded bg-slate-100" />
+    </div>
+  </div>
+)
+
 function HomePage() {
   const navigate = useNavigate()
+  const user = useAuthStore((state) => state.user)
   const month = getCurrentMonthKey()
   const salaryRoute = `/salary/${month}`
-  const employeeId = useAuthStore((state) => state.user?.id) ?? DEMO_EMPLOYEE_ID
-  const { summary, isLoading, isPersisting, error, refresh } = useSalary({
+  const employeeId = user?.id ?? DEMO_EMPLOYEE_ID
+  const todayKey = getTodayKey()
+
+  const {
+    summary,
+    isLoading,
+    isPersisting,
+    error,
+    refresh: refreshSalary,
+  } = useSalary({
     employeeId,
     month,
   })
-  const scheduleState = useSchedule({ employeeId, month, autoFetch: true })
+  const {
+    schedule,
+    refresh: refreshSchedule,
+    isLoading: isScheduleLoading,
+    error: scheduleError,
+  } = useSchedule({ employeeId, month, autoFetch: true })
 
   useEffect(() => {
-    refresh()
-    scheduleState.refresh()
-    // intentionally run once on entry to keep data fresh
+    Promise.all([refreshSalary(), refreshSchedule()]).catch(() => {})
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const upcomingEntries = useMemo(() => {
-    const schedule = scheduleState.schedule
-    if (!schedule) {
-      return []
-    }
-    const todayKey = getTodayKey()
+    if (!schedule) return []
     return Object.entries(schedule.scheduleData)
       .filter(([date]) => date >= todayKey)
       .sort(([a], [b]) => a.localeCompare(b))
       .slice(0, 3)
-      .map(([date, entry]) => ({ date, entry }))
-  }, [scheduleState.schedule])
+  }, [schedule, todayKey])
 
-  const quickActions = [
-    { label: 'Import roster', action: () => navigate('/schedule/import'), className: 'secondary' },
-    { label: 'Record today', action: () => navigate(`/timecard/${getTodayKey()}`), className: 'button' },
-  ]
+  const todaySchedule = useMemo(() => schedule?.scheduleData[todayKey], [schedule, todayKey])
+
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours()
+    if (hour < 12) return 'Good morning ☀️'
+    if (hour < 18) return 'Good afternoon 🌤️'
+    return 'Good evening 🌙'
+  }, [])
+
+  const handleRefresh = async () => {
+    await Promise.all([refreshSalary(), refreshSchedule()])
+  }
+
+  const displayName = user?.email?.split('@')[0] ?? 'Staff'
 
   return (
-    <section className="home-page">
-      {error && <p className="upload-error">Error: {error}</p>}
-      {scheduleState.error && <p className="upload-error">Error: {scheduleState.error}</p>}
+    <PullToRefresh onRefresh={handleRefresh} className="bg-slate-50">
+      <section className="min-h-screen px-4 py-6 pb-28 md:px-6 md:pb-16">
+        <div className="mx-auto max-w-4xl space-y-6">
+          {(error || scheduleError) && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 shadow-sm">
+              <strong className="font-semibold">Heads up: </strong>
+              {error ?? scheduleError}
+            </div>
+          )}
 
-      <div className="home-grid">
-        <div className="home-grid__main">
-          <SalarySummaryCard
-            summary={summary}
-            isLoading={isLoading}
-            isPersisting={isPersisting}
-            onViewDetails={() => navigate(salaryRoute)}
-          />
+          <header className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-slate-500">{greeting}</p>
+              <h1 className="text-2xl font-bold text-slate-900">{displayName}</h1>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate('/settings')}
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-brand-100 bg-brand-50 text-lg font-semibold text-brand-600 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              aria-label="Open settings"
+            >
+              {displayName.charAt(0).toUpperCase()}
+            </button>
+          </header>
 
-          <div className="home-secondary-grid">
-            <SalaryBreakdown summary={summary} isLoading={isLoading} variant="compact" />
-            <OvertimeWarning summary={summary} />
+          <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+            <button
+              type="button"
+              onClick={() => navigate(`/timecard/${todayKey}`)}
+              className="flex w-full flex-col gap-4 text-left transition-transform active:scale-[0.99]"
+            >
+              <div className="flex items-center justify-between">
+                <span className="rounded-md bg-brand-50 px-2 py-1 text-xs font-semibold uppercase tracking-wide text-brand-600">
+                  Today · {formatDate(todayKey, { format: 'medium' })}
+                </span>
+                <span className="text-slate-400">→</span>
+              </div>
+              <div className="flex items-center gap-4">
+                <div
+                  className={[
+                    'flex h-12 w-12 items-center justify-center rounded-xl text-2xl',
+                    todaySchedule ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-500',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                >
+                  {todaySchedule ? '⏰' : '🏖️'}
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">
+                    {todaySchedule
+                      ? `${todaySchedule.plannedStartTime ?? '--:--'} → ${todaySchedule.plannedEndTime ?? '--:--'}`
+                      : 'No shift scheduled'}
+                  </h3>
+                  <p className="text-sm text-slate-500">
+                    {todaySchedule ? 'Tap to review or log out' : 'Tap to add OT or a quick note'}
+                  </p>
+                </div>
+              </div>
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between px-1">
+              <h2 className="text-lg font-bold text-slate-900">Current month</h2>
+              <button
+                type="button"
+                onClick={() => navigate(salaryRoute)}
+                className="text-sm font-semibold text-brand-600 hover:text-brand-500"
+              >
+                View details
+              </button>
+            </div>
+            <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+              {isLoading ? (
+                <SkeletonCard />
+              ) : (
+                <SalarySummaryCard
+                  summary={summary}
+                  isLoading={isLoading}
+                  isPersisting={isPersisting}
+                />
+              )}
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <SalaryBreakdown summary={summary} isLoading={isLoading} variant="compact" />
+              <OvertimeWarning summary={summary} />
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between px-1">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Schedule</p>
+                <h3 className="text-lg font-bold text-slate-900">Coming up</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate('/calendar')}
+                className="text-sm font-semibold text-brand-600 hover:text-brand-500"
+              >
+                Open calendar
+              </button>
+            </div>
+            <div className="space-y-3">
+              {isScheduleLoading && (
+                <>
+                  <SkeletonListItem />
+                  <SkeletonListItem />
+                </>
+              )}
+              {!isScheduleLoading && upcomingEntries.length === 0 && (
+                <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-6 text-center text-slate-500 shadow-sm">
+                  No upcoming shifts. Import a roster to populate your calendar.
+                </div>
+              )}
+              {!isScheduleLoading &&
+                upcomingEntries.map(([date, entry]) => (
+                  <button
+                    key={date}
+                    type="button"
+                    onClick={() => navigate(`/timecard/${date}`)}
+                    className="flex w-full items-center justify-between rounded-2xl border border-slate-100 bg-white px-4 py-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">
+                        {formatDate(date, { format: 'medium' })}
+                      </p>
+                      <p className="text-xs text-slate-500">{entry?.type ?? 'No type recorded'}</p>
+                    </div>
+                    <div className="text-sm font-semibold text-slate-700">
+                      {entry?.plannedStartTime
+                        ? `${entry.plannedStartTime} → ${entry?.plannedEndTime ?? '--:--'}`
+                        : '--'}
+                    </div>
+                  </button>
+                ))}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-100 bg-white px-6 py-6 text-center shadow-sm">
+            <p className="text-3xl">🎉</p>
+            <p className="mt-2 text-base font-semibold text-slate-800">All caught up</p>
+            <p className="text-sm text-slate-500">No missing timecards or alerts.</p>
           </div>
         </div>
-
-        <aside className="home-grid__sidebar">
-          <div className="home-card">
-            <div className="home-card__header">
-              <h3>Quick actions</h3>
-            </div>
-            <div className="home-quick-actions">
-              {quickActions.map((action) => (
-                <button
-                  key={action.label}
-                  type="button"
-                  className={action.className}
-                  onClick={action.action}
-                >
-                  {action.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="home-card">
-            <div className="home-card__header">
-              <h3>Upcoming schedule</h3>
-              {scheduleState.isLoading && <span className="text-muted">Syncing...</span>}
-            </div>
-            {!upcomingEntries.length && !scheduleState.isLoading && (
-              <p className="text-muted">No upcoming shifts on file. Import a roster to populate this list.</p>
-            )}
-            <ul className="home-calendar-list">
-              {upcomingEntries.map(({ date, entry }) => (
-                <li key={date}>
-                  <div>
-                    <p className="home-calendar-list__date">{formatDate(date, { format: 'medium' })}</p>
-                    <small className="text-muted">{entry?.type ?? '—'}</small>
-                  </div>
-                  <div className="home-calendar-list__slot">
-                    {entry?.plannedStartTime ? `${entry.plannedStartTime} — ${entry?.plannedEndTime ?? '--'}` : '—'}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </aside>
-      </div>
-    </section>
+      </section>
+    </PullToRefresh>
   )
 }
 

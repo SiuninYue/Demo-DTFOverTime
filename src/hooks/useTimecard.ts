@@ -31,6 +31,7 @@ interface UseTimecardResult {
   setDayType: (dayType: DayType) => void
   normalHours: number
   resetToSchedule: () => void
+  refresh: () => Promise<void>
   save: () => Promise<TimeRecord | null>
   remove: () => Promise<void>
 }
@@ -213,6 +214,10 @@ export const useTimecard = ({ employeeId, date }: UseTimecardOptions): UseTimeca
     setHasChanges(true)
   }, [date, scheduleEntry])
 
+  const refresh = useCallback(async () => {
+    await loadRecord()
+  }, [loadRecord])
+
   const save = useCallback(async () => {
     if (!hasChanges) {
       return record.id ? ({ employeeId, ...record } as TimeRecord) : null
@@ -276,7 +281,7 @@ export const useTimecard = ({ employeeId, date }: UseTimecardOptions): UseTimeca
     } finally {
       setIsSaving(false)
     }
-  }, [date, record.id, scheduleEntry, store])
+  }, [date, employeeId, record.id, scheduleEntry, store])
 
   return {
     record,
@@ -289,6 +294,7 @@ export const useTimecard = ({ employeeId, date }: UseTimecardOptions): UseTimeca
     updateField,
     setDayType,
     resetToSchedule,
+    refresh,
     normalHours,
     save,
     remove,

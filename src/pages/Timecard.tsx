@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import PullToRefresh from '@/components/common/PullToRefresh'
 import TimeInput from '@/components/timecard/TimeInput'
 import RestDayTimecardForm from '@/components/timecard/RestDayTimecardForm'
 import PHTimecardForm from '@/components/timecard/PHTimecardForm'
@@ -35,7 +36,7 @@ function TimecardPage() {
     navigate(`/timecard/${date}`, { replace: true })
   }
 
-  const { record, scheduleEntry, preview, updateField, setDayType, resetToSchedule, save, remove, isLoading, isSaving, error, hasChanges, normalHours } =
+  const { record, scheduleEntry, preview, updateField, setDayType, resetToSchedule, refresh, save, remove, isLoading, isSaving, error, hasChanges, normalHours } =
     useTimecard({
       employeeId,
       date,
@@ -123,192 +124,194 @@ function TimecardPage() {
   const interactionDisabled = isLoading || isSaving || !isOnline
 
   return (
-    <section className="timecard-page">
-      {!isOnline && (
-        <p className="offline-banner">
-          Offline mode: You can review timecards, but saving or deleting requires a connection.
-        </p>
-      )}
-      <div className="timecard-toolbar">
-        <div>
-          <p className="text-muted">Timecard date</p>
-          <h1>{date}</h1>
-          {plannedWindow && <p className="text-muted">Planned shift: {plannedWindow}</p>}
+    <PullToRefresh onRefresh={refresh}>
+      <section className="timecard-page">
+        {!isOnline && (
+          <p className="offline-banner">
+            Offline mode: You can review timecards, but saving or deleting requires a connection.
+          </p>
+        )}
+        <div className="timecard-toolbar">
+          <div>
+            <p className="text-muted">Timecard date</p>
+            <h1>{date}</h1>
+            {plannedWindow && <p className="text-muted">Planned shift: {plannedWindow}</p>}
+          </div>
+          <div className="timecard-controls">
+            <button type="button" className="ghost" onClick={() => navigate(`/timecard/${shiftDate(date, -1)}`)}>
+              Previous Day
+            </button>
+            <button type="button" className="ghost" onClick={() => navigate(`/timecard/${shiftDate(date, 1)}`)}>
+              Next Day
+            </button>
+            <button type="button" className="ghost" onClick={() => resetToSchedule()} disabled={isLoading}>
+              Reset to Schedule
+            </button>
+          </div>
         </div>
-        <div className="timecard-controls">
-          <button type="button" className="ghost" onClick={() => navigate(`/timecard/${shiftDate(date, -1)}`)}>
-            Previous Day
-          </button>
-          <button type="button" className="ghost" onClick={() => navigate(`/timecard/${shiftDate(date, 1)}`)}>
-            Next Day
-          </button>
-          <button type="button" className="ghost" onClick={() => resetToSchedule()} disabled={isLoading}>
-            Reset to Schedule
-          </button>
-        </div>
-      </div>
 
-      {error && <p className="upload-error">Error: {error}</p>}
+        {error && <p className="upload-error">Error: {error}</p>}
 
-      <form
-        className="timecard-form"
-        onSubmit={(event) => {
-          event.preventDefault()
-          handleSaveAndExit().catch(() => {})
-        }}
-      >
-        <label className="time-input">
-          <span className="time-input__label">Day Type</span>
-          <select
-            value={getDayTypeSelectValue()}
-            onChange={(event) => {
-              const value = event.target.value
-              if (value === UNPAID_MC_OPTION) {
-                setDayType(DayType.MEDICAL_LEAVE)
-                setUnpaidMc(true)
-                setUnpaidLeave(false)
-              } else if (value === UNPAID_LEAVE_OPTION) {
-                setDayType(DayType.ANNUAL_LEAVE)
-                setUnpaidLeave(true)
-                setUnpaidMc(false)
-              } else {
-                setUnpaidMc(false)
-                setUnpaidLeave(false)
-                setDayType(value as DayType)
-              }
-            }}
-            disabled={interactionDisabled}
-          >
-            <option value={DayType.NORMAL_WORK_DAY}>Normal Work Day</option>
-            <option value={DayType.REST_DAY}>Rest Day</option>
-            <option value={DayType.OFF_DAY}>Off Day</option>
-            <option value={DayType.PUBLIC_HOLIDAY}>Public Holiday</option>
-            <option value={DayType.ANNUAL_LEAVE}>Annual Leave (Paid)</option>
-            <option value={DayType.MEDICAL_LEAVE}>Medical Leave (Paid)</option>
-            {isUnpaidMc && (
-              <option value={UNPAID_MC_OPTION} disabled>
-                Medical Leave (Unpaid)
-              </option>
-            )}
-            {isUnpaidLeave && (
-              <option value={UNPAID_LEAVE_OPTION} disabled>
-                Unpaid Leave
-              </option>
-            )}
-          </select>
-        </label>
-
-        <TimeInput
-          label="Actual Start"
-          value={record.actualStartTime}
-          onChange={(value) => handleFieldChange('actualStartTime', value)}
-          helperText="Tap to adjust actual clock-in time"
-          disabled={interactionDisabled}
-        />
-
-        <TimeInput
-          label="Actual End"
-          value={record.actualEndTime}
-          onChange={(value) => handleFieldChange('actualEndTime', value)}
-          helperText="Required to compute hours"
-          disabled={interactionDisabled}
-        />
-
-        <label className="time-input">
-          <span className="time-input__label">Rest Hours</span>
-          <input
-            type="number"
-            min={0}
-            max={5}
-            step={0.25}
-            value={record.restHours}
-            onChange={(event) => handleFieldChange('restHours', Number(event.target.value))}
-            disabled={interactionDisabled}
-          />
-        </label>
-
-        <label className="toggle">
-          <input
-            type="checkbox"
-            checked={record.spansMidnight ?? false}
-            onChange={(event) => handleFieldChange('spansMidnight', event.target.checked)}
-            disabled={interactionDisabled}
-          />
-          <span>Shift spans midnight</span>
-        </label>
-
-      <label className="time-input" style={{ gridColumn: '1 / -1' }}>
-        <span className="time-input__label">Notes</span>
-        <textarea
-          value={stripInternalTags(record.notes)}
-          onChange={(event) => {
-            const body = event.target.value ?? ''
-            const nextNotes = joinNotesWithTags(body, isUnpaidMc, isUnpaidLeave)
-            handleFieldChange('notes', nextNotes || undefined)
+        <form
+          className="timecard-form"
+          onSubmit={(event) => {
+            event.preventDefault()
+            handleSaveAndExit().catch(() => {})
           }}
-          rows={3}
-          disabled={interactionDisabled}
-        />
-      </label>
-
-      {record.dayType === DayType.MEDICAL_LEAVE && (
-        <label className="toggle" style={{ gridColumn: '1 / -1' }}>
-          <input
-            type="checkbox"
-            checked={isUnpaidMc}
-            onChange={(event) => setUnpaidMc(event.target.checked)}
-            disabled={interactionDisabled}
-          />
-          <span>Mark as unpaid MC</span>
-        </label>
-      )}
-      {record.dayType === DayType.ANNUAL_LEAVE && (
-        <label className="toggle" style={{ gridColumn: '1 / -1' }}>
-          <input
-            type="checkbox"
-            checked={isUnpaidLeave}
-            onChange={(event) => setUnpaidLeave(event.target.checked)}
-            disabled={interactionDisabled}
-          />
-          <span>Mark as unpaid leave</span>
-        </label>
-      )}
-      </form>
-
-      {isRestOrOffDay && (
-        <RestDayTimecardForm
-          dayType={record.dayType}
-          isStatutoryRestDay={isStatutoryRestDay}
-          isEmployerRequested={record.isEmployerRequested ?? true}
-          disabled={interactionDisabled}
-          onChange={({ dayType, isStatutoryRestDay: nextStatRestDay, isEmployerRequested }) => {
-            setDayType(dayType)
-            handleFieldChange('isStatutoryRestDay', nextStatRestDay)
-            handleFieldChange('isEmployerRequested', isEmployerRequested)
-          }}
-        />
-      )}
-
-      {isPublicHoliday && <PHTimecardForm normalHours={normalHours} />}
-
-      <SalaryPreview preview={preview} dayType={record.dayType} isSaving={isSaving} />
-
-      <div className="timecard-controls">
-        <button
-          type="button"
-          className="secondary"
-          disabled={isSaving || !hasChanges || !isOnline}
-          onClick={() => handleSaveAndExit().catch(() => {})}
         >
-          Save &amp; Return Home
-        </button>
-        <button type="button" className="ghost" onClick={() => handleDelete().catch(() => {})} disabled={isSaving || !isOnline}>
-          Delete Record
-        </button>
-      </div>
+          <label className="time-input">
+            <span className="time-input__label">Day Type</span>
+            <select
+              value={getDayTypeSelectValue()}
+              onChange={(event) => {
+                const value = event.target.value
+                if (value === UNPAID_MC_OPTION) {
+                  setDayType(DayType.MEDICAL_LEAVE)
+                  setUnpaidMc(true)
+                  setUnpaidLeave(false)
+                } else if (value === UNPAID_LEAVE_OPTION) {
+                  setDayType(DayType.ANNUAL_LEAVE)
+                  setUnpaidLeave(true)
+                  setUnpaidMc(false)
+                } else {
+                  setUnpaidMc(false)
+                  setUnpaidLeave(false)
+                  setDayType(value as DayType)
+                }
+              }}
+              disabled={interactionDisabled}
+            >
+              <option value={DayType.NORMAL_WORK_DAY}>Normal Work Day</option>
+              <option value={DayType.REST_DAY}>Rest Day</option>
+              <option value={DayType.OFF_DAY}>Off Day</option>
+              <option value={DayType.PUBLIC_HOLIDAY}>Public Holiday</option>
+              <option value={DayType.ANNUAL_LEAVE}>Annual Leave (Paid)</option>
+              <option value={DayType.MEDICAL_LEAVE}>Medical Leave (Paid)</option>
+              {isUnpaidMc && (
+                <option value={UNPAID_MC_OPTION} disabled>
+                  Medical Leave (Unpaid)
+                </option>
+              )}
+              {isUnpaidLeave && (
+                <option value={UNPAID_LEAVE_OPTION} disabled>
+                  Unpaid Leave
+                </option>
+              )}
+            </select>
+          </label>
 
-      {isSaving && <Loading label="Saving timecard" description="Applying MOM compliance rules" />}
-    </section>
+          <TimeInput
+            label="Actual Start"
+            value={record.actualStartTime}
+            onChange={(value) => handleFieldChange('actualStartTime', value)}
+            helperText="Tap to adjust actual clock-in time"
+            disabled={interactionDisabled}
+          />
+
+          <TimeInput
+            label="Actual End"
+            value={record.actualEndTime}
+            onChange={(value) => handleFieldChange('actualEndTime', value)}
+            helperText="Required to compute hours"
+            disabled={interactionDisabled}
+          />
+
+          <label className="time-input">
+            <span className="time-input__label">Rest Hours</span>
+            <input
+              type="number"
+              min={0}
+              max={5}
+              step={0.25}
+              value={record.restHours}
+              onChange={(event) => handleFieldChange('restHours', Number(event.target.value))}
+              disabled={interactionDisabled}
+            />
+          </label>
+
+          <label className="toggle">
+            <input
+              type="checkbox"
+              checked={record.spansMidnight ?? false}
+              onChange={(event) => handleFieldChange('spansMidnight', event.target.checked)}
+              disabled={interactionDisabled}
+            />
+            <span>Shift spans midnight</span>
+          </label>
+
+        <label className="time-input" style={{ gridColumn: '1 / -1' }}>
+          <span className="time-input__label">Notes</span>
+          <textarea
+            value={stripInternalTags(record.notes)}
+            onChange={(event) => {
+              const body = event.target.value ?? ''
+              const nextNotes = joinNotesWithTags(body, isUnpaidMc, isUnpaidLeave)
+              handleFieldChange('notes', nextNotes || undefined)
+            }}
+            rows={3}
+            disabled={interactionDisabled}
+          />
+        </label>
+
+        {record.dayType === DayType.MEDICAL_LEAVE && (
+          <label className="toggle" style={{ gridColumn: '1 / -1' }}>
+            <input
+              type="checkbox"
+              checked={isUnpaidMc}
+              onChange={(event) => setUnpaidMc(event.target.checked)}
+              disabled={interactionDisabled}
+            />
+            <span>Mark as unpaid MC</span>
+          </label>
+        )}
+        {record.dayType === DayType.ANNUAL_LEAVE && (
+          <label className="toggle" style={{ gridColumn: '1 / -1' }}>
+            <input
+              type="checkbox"
+              checked={isUnpaidLeave}
+              onChange={(event) => setUnpaidLeave(event.target.checked)}
+              disabled={interactionDisabled}
+            />
+            <span>Mark as unpaid leave</span>
+          </label>
+        )}
+        </form>
+
+        {isRestOrOffDay && (
+          <RestDayTimecardForm
+            dayType={record.dayType}
+            isStatutoryRestDay={isStatutoryRestDay}
+            isEmployerRequested={record.isEmployerRequested ?? true}
+            disabled={interactionDisabled}
+            onChange={({ dayType, isStatutoryRestDay: nextStatRestDay, isEmployerRequested }) => {
+              setDayType(dayType)
+              handleFieldChange('isStatutoryRestDay', nextStatRestDay)
+              handleFieldChange('isEmployerRequested', isEmployerRequested)
+            }}
+          />
+        )}
+
+        {isPublicHoliday && <PHTimecardForm normalHours={normalHours} />}
+
+        <SalaryPreview preview={preview} dayType={record.dayType} isSaving={isSaving} />
+
+        <div className="timecard-controls">
+          <button
+            type="button"
+            className="secondary"
+            disabled={isSaving || !hasChanges || !isOnline}
+            onClick={() => handleSaveAndExit().catch(() => {})}
+          >
+            Save &amp; Return Home
+          </button>
+          <button type="button" className="ghost" onClick={() => handleDelete().catch(() => {})} disabled={isSaving || !isOnline}>
+            Delete Record
+          </button>
+        </div>
+
+        {isSaving && <Loading label="Saving timecard" description="Applying MOM compliance rules" />}
+      </section>
+    </PullToRefresh>
   )
 }
 

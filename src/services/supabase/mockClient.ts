@@ -348,7 +348,7 @@ const loadTables = (): Record<TableName, TableRow<TableName>[]> => {
   try {
     const parsed = JSON.parse(raw) as Record<TableName, TableRow<TableName>[]>
     return { ...defaultTables(), ...parsed }
-  } catch (_err) {
+  } catch {
     return defaultTables()
   }
 }
@@ -374,7 +374,7 @@ const loadAuthState = (): { users: StoredUser[]; session: Session | null } => {
       users: parsed.users ?? [],
       session: parsed.session ?? null,
     }
-  } catch (_err) {
+  } catch {
     return { users: [], session: null }
   }
 }

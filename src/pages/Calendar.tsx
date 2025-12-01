@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import PullToRefresh from '@/components/common/PullToRefresh'
 import MonthCalendar from '@/components/calendar/MonthCalendar'
 import DayDetailModal from '@/components/calendar/DayDetailModal'
 import ScheduleImageViewer from '@/components/calendar/ScheduleImageViewer'
@@ -214,71 +215,80 @@ function CalendarPage() {
     }
   }
 
+  const handleRefresh = async () => {
+    await Promise.all([
+      refresh(),
+      loadMonthRecords(monthId, () => getMonthlyRecords(employeeId, monthId)),
+    ])
+  }
+
   return (
-    <section className="calendar-page">
-      {isOffline && (
-        <div className="offline-banner">Offline mode: showing cached schedule data</div>
-      )}
+    <PullToRefresh onRefresh={handleRefresh}>
+      <section className="calendar-page">
+        {isOffline && (
+          <div className="offline-banner">Offline mode: showing cached schedule data</div>
+        )}
 
-      <div className="calendar-toolbar">
-        <div>
-          <p className="text-muted">Current month</p>
-          <h1>{monthId}</h1>
+        <div className="calendar-toolbar">
+          <div>
+            <p className="text-muted">Current month</p>
+            <h1>{monthId}</h1>
+          </div>
+          <div className="calendar-toolbar__actions">
+            <button type="button" className="secondary" onClick={() => setViewerOpen(true)}>
+              ?? View Roster
+            </button>
+            <button type="button" className="ghost" onClick={() => handleMonthChange('prev')}>
+              ? Previous
+            </button>
+            <button type="button" className="ghost" onClick={() => handleMonthChange('next')}>
+              Next ?
+            </button>
+          </div>
         </div>
-        <div className="calendar-toolbar__actions">
-          <button type="button" className="secondary" onClick={() => setViewerOpen(true)}>
-            📸 View Roster
-          </button>
-          <button type="button" className="ghost" onClick={() => handleMonthChange('prev')}>
-            ◀ Previous
-          </button>
-          <button type="button" className="ghost" onClick={() => handleMonthChange('next')}>
-            Next ▶
-          </button>
-        </div>
-      </div>
 
-      {error && <p className="upload-error">Error: {error}</p>}
-      {isLoading && <Loading label="Refreshing roster" description="Fetching schedule data" />}
+        {error && <p className="upload-error">Error: {error}</p>}
+        {isLoading && <Loading label="Refreshing roster" description="Fetching schedule data" />}
 
-      {!isLoading && !hasData && (
-        <div className="empty-state">
-          <p>No schedule has been imported for this month.</p>
-          <button type="button" className="secondary" onClick={handleImportRedirect}>
-            Import Schedule
-          </button>
-        </div>
-      )}
+        {!isLoading && !hasData && (
+          <div className="empty-state">
+            <p>No schedule has been imported for this month.</p>
+            <button type="button" className="secondary" onClick={handleImportRedirect}>
+              Import Schedule
+            </button>
+          </div>
+        )}
 
-      <MonthCalendar
-        month={monthId}
-        schedule={schedule ?? undefined}
-        timeRecords={timeRecords}
-        selectedDate={detailDate}
-        onSelectDate={handleSelectDate}
-        onQuickAction={handleQuickAction}
-        onMonthChange={handleMonthChange}
-      />
+        <MonthCalendar
+          month={monthId}
+          schedule={schedule ?? undefined}
+          timeRecords={timeRecords}
+          selectedDate={detailDate}
+          onSelectDate={handleSelectDate}
+          onQuickAction={handleQuickAction}
+          onMonthChange={handleMonthChange}
+        />
 
-      <DayDetailModal
-        date={detailDate ?? ''}
-        schedule={selectedEntry}
-        isOpen={isDetailOpen && Boolean(detailDate)}
-        onClose={() => setDetailOpen(false)}
-        onViewImage={() => setViewerOpen(true)}
-        onEditSchedule={openScheduleEditor}
-        onRecordTimecard={(date) => navigate(`/timecard/${date}`)}
-        onCopyDetails={copyScheduleDetails}
-      />
+        <DayDetailModal
+          date={detailDate ?? ''}
+          schedule={selectedEntry}
+          isOpen={isDetailOpen && Boolean(detailDate)}
+          onClose={() => setDetailOpen(false)}
+          onViewImage={() => setViewerOpen(true)}
+          onEditSchedule={openScheduleEditor}
+          onRecordTimecard={(date) => navigate(`/timecard/${date}`)}
+          onCopyDetails={copyScheduleDetails}
+        />
 
-      <ScheduleImageViewer
-        imageUrl={schedule?.originalImageUrl ?? null}
-        fileName={schedule?.imageFileName}
-        open={isViewerOpen && Boolean(schedule?.originalImageUrl)}
-        onClose={() => setViewerOpen(false)}
-      />
+        <ScheduleImageViewer
+          imageUrl={schedule?.originalImageUrl ?? null}
+          fileName={schedule?.imageFileName}
+          open={isViewerOpen && Boolean(schedule?.originalImageUrl)}
+          onClose={() => setViewerOpen(false)}
+        />
 
-    </section>
+      </section>
+    </PullToRefresh>
   )
 }
 

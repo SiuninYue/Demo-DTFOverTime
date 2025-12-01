@@ -300,7 +300,7 @@ export const useSalary = ({
         console.timeEnd(perfLabel)
       }
     }
-  }, [records, profile, mcDays, unpaidLeaveDays, normalizedMonth.year, normalizedMonth.month])
+  }, [records, profile, mcDays, unpaidLeaveDays, normalizedMonth.key, normalizedMonth.month, normalizedMonth.year])
 
   const summary: SalaryOverview | undefined = useMemo(() => {
     const result =

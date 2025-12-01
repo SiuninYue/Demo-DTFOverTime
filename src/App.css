@@ -382,6 +382,45 @@ button:disabled {
   }
 }
 
+/* Floating dock styles (BottomNav) */
+.floating-dock {
+  position: fixed;
+  inset: auto 0 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 50;
+}
+
+.floating-dock__nav {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  width: min(42rem, calc(100% - 1.5rem));
+  margin-bottom: clamp(0.5rem, 1vw, 1rem);
+  padding: 0.35rem 0.75rem calc(0.35rem + env(safe-area-inset-bottom, 0px));
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 18px;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.15);
+}
+
+.floating-dock__item {
+  text-decoration: none;
+}
+
+.floating-dock__item span {
+  text-decoration: none;
+}
+
+@media (min-width: 960px) {
+  .floating-dock[data-hide-desktop='true'] {
+    display: none;
+  }
+}
+
 .table-wrapper {
   overflow-x: auto;
   margin-top: 1rem;
