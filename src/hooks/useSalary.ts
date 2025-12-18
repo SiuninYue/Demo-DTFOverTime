@@ -64,7 +64,7 @@ const buildMonthMeta = (value: string) => {
   }
   const year = Number(match[1])
   const month = Number(match[2])
-  const label = new Intl.DateTimeFormat('en-SG', {
+  const label = new Intl.DateTimeFormat('zh-SG', {
     month: 'long',
     year: 'numeric',
   }).format(new Date(Date.UTC(year, month - 1, 1)))
@@ -83,11 +83,11 @@ const computePayDate = (year: number, month: number, payDay: number): Date => {
 const formatCountdown = (payDate: Date): { payDateISO: string; daysUntil: number; label: string } => {
   const diffDays = Math.ceil((payDate.getTime() - Date.now()) / msPerDay)
   const daysUntil = Math.max(0, diffDays)
-  let label = 'Payday today'
+  let label = '今天发薪'
   if (daysUntil > 0) {
-    label = daysUntil === 1 ? '1 day until payday' : `${daysUntil} days until payday`
+    label = daysUntil === 1 ? '距发薪日还有 1 天' : `距发薪日还有 ${daysUntil} 天`
   } else if (diffDays < 0) {
-    label = 'Salary paid'
+    label = '已发薪'
   }
   return { payDateISO: payDate.toISOString().slice(0, 10), daysUntil, label }
 }
@@ -95,7 +95,7 @@ const formatCountdown = (payDate: Date): { payDateISO: string; daysUntil: number
 const fallbackProfile: Employee = {
   id: '00000000-0000-0000-0000-000000000000',
   email: 'demo@dtf.sg',
-  name: 'Demo Employee',
+  name: '示例员工',
   baseSalary: 1770,
   attendanceBonus: 200,
   workScheduleType: WorkScheduleType.FIVE_DAY,
@@ -210,7 +210,7 @@ export const useSalary = ({
     loadMonthRecords(normalizedMonth.key, () => getMonthlyRecords(employeeId, normalizedMonth.key))
       .catch((error) => {
         const message =
-          error instanceof Error ? error.message : 'Failed to load timecard records.'
+          error instanceof Error ? error.message : '加载打卡记录失败。'
         setCalcError((current) => current ?? message)
       })
       .finally(() => {
@@ -230,7 +230,7 @@ export const useSalary = ({
       })
       .catch((error) => {
         if (active) {
-          setMcError(error instanceof Error ? error.message : 'Failed to load MC records.')
+          setMcError(error instanceof Error ? error.message : '加载病假记录失败。')
           setMcDays(0)
         }
       })
@@ -256,7 +256,7 @@ export const useSalary = ({
       })
       .catch((error) => {
         if (active) {
-          setRemoteError(error instanceof Error ? error.message : 'Failed to load salary cache.')
+          setRemoteError(error instanceof Error ? error.message : '加载工资缓存失败。')
           setRemoteSummary(null)
         }
       })
@@ -291,7 +291,7 @@ export const useSalary = ({
       })
       setCalcResult(result)
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to calculate salary summary.'
+      const message = error instanceof Error ? error.message : '计算工资汇总失败。'
       setCalcResult(null)
       setCalcError(message)
     } finally {
@@ -388,13 +388,13 @@ export const useSalary = ({
           return
         }
         const message =
-          error instanceof Error ? error.message : 'Failed to save salary summary.'
+          error instanceof Error ? error.message : '保存工资汇总失败。'
         const isRlsBlocked = message.toLowerCase().includes('row-level security')
         if (isRlsBlocked) {
           // Frontend anon key cannot bypass RLS; avoid spamming the UI and retry only when data changes.
           lastPersistSignature.current = signature
           setPersistError(null)
-          console.warn('Monthly salary upsert skipped due to RLS; configure policies or use a service role.')
+          console.warn('月度工资汇总写入因 RLS 被跳过；请配置策略或使用 service role。')
           return
         }
         setPersistError(message)
@@ -432,7 +432,7 @@ export const useSalary = ({
       )
       if (rejected) {
         const reason = rejected.reason
-        const message = reason instanceof Error ? reason.message : 'Refresh failed.'
+        const message = reason instanceof Error ? reason.message : '刷新失败。'
         setCalcError(message)
       }
     } finally {

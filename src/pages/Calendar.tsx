@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ChevronLeft, ChevronRight, Info, Calendar as CalendarIcon, Import } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Info } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 import PullToRefresh from '@/components/common/PullToRefresh'
 import MonthCalendar from '@/components/calendar/MonthCalendar'
@@ -118,28 +118,28 @@ function CalendarPage() {
     const record = timeRecords[targetDate]
     const summary = record
       ? [
-        `Date: ${targetDate}`,
-        `DayType: ${record.dayType}`,
-        record.actualStartTime ? `Start: ${record.actualStartTime}` : null,
-        record.actualEndTime ? `End: ${record.actualEndTime}` : null,
-        `Rest: ${record.restHours ?? 0}`,
-        record.notes ? `Notes: ${record.notes}` : null,
+        `日期：${targetDate}`,
+        `类型：${record.dayType}`,
+        record.actualStartTime ? `开始：${record.actualStartTime}` : null,
+        record.actualEndTime ? `结束：${record.actualEndTime}` : null,
+        `休息：${record.restHours ?? 0}`,
+        record.notes ? `备注：${record.notes}` : null,
       ]
         .filter(Boolean)
         .join('\n')
       : [
-        `Date: ${targetDate}`,
-        entry?.type ? `Type: ${entry.type}` : null,
-        entry?.plannedStartTime ? `Start: ${entry.plannedStartTime}` : null,
-        entry?.plannedEndTime ? `End: ${entry.plannedEndTime}` : null,
-        entry?.notes ? `Notes: ${entry.notes}` : null,
+        `日期：${targetDate}`,
+        entry?.type ? `类型：${entry.type}` : null,
+        entry?.plannedStartTime ? `开始：${entry.plannedStartTime}` : null,
+        entry?.plannedEndTime ? `结束：${entry.plannedEndTime}` : null,
+        entry?.notes ? `备注：${entry.notes}` : null,
       ]
         .filter(Boolean)
         .join('\n')
     try {
-      await navigator.clipboard.writeText(summary || `Date: ${targetDate}`)
+      await navigator.clipboard.writeText(summary || `日期：${targetDate}`)
       showToast({
-        title: 'Copied schedule details',
+        title: '已复制',
         description: targetDate,
         variant: 'success',
       })
@@ -147,8 +147,8 @@ function CalendarPage() {
       clipboardRecordRef.current = timeRecords[targetDate] ?? null
     } catch {
       showToast({
-        title: 'Copy failed',
-        description: 'Unable to copy automatically. Please copy manually.',
+        title: '复制失败',
+        description: '无法自动复制，请手动复制。',
         variant: 'warning',
       })
     }
@@ -158,8 +158,8 @@ function CalendarPage() {
     const sourceDate = clipboardRef.current
     if (!sourceDate || (!clipboardRecordRef.current && !timeRecords[sourceDate])) {
       showToast({
-        title: 'No copied entry',
-        description: 'Copy Details first, then paste into another day.',
+        title: '没有可粘贴的内容',
+        description: '请先复制，再粘贴到其他日期。',
         variant: 'warning',
       })
       return
@@ -167,8 +167,8 @@ function CalendarPage() {
     const sourceRecord = timeRecords[sourceDate] ?? clipboardRecordRef.current
     if (!sourceRecord) {
       showToast({
-        title: 'Nothing to paste',
-        description: 'Copied day has no timecard to paste.',
+        title: '没有可粘贴的内容',
+        description: '已复制的日期没有打卡记录。',
         variant: 'warning',
       })
       return
@@ -199,14 +199,14 @@ function CalendarPage() {
 
       await loadMonthRecords(monthId, () => getMonthlyRecords(employeeId, monthId))
       showToast({
-        title: 'Pasted timecard details',
+        title: '已粘贴',
         description: targetDate,
         variant: 'success',
       })
     } catch {
       showToast({
-        title: 'Paste failed',
-        description: 'Unable to apply copied timecard.',
+        title: '粘贴失败',
+        description: '无法应用已复制的打卡记录。',
         variant: 'error',
       })
     }
@@ -223,12 +223,12 @@ function CalendarPage() {
     <PullToRefresh onRefresh={handleRefresh}>
       <section className="calendar-page">
         {isOffline && (
-          <div className="offline-banner">Offline mode: showing cached schedule data</div>
+          <div className="offline-banner">离线模式：正在显示缓存的排班数据</div>
         )}
 
         <div className="flex items-center justify-between mb-6">
           <div>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400 font-medium">Current month</p>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400 font-medium">当前月份</p>
             <h1 className="text-3xl font-bold tracking-tight text-neutral-900 dark:text-white mt-0.5">{monthId}</h1>
           </div>
           <div className="flex items-center gap-2">
@@ -236,7 +236,7 @@ function CalendarPage() {
               type="button"
               className="inline-flex items-center justify-center rounded-full w-10 h-10 bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700 transition"
               onClick={() => handleMonthChange('prev')}
-              aria-label="Previous Month"
+              aria-label="上个月"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -244,7 +244,7 @@ function CalendarPage() {
               type="button"
               className="inline-flex items-center justify-center rounded-full w-10 h-10 bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700 transition"
               onClick={() => handleMonthChange('next')}
-              aria-label="Next Month"
+              aria-label="下个月"
             >
               <ChevronRight className="w-5 h-5" />
             </button>
@@ -254,7 +254,7 @@ function CalendarPage() {
               onClick={() => setViewerOpen(true)}
             >
               <ImageIcon className="w-4 h-4" />
-              View Roster
+              查看排班图
             </button> */}
           </div>
         </div>
@@ -266,7 +266,7 @@ function CalendarPage() {
           </div>
         )}
 
-        {isLoading && <Loading label="Refreshing roster" description="Fetching schedule data" />}
+        {isLoading && <Loading label="正在刷新排班" description="正在获取排班数据" />}
 
         <MonthCalendar
           month={monthId}

@@ -47,22 +47,22 @@ function ScheduleImportPage() {
       })
       setSchedule(saved)
       setManualStatus('success')
-      setStatusMessage('Schedule saved successfully.')
+      setStatusMessage('排班已保存。')
       showToast({
-        title: 'Schedule saved',
-        description: `${month} schedule is ready.`,
+        title: '已保存排班',
+        description: `${month} 排班已就绪。`,
         variant: 'success',
       })
       navigate(`/calendar/${month}`)
     } catch (error) {
       setManualStatus('error')
       setStatusMessage(
-        error instanceof Error ? error.message : 'Failed to save schedule. Please retry.',
+        error instanceof Error ? error.message : '保存排班失败，请重试。',
       )
       showToast({
-        title: 'Save failed',
+        title: '保存失败',
         description:
-          error instanceof Error ? error.message : 'Unable to persist schedule. Please retry.',
+          error instanceof Error ? error.message : '无法保存排班，请重试。',
         variant: 'error',
       })
       throw error
@@ -72,12 +72,12 @@ function ScheduleImportPage() {
   return (
     <section className="schedule-import">
       <header className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight text-neutral-900 dark:text-white mb-2">Manual Schedule Entry</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-neutral-900 dark:text-white mb-2">手动录入排班</h1>
         <p className="text-muted mb-4">
-          Enter or edit your schedule below. Use the "Copy" tool to quickly duplicate shifts.
+          在下方录入或编辑排班，可使用“复制”快速复用班次。
         </p>
         <div className="form-control">
-          <label htmlFor="month-input" className="text-sm font-medium mb-1">Target Month</label>
+          <label htmlFor="month-input" className="text-sm font-medium mb-1">目标月份</label>
           <input
             id="month-input"
             type="month"
@@ -90,7 +90,7 @@ function ScheduleImportPage() {
 
       {!isOnline && (
         <p className="offline-banner mb-4">
-          You are offline. Editing and saving is disabled until connection is restored.
+          当前离线，恢复网络连接后才能编辑与保存。
         </p>
       )}
 
@@ -99,7 +99,7 @@ function ScheduleImportPage() {
         isSaving={manualStatus === 'saving'}
         onSubmit={handleScheduleSubmit}
         disabled={!isOnline}
-        disabledReason={!isOnline ? 'Connect to the internet to edit and save schedule entries.' : null}
+        disabledReason={!isOnline ? '请连接网络后再编辑与保存排班。' : null}
       />
     </section>
   )

@@ -31,7 +31,7 @@ const mapRowToRecord = (row: MCRecordRow): MCRecord => ({
 
 const buildMonthRange = (month: string): { start: string; end: string } => {
   if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) {
-    throw new Error(`Invalid month format: ${month}. Expected YYYY-MM.`)
+    throw new Error(`月份格式无效：${month}，应为 YYYY-MM。`)
   }
   const [yearStr, monthStr] = month.split('-')
   const year = Number(yearStr)
@@ -57,7 +57,7 @@ export const getMonthlyMcRecords = async (
     .order('date', { ascending: true })
 
   if (error) {
-    throw new Error(`Failed to load MC records: ${error.message}`)
+    throw new Error(`加载病假记录失败：${error.message}`)
   }
 
   return (data ?? []).map(mapRowToRecord)
@@ -100,7 +100,7 @@ export const createMcRecord = async (input: CreateMcRecordInput): Promise<MCReco
   const { data, error } = await supabase.from('mc_records').insert(payload).select('*').single()
 
   if (error || !data) {
-    throw new Error(`Failed to create MC record: ${error?.message ?? 'Unknown error'}`)
+    throw new Error(`创建病假记录失败：${error?.message ?? '未知错误'}`)
   }
 
   return mapRowToRecord(data)
@@ -110,7 +110,7 @@ export const deleteMcRecord = async (id: string): Promise<void> => {
   const supabase = getSupabaseClient()
   const { error } = await supabase.from('mc_records').delete().eq('id', id)
   if (error) {
-    throw new Error(`Failed to delete MC record: ${error.message}`)
+    throw new Error(`删除病假记录失败：${error.message}`)
   }
 }
 
@@ -138,7 +138,7 @@ export const upsertMcRecordForDate = async ({
     .single()
 
   if (error || !data) {
-    throw new Error(`Failed to save MC record for ${date}: ${error?.message ?? 'Unknown error'}`)
+    throw new Error(`保存 ${date} 的病假记录失败：${error?.message ?? '未知错误'}`)
   }
 
   return mapRowToRecord(data)
@@ -163,7 +163,7 @@ export const updateMcRecordByDate = async ({
     .maybeSingle()
 
   if (error) {
-    throw new Error(`Failed to update MC record for ${date}: ${error.message}`)
+    throw new Error(`更新 ${date} 的病假记录失败：${error.message}`)
   }
 
   return data ? mapRowToRecord(data) : null
@@ -179,7 +179,7 @@ export const deleteMcRecordByDate = async ({
   const supabase = getSupabaseClient()
   const { error } = await supabase.from('mc_records').delete().eq('employee_id', employeeId).eq('date', date)
   if (error) {
-    throw new Error(`Failed to delete MC record for ${date}: ${error.message}`)
+    throw new Error(`删除 ${date} 的病假记录失败：${error.message}`)
   }
 }
 
@@ -209,7 +209,7 @@ export const getYearlyMcCount = async (employeeId: string, yearInput: number | s
     .lte('date', end)
 
   if (error) {
-    throw new Error(`Failed to load yearly MC count: ${error.message}`)
+    throw new Error(`加载年度病假天数失败：${error.message}`)
   }
 
   return (data ?? []).reduce((total, row) => total + Math.max(0, row.days ?? 0), 0)

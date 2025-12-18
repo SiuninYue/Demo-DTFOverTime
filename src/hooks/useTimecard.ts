@@ -118,7 +118,7 @@ export const useTimecard = ({ employeeId, date }: UseTimecardOptions): UseTimeca
       }
     } catch (loadError) {
       setError(
-        loadError instanceof Error ? loadError.message : 'Failed to load timecard for this date.',
+        loadError instanceof Error ? loadError.message : '加载该日期的打卡记录失败。',
       )
     } finally {
       setIsLoading(false)
@@ -250,7 +250,7 @@ export const useTimecard = ({ employeeId, date }: UseTimecardOptions): UseTimeca
       return saved
     } catch (saveError) {
       const message =
-        saveError instanceof Error ? saveError.message : 'Failed to save timecard record.'
+        saveError instanceof Error ? saveError.message : '保存打卡记录失败。'
       setError(message)
       throw saveError
     } finally {
@@ -275,7 +275,7 @@ export const useTimecard = ({ employeeId, date }: UseTimecardOptions): UseTimeca
       setHasChanges(false)
     } catch (deleteError) {
       const message =
-        deleteError instanceof Error ? deleteError.message : 'Failed to delete timecard record.'
+        deleteError instanceof Error ? deleteError.message : '删除打卡记录失败。'
       setError(message)
       throw deleteError
     } finally {

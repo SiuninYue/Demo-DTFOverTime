@@ -56,7 +56,7 @@ export const propagateProfileChange = async (
       try {
         const mcDays = await getMonthlyMcDays(profile.id, month).catch((error) => {
           warnings.push(
-            `MC data unavailable for ${month}: ${error instanceof Error ? error.message : error}`,
+            `无法获取 ${month} 的病假数据：${error instanceof Error ? error.message : error}`,
           )
           return 0
         })
@@ -84,9 +84,7 @@ export const propagateProfileChange = async (
         summariesPersisted += 1
       } catch (error) {
         warnings.push(
-          `Salary cache refresh failed for ${month}: ${
-            error instanceof Error ? error.message : error
-          }`,
+          `刷新 ${month} 的工资缓存失败：${error instanceof Error ? error.message : error}`,
         )
       }
     }),

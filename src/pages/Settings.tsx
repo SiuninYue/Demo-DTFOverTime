@@ -1,12 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
 import BasicInfoForm, { type BasicInfoValues } from '@/components/settings/BasicInfoForm'
 import SalaryInfoForm, { type SalaryInfoValues } from '@/components/settings/SalaryInfoForm'
 import WorkPreferencesForm, {
   type WorkPreferencesValues,
 } from '@/components/settings/WorkPreferencesForm'
-import PartIVBadge from '@/components/settings/PartIVBadge'
 import { useUserStore } from '@/store/userStore'
 import { useAuthStore } from '@/store/authStore'
 import {
@@ -30,9 +28,9 @@ const isValidUuid = (value: string | undefined | null): boolean =>
 const buildDefaultProfile = (identity?: AuthIdentity): DraftProfile => ({
   id: identity?.id ?? DEMO_EMPLOYEE_ID,
   email: identity?.email ?? 'demo@dtf.sg',
-  name: 'Demo Employee',
+  name: '示例员工',
   employeeId: undefined,
-  position: 'Crew',
+  position: '员工',
   outletCode: 'DTF-SG-01',
   baseSalary: 1770,
   attendanceBonus: 200,
@@ -91,7 +89,6 @@ const toEmployee = (draft: DraftProfile): Employee => ({
 })
 
 function SettingsPage() {
-  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const profile = useUserStore((state) => state.profile)
   const status = useUserStore((state) => state.status)
@@ -109,10 +106,6 @@ function SettingsPage() {
 
   const employeeId = user?.id ?? draft.id ?? DEMO_EMPLOYEE_ID
 
-  const handleLanguageChange = (lang: string) => {
-    i18n.changeLanguage(lang)
-  }
-
   const handleLogout = async () => {
     await signOut()
     navigate('/login')
@@ -127,7 +120,7 @@ function SettingsPage() {
       return
     }
     if (!isValidUuid(employeeId)) {
-      setLoadError('No existing profile found. Fill in your details to get started.')
+      setLoadError('未找到现有资料，请先填写个人信息。')
       return
     }
     if (lastLoadedIdRef.current === employeeId) {
@@ -137,11 +130,11 @@ function SettingsPage() {
     loadProfile(() => getEmployee(employeeId))
       .then((remoteProfile) => {
         if (!remoteProfile) {
-          setLoadError('No existing profile found. Fill in your details to get started.')
+          setLoadError('未找到现有资料，请先填写个人信息。')
         }
       })
       .catch((error) => {
-        const message = error instanceof Error ? error.message : 'Unable to load profile.'
+        const message = error instanceof Error ? error.message : '无法加载个人资料。'
         setLoadError(message)
       })
   }, [employeeId, loadProfile, profile, status])
@@ -191,7 +184,7 @@ function SettingsPage() {
       }
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : 'Saving settings failed. Stored locally only.'
+        error instanceof Error ? error.message : '保存设置失败，仅已保存到本地。'
       setSaveError(message)
     }
 
@@ -206,7 +199,7 @@ function SettingsPage() {
       setRecalcReport(report)
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : 'Failed to refresh salary caches.'
+        error instanceof Error ? error.message : '刷新工资缓存失败。'
       setRecalcReport({
         monthsProcessed: 0,
         summariesPersisted: 0,
@@ -247,32 +240,27 @@ function SettingsPage() {
     <section className="settings-page">
       <header className="settings-page__header">
         <div>
-          <p className="text-muted">Profile & compliance</p>
-          <h1>Settings</h1>
-          <p>Keep these values accurate to unlock reliable MOM-compliant calculations.</p>
+          <p className="text-muted">个人资料与合规</p>
+          <h1>设置</h1>
+          <p>请保持以下信息准确，以确保工资计算符合 MOM 规定。</p>
         </div>
         <div className="settings-page__meta">
-          <p aria-live="polite">Status: {status === 'loading' ? 'Syncing...' : 'Ready'}</p>
-          <p>Last saved: {lastSavedAt ? new Date(lastSavedAt).toLocaleString() : 'Not saved yet'}</p>
+          <p aria-live="polite">状态：{status === 'loading' ? '同步中…' : '就绪'}</p>
+          <p>
+            上次保存：
+            {lastSavedAt ? new Date(lastSavedAt).toLocaleString('zh-SG') : '尚未保存'}
+          </p>
         </div>
       </header>
 
-      <PartIVBadge
-        isApplicable={evaluation.isApplicable}
-        threshold={evaluation.threshold}
-        baseSalary={draft.baseSalary}
-        isWorkman={draft.isWorkman}
-        calculationMode={evaluation.calculationMode}
-      />
-
       {(loadError || saveError) && (
         <div className="settings-alert settings-alert--error">
-          Error: {loadError ?? saveError}
+          错误：{loadError ?? saveError}
         </div>
       )}
 
       {isRecalculating && (
-        <div className="settings-alert settings-alert--info">Recalculating cached salary data...</div>
+        <div className="settings-alert settings-alert--info">正在重新计算工资缓存数据…</div>
       )}
 
       <div className="settings-grid">
@@ -297,43 +285,19 @@ function SettingsPage() {
         />
 
         <section className="settings-section">
-          <h3>{t('settings.language')}</h3>
-          <p className="settings-description">{t('settings.languageDescription')}</p>
-          <div className="language-selector">
-            <button
-              className={`language-button ${i18n.language === 'en' ? 'active' : ''}`}
-              type="button"
-              aria-pressed={i18n.language === 'en'}
-              onClick={() => handleLanguageChange('en')}
-            >
-              English
-            </button>
-            <button
-              className={`language-button ${i18n.language === 'zh' ? 'active' : ''}`}
-              type="button"
-              aria-pressed={i18n.language === 'zh'}
-              onClick={() => handleLanguageChange('zh')}
-            >
-              中文
-            </button>
-          </div>
-        </section>
-
-        <section className="settings-section">
-          <h3>Account</h3>
-          <p className="settings-description">Logged in as: {user?.email}</p>
+          <h3>账户</h3>
+          <p className="settings-description">当前登录：{user?.email}</p>
           <button className="logout-button" onClick={handleLogout}>
-            {t('nav.logout')}
+            退出登录
           </button>
         </section>
       </div>
 
       {recalcReport && (
         <section className="settings-recalc">
-          <h3>Recalculation summary</h3>
+          <h3>重新计算摘要</h3>
           <p>
-            Updated {recalcReport.summariesPersisted}/{recalcReport.monthsProcessed} cached salary
-            summaries.
+            已更新 {recalcReport.summariesPersisted}/{recalcReport.monthsProcessed} 份工资缓存汇总。
           </p>
           {recalcReport.warnings.length > 0 && (
             <ul>

@@ -30,11 +30,11 @@ function OvertimeWarning({ summary }: OvertimeWarningProps) {
   const warnings = summary?.result.compliance.warnings ?? []
 
   const messages: Record<string, string> = {
-    critical: 'You have exceeded MOM’s 72h monthly overtime limit. Please adjust future shifts.',
-    high: 'Approaching the monthly OT limit. Consider swapping upcoming OT shifts.',
-    medium: 'OT usage is high this month. Monitor remaining hours closely.',
-    low: 'Overtime recorded. Keep tracking to avoid breaching 72h monthly limit.',
-    neutral: 'No overtime recorded for this month yet.',
+    critical: '已超过 MOM 每月 72 小时加班上限，请调整后续班次。',
+    high: '接近本月加班上限，建议调整或替换后续加班班次。',
+    medium: '本月加班较多，请关注剩余可用小时数。',
+    low: '已记录加班，请持续跟踪以避免超过每月 72 小时上限。',
+    neutral: '本月尚未记录加班。',
   }
 
   const tone = warnings[0] ?? messages[severity]
@@ -42,7 +42,7 @@ function OvertimeWarning({ summary }: OvertimeWarningProps) {
   return (
     <section className={`salary-warning salary-warning--${severity}`}>
       <header>
-        <h3>Overtime monitor</h3>
+        <h3>加班监控</h3>
         <span>{hours.toFixed(1)}h / {limit}h</span>
       </header>
       <p>{tone}</p>

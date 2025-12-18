@@ -2,17 +2,14 @@ import { Outlet, useLocation, useNavigation } from 'react-router-dom'
 import Dock from '@/components/common/Dock'
 import '@/App.css'
 
-import { CalendarDays, Home, PanelsTopLeft, Wallet2 } from 'lucide-react'
-
 const resolveSectionTitle = (pathname: string) => {
-  if (pathname.startsWith('/schedule')) return 'Schedule Import'
-  if (pathname.startsWith('/calendar')) return 'Calendar Overview'
-  if (pathname.startsWith('/timecard')) return 'Timecard Entry'
-  if (pathname.startsWith('/salary')) return 'Salary Breakdown'
-  if (pathname.startsWith('/mc')) return 'MC Records'
-  if (pathname.startsWith('/settings')) return 'Settings'
-  if (pathname.startsWith('/more')) return 'More'
-  return 'Dashboard'
+  if (pathname.startsWith('/schedule')) return '导入排班'
+  if (pathname.startsWith('/calendar')) return '日历'
+  if (pathname.startsWith('/timecard')) return '打卡'
+  if (pathname.startsWith('/salary')) return '工资'
+  if (pathname.startsWith('/mc')) return '病假'
+  if (pathname.startsWith('/settings')) return '设置'
+  return '首页'
 }
 
 function RootLayout() {
@@ -34,7 +31,7 @@ function RootLayout() {
         </h1>
         {isNavigating && (
           <span className="text-xs font-medium text-neutral-500 animate-pulse bg-white/50 px-2 py-1 rounded-full">
-            Syncing...
+            同步中…
           </span>
         )}
       </header>

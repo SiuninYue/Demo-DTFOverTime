@@ -32,22 +32,22 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 
   render() {
     if (this.state.hasError) {
-      const title = this.props.fallbackTitle ?? 'Something went wrong'
+      const title = this.props.fallbackTitle ?? '出现错误'
       return (
         <section className="error-fallback" role="alert">
           <div>
-            <p className="error-fallback__eyebrow">System notice</p>
+            <p className="error-fallback__eyebrow">系统提示</p>
             <h1>{title}</h1>
             <p className="error-fallback__message">
-              {this.state.error?.message ?? 'An unexpected error occurred. Please try again.'}
+              {this.state.error?.message ?? '发生未知错误，请重试。'}
             </p>
           </div>
           <div className="error-fallback__actions">
             <button type="button" className="secondary" onClick={this.handleReset}>
-              Retry
+              重试
             </button>
             <button type="button" className="ghost" onClick={() => window.location.reload()}>
-              Reload page
+              刷新页面
             </button>
           </div>
         </section>

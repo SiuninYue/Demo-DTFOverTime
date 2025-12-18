@@ -154,7 +154,7 @@ export const useMC = ({
       return data
     } catch (loadError) {
       const message =
-        loadError instanceof Error ? loadError.message : 'Failed to load MC records.'
+        loadError instanceof Error ? loadError.message : '加载病假记录失败。'
       setError(message)
       throw loadError
     } finally {
@@ -170,7 +170,7 @@ export const useMC = ({
       setError((current) => current)
     } catch (loadError) {
       const message =
-        loadError instanceof Error ? loadError.message : 'Failed to load yearly MC quota.'
+        loadError instanceof Error ? loadError.message : '加载年度病假额度失败。'
       setError((current) => current ?? message)
       throw loadError
     } finally {
@@ -213,7 +213,7 @@ export const useMC = ({
         const message =
           mutationError instanceof Error
             ? mutationError.message
-            : 'Failed to update MC records.'
+            : '更新病假记录失败。'
         setError(message)
         throw mutationError
       } finally {

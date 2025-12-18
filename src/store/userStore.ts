@@ -47,7 +47,7 @@ const defaultPreferences: UserPreferences = {
   showComplianceTips: true,
   offlineMode: true,
   enableNotifications: false,
-  locale: 'en-SG',
+  locale: 'zh-SG',
   timeFormat: '24h',
 }
 
@@ -169,7 +169,7 @@ export const useUserStore = create<UserStoreState>()(
           return profile
         } catch (error) {
           const message =
-            error instanceof Error ? error.message : 'Failed to load employee profile.'
+            error instanceof Error ? error.message : '加载员工资料失败。'
           set({ status: 'error', error: message })
           throw error
         }

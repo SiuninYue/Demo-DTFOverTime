@@ -96,7 +96,7 @@ function DayCell({
           <div className={`text-xs p-1 rounded font-medium truncate ${schedule ? typeColors[schedule.type] : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'}`}>
             <div className="flex items-center gap-1">
               <span className="font-bold">✓</span>
-              <span className="truncate">{timeRecord.dayType === 'NORMAL_WORK_DAY' ? 'Worked' : 'Recorded'}</span>
+              <span className="truncate">{timeRecord.dayType === 'NORMAL_WORK_DAY' ? '已出勤' : '已记录'}</span>
             </div>
             <div className="text-[10px] opacity-80 mt-0.5">
               {formatTimeShort(timeRecord.actualStartTime)}

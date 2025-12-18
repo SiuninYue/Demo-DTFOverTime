@@ -43,24 +43,24 @@ function SalaryPage() {
       <section className="salary-page">
         <header className="salary-page__header">
           <div>
-            <p className="text-muted">Monthly summary</p>
-            <h1>{summary?.monthLabel ?? 'Salary overview'}</h1>
+            <p className="text-muted">月度汇总</p>
+            <h1>{summary?.monthLabel ?? '工资概览'}</h1>
           </div>
           <div className="salary-page__actions">
             <button type="button" className="ghost" onClick={exportCsv} disabled={!summary}>
-              Export CSV
+              导出 CSV
             </button>
             <button type="button" className="secondary" onClick={exportPdf} disabled={!summary}>
-              Export PDF
+              导出 PDF
             </button>
           </div>
         </header>
 
         {hasInvalidParam && (
-          <p className="upload-error">Invalid month in URL. Showing the latest month instead.</p>
+          <p className="upload-error">URL 中的月份无效，已显示最新月份。</p>
         )}
-        {error && <p className="upload-error">Error: {error}</p>}
-        {isLoading && <Loading label="Calculating salary" description="Applying MOM compliance rules" />}
+        {error && <p className="upload-error">错误：{error}</p>}
+        {isLoading && <Loading label="正在计算工资" description="正在应用 MOM 合规规则" />}
 
         <SalarySummaryCard summary={summary} isLoading={isLoading} isPersisting={isPersisting} />
 
@@ -72,8 +72,8 @@ function SalaryPage() {
 
         <section className="salary-detail-section">
           <div className="salary-detail-section__header">
-            <h3>Daily breakdown</h3>
-            <span className="text-muted">{summary?.result.breakdown.length ?? 0} entries</span>
+            <h3>每日明细</h3>
+            <span className="text-muted">{summary?.result.breakdown.length ?? 0} 条</span>
           </div>
           <SalaryDetailTable breakdown={summary?.result.breakdown ?? []} isLoading={isLoading} />
         </section>

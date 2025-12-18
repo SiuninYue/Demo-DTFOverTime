@@ -11,7 +11,7 @@ import './styles/auth.css'
 const rootElement = document.getElementById('root')
 
 if (!rootElement) {
-  throw new Error('Failed to find root element')
+  throw new Error('未找到根节点元素（root）')
 }
 
 createRoot(rootElement).render(

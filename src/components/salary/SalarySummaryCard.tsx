@@ -10,10 +10,10 @@ interface SalarySummaryCardProps {
 
 const formatTimestamp = (value?: string | null): string => {
   if (!value) {
-    return 'Not synced yet'
+    return '尚未同步'
   }
   try {
-    return new Intl.DateTimeFormat('en-SG', {
+    return new Intl.DateTimeFormat('zh-SG', {
       dateStyle: 'medium',
       timeStyle: 'short',
     }).format(new Date(value))
@@ -30,48 +30,48 @@ function SalarySummaryCard({ summary, isLoading, isPersisting, onViewDetails }: 
   const deductions = summary ? formatCurrency(summary.result.deductions) : '--'
   const attendanceImpact = summary?.result.calculationDetails.attendanceBonusImpact
   const attendanceContext = attendanceImpact
-    ? `${formatCurrency(attendanceImpact.actualAmount)} of ${formatCurrency(attendanceImpact.fullAmount)}`
+    ? `${formatCurrency(attendanceImpact.actualAmount)} / ${formatCurrency(attendanceImpact.fullAmount)}`
     : attendance
   const progressPercent = summary ? Math.min(100, summary.progressPercent) : 0
   const progressLabel = summary
-    ? `${summary.recordedDays}/${summary.totalWorkingDays || '--'} days logged`
-    : 'Waiting for timecards'
-  const countdown = summary?.countdown.label ?? 'Configure payday in Settings'
+    ? `已记录 ${summary.recordedDays}/${summary.totalWorkingDays || '--'} 天`
+    : '等待打卡记录'
+  const countdown = summary?.countdown.label ?? '请在设置中配置发薪日'
   const lastSyncedLabel = formatTimestamp(summary?.lastSyncedAt)
 
   return (
     <section className="salary-summary-card">
       <header className="salary-summary-card__header">
         <div>
-          <p className="text-muted">Salary overview</p>
-          <h2>{summary?.monthLabel ?? 'Pending setup'}</h2>
+          <p className="text-muted">工资概览</p>
+          <h2>{summary?.monthLabel ?? '尚未设置'}</h2>
         </div>
         <div className="salary-summary-card__status">
-          {isPersisting && <span className="salary-pill">Syncing…</span>}
-          {!isPersisting && summary && <span className="salary-pill salary-pill--success">Up to date</span>}
+          {isPersisting && <span className="salary-pill">同步中…</span>}
+          {!isPersisting && summary && <span className="salary-pill salary-pill--success">已更新</span>}
         </div>
       </header>
 
       <div className="salary-summary-card__total">
-        <p className="label">Estimated total (net)</p>
-        <p className="value">{isLoading ? 'Calculating…' : total}</p>
+        <p className="label">预计实发（净额）</p>
+        <p className="value">{isLoading ? '计算中…' : total}</p>
       </div>
 
       <div className="salary-summary-card__breakdown">
         <div>
-          <p className="label">Base</p>
+          <p className="label">底薪</p>
           <p className="value">{base}</p>
         </div>
         <div>
-          <p className="label">Attendance</p>
+          <p className="label">全勤</p>
           <p className="value">{attendance}</p>
         </div>
         <div>
-          <p className="label">Overtime</p>
+          <p className="label">加班</p>
           <p className="value">{overtime}</p>
         </div>
         <div>
-          <p className="label">Deductions</p>
+          <p className="label">扣款</p>
           <p className="value">{deductions}</p>
         </div>
       </div>
@@ -79,10 +79,9 @@ function SalarySummaryCard({ summary, isLoading, isPersisting, onViewDetails }: 
       {summary && (
         <div className="salary-summary-card__notice">
           <div>
-            <p className="label">MC impact</p>
+            <p className="label">病假影响</p>
             <p>
-              {summary.mcDays} MC day{summary.mcDays === 1 ? '' : 's'} ·{' '}
-              {attendanceImpact?.reason ?? 'Full attendance bonus applied'}
+              病假 {summary.mcDays} 天 · {attendanceImpact?.reason ?? '已计入全勤奖'}
             </p>
           </div>
           <strong>{attendanceContext}</strong>
@@ -105,7 +104,7 @@ function SalarySummaryCard({ summary, isLoading, isPersisting, onViewDetails }: 
         </div>
         {onViewDetails && (
           <button type="button" className="secondary" onClick={onViewDetails} disabled={isLoading}>
-            View details
+            查看详情
           </button>
         )}
       </footer>

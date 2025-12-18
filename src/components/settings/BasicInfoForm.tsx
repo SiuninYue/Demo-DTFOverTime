@@ -17,8 +17,8 @@ interface BasicInfoFormProps {
 }
 
 const employmentOptions = [
-  { value: true, label: 'Workman (threshold $4,500)' },
-  { value: false, label: 'Non-workman (threshold $2,600)' },
+  { value: true, label: '工人（门槛 $4,500）' },
+  { value: false, label: '非工人（门槛 $2,600）' },
 ]
 
 function BasicInfoForm({ values, onChange, onSubmit, isSaving }: BasicInfoFormProps) {
@@ -31,25 +31,25 @@ function BasicInfoForm({ values, onChange, onSubmit, isSaving }: BasicInfoFormPr
     <section className="settings-card">
       <header className="settings-card__header">
         <div>
-          <p className="label">Profile</p>
-          <h3>Basic information</h3>
+          <p className="label">个人资料</p>
+          <h3>基本信息</h3>
         </div>
       </header>
 
       <form className="settings-form" onSubmit={handleSubmit}>
         <label className="settings-field">
-          <span>Full name</span>
+          <span>姓名</span>
           <input
             type="text"
             value={values.name}
             onChange={(event) => onChange({ name: event.target.value })}
-            placeholder="e.g., KELLY TEIN ROU YI"
+            placeholder="例如：张三"
             required
           />
         </label>
 
         <label className="settings-field">
-          <span>Work email</span>
+          <span>工作邮箱</span>
           <input
             type="email"
             value={values.email}
@@ -60,7 +60,7 @@ function BasicInfoForm({ values, onChange, onSubmit, isSaving }: BasicInfoFormPr
         </label>
 
         <label className="settings-field">
-          <span>Employee ID</span>
+          <span>员工编号</span>
           <input
             type="text"
             value={values.employeeId ?? ''}
@@ -70,17 +70,17 @@ function BasicInfoForm({ values, onChange, onSubmit, isSaving }: BasicInfoFormPr
         </label>
 
         <label className="settings-field">
-          <span>Position</span>
+          <span>职位</span>
           <input
             type="text"
             value={values.position ?? ''}
             onChange={(event) => onChange({ position: event.target.value || undefined })}
-            placeholder="Chef, Server, etc."
+            placeholder="例如：厨师、服务员"
           />
         </label>
 
         <label className="settings-field">
-          <span>Outlet code</span>
+          <span>门店代码</span>
           <input
             type="text"
             value={values.outletCode ?? ''}
@@ -90,7 +90,7 @@ function BasicInfoForm({ values, onChange, onSubmit, isSaving }: BasicInfoFormPr
         </label>
 
         <fieldset className="settings-field settings-field--inline">
-          <legend>Employment type</legend>
+          <legend>雇佣类型</legend>
           <div className="settings-radio-group">
             {employmentOptions.map((option) => (
               <label key={String(option.value)} className="radio-pill">
@@ -106,13 +106,13 @@ function BasicInfoForm({ values, onChange, onSubmit, isSaving }: BasicInfoFormPr
             ))}
           </div>
           <p className="text-muted">
-            Used to determine MOM Part IV coverage and overtime eligibility.
+            用于判断是否适用 MOM 第四部分及加班资格。
           </p>
         </fieldset>
 
         <div className="settings-form__actions">
           <button type="submit" className="secondary" disabled={isSaving}>
-            Save basic info
+            保存基本信息
           </button>
         </div>
       </form>

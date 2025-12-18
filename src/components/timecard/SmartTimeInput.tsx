@@ -120,7 +120,7 @@ export default function SmartTimeInput({
                     onBlur={handleBlur}
                     onKeyDown={handleKeyDown}
                     disabled={disabled}
-                    placeholder="e.g. 09:00 or 930"
+                    placeholder="例如：09:00 或 930"
                     className={cn(
                         "w-full px-3 py-2 text-base rounded-xl border bg-white/50 backdrop-blur-sm shadow-sm transition-all outline-none",
                         "focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500",
@@ -129,7 +129,7 @@ export default function SmartTimeInput({
                     )}
                 />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-xs text-neutral-400">
-                    HH:MM
+                    时:分
                 </div>
             </div>
             {helperText && (

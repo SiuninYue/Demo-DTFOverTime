@@ -127,7 +127,7 @@ export const upsertSchedule = async (params: UpsertScheduleParams): Promise<Sche
     .single()
 
   if (error || !data) {
-    throw new Error(`Failed to upsert schedule: ${error?.message ?? 'Unknown error'}`)
+    throw new Error(`保存排班失败：${error?.message ?? '未知错误'}`)
   }
 
   return mapRowToSchedule(data)
@@ -147,7 +147,7 @@ export const getScheduleByMonth = async (
     .maybeSingle()
 
   if (error) {
-    throw new Error(`Failed to fetch schedule: ${error.message}`)
+    throw new Error(`获取排班失败：${error.message}`)
   }
 
   return data ? mapRowToSchedule(data) : null
@@ -169,7 +169,7 @@ export const updateScheduleDay = async ({
   const existing = await getScheduleByMonth(employeeId, month)
 
   if (!existing) {
-    throw new Error('Cannot update day for a schedule that has not been created.')
+    throw new Error('排班尚未创建，无法更新指定日期。')
   }
 
   const scheduleData: ScheduleData = {
@@ -200,7 +200,7 @@ export const getEmployee = async (employeeId: string): Promise<Employee | null> 
     .maybeSingle()
 
   if (error) {
-    throw new Error(`Failed to fetch employee profile: ${error.message}`)
+    throw new Error(`获取员工资料失败：${error.message}`)
   }
 
   return data ? mapRowToEmployee(data) : null
@@ -212,7 +212,7 @@ export const createEmployee = async (input: EmployeeUpsertInput): Promise<Employ
   // Get current authenticated user
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
-    throw new Error('User must be authenticated to create employee record')
+    throw new Error('需要登录后才能创建员工资料。')
   }
 
   // Use auth.uid() as employee id
@@ -221,7 +221,7 @@ export const createEmployee = async (input: EmployeeUpsertInput): Promise<Employ
   const { data, error } = await supabase.from('employees').insert(payload).select('*').single()
 
   if (error || !data) {
-    throw new Error(`Failed to create employee: ${error?.message ?? 'Unknown error'}`)
+    throw new Error(`创建员工资料失败：${error?.message ?? '未知错误'}`)
   }
 
   return mapRowToEmployee(data)
@@ -236,18 +236,18 @@ export const updateEmployee = async (
   // Verify user is authenticated
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
-    throw new Error('User must be authenticated to update employee record')
+    throw new Error('需要登录后才能更新员工资料。')
   }
 
   // Ensure user can only update their own record
   if (employeeId !== user.id) {
-    throw new Error('Unauthorized: Cannot update another user\'s employee record')
+    throw new Error('无权限：不能更新其他用户的员工资料。')
   }
 
   const payload = buildEmployeeUpdate(input)
 
   if (!Object.keys(payload).length) {
-    throw new Error('No employee fields provided for update.')
+    throw new Error('未提供需要更新的员工字段。')
   }
 
   const { data, error } = await supabase
@@ -258,7 +258,7 @@ export const updateEmployee = async (
     .single()
 
   if (error || !data) {
-    throw new Error(`Failed to update employee: ${error?.message ?? 'Unknown error'}`)
+    throw new Error(`更新员工资料失败：${error?.message ?? '未知错误'}`)
   }
 
   return mapRowToEmployee(data)

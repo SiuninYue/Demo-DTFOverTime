@@ -79,16 +79,16 @@ function HomePage() {
 
   const greeting = useMemo(() => {
     const hour = new Date().getHours()
-    if (hour < 12) return 'Good morning ☀️'
-    if (hour < 18) return 'Good afternoon 🌤️'
-    return 'Good evening 🌙'
+    if (hour < 12) return '早上好'
+    if (hour < 18) return '下午好'
+    return '晚上好'
   }, [])
 
   const handleRefresh = async () => {
     await Promise.all([refreshSalary(), refreshSchedule()])
   }
 
-  const displayName = user?.email?.split('@')[0] ?? 'Staff'
+  const displayName = user?.email?.split('@')[0] ?? '员工'
 
   return (
     <PullToRefresh onRefresh={handleRefresh} className="bg-slate-50">
@@ -96,7 +96,7 @@ function HomePage() {
         <div className="mx-auto max-w-4xl space-y-6">
           {(error || scheduleError) && (
             <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 shadow-sm">
-              <strong className="font-semibold">Heads up: </strong>
+              <strong className="font-semibold">提示：</strong>
               {error ?? scheduleError}
             </div>
           )}
@@ -110,7 +110,7 @@ function HomePage() {
               type="button"
               onClick={() => navigate('/settings')}
               className="flex h-11 w-11 items-center justify-center rounded-full border border-brand-100 bg-brand-50 text-lg font-semibold text-brand-600 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-              aria-label="Open settings"
+              aria-label="打开设置"
             >
               {displayName.charAt(0).toUpperCase()}
             </button>
@@ -124,7 +124,7 @@ function HomePage() {
             >
               <div className="flex items-center justify-between">
                 <span className="rounded-md bg-brand-50 px-2 py-1 text-xs font-semibold uppercase tracking-wide text-brand-600">
-                  Today · {formatDate(todayKey, { format: 'medium' })}
+                  今日 · {formatDate(todayKey, { format: 'medium' })}
                 </span>
                 <span className="text-slate-400">→</span>
               </div>
@@ -143,10 +143,10 @@ function HomePage() {
                   <h3 className="text-lg font-bold text-slate-900">
                     {todaySchedule
                       ? `${todaySchedule.plannedStartTime ?? '--:--'} → ${todaySchedule.plannedEndTime ?? '--:--'}`
-                      : 'No shift scheduled'}
+                      : '今日无排班'}
                   </h3>
                   <p className="text-sm text-slate-500">
-                    {todaySchedule ? 'Tap to review or log out' : 'Tap to add OT or a quick note'}
+                    {todaySchedule ? '点按查看/记录打卡' : '点按添加加班或备注'}
                   </p>
                 </div>
               </div>
@@ -155,13 +155,13 @@ function HomePage() {
 
           <div className="space-y-3">
             <div className="flex items-center justify-between px-1">
-              <h2 className="text-lg font-bold text-slate-900">Current month</h2>
+              <h2 className="text-lg font-bold text-slate-900">本月</h2>
               <button
                 type="button"
                 onClick={() => navigate(salaryRoute)}
                 className="text-sm font-semibold text-brand-600 hover:text-brand-500"
               >
-                View details
+                查看详情
               </button>
             </div>
             <button
@@ -184,8 +184,8 @@ function HomePage() {
           <div className="space-y-3">
             <div className="flex items-center justify-between px-1">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Schedule</p>
-                <h3 className="text-lg font-bold text-slate-900">Coming up</h3>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">排班</p>
+                <h3 className="text-lg font-bold text-slate-900">即将到来</h3>
               </div>
 
             </div>
@@ -198,7 +198,7 @@ function HomePage() {
               )}
               {!isScheduleLoading && upcomingEntries.length === 0 && (
                 <div className="py-4 text-center text-sm text-slate-500">
-                  No upcoming shifts
+                  暂无即将到来的排班
                 </div>
               )}
               {!isScheduleLoading &&
@@ -213,7 +213,7 @@ function HomePage() {
                       <p className="text-sm font-semibold text-slate-900">
                         {formatDate(date, { format: 'medium' })}
                       </p>
-                      <p className="text-xs text-slate-500">{entry?.type ?? 'No type recorded'}</p>
+                      <p className="text-xs text-slate-500">{entry?.type ?? '未记录类型'}</p>
                     </div>
                     <div className="text-sm font-semibold text-slate-700">
                       {entry?.plannedStartTime

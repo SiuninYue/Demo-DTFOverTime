@@ -22,10 +22,9 @@ function RestDayTimecardForm({
   return (
     <section className="rest-day-card">
       <header>
-        <h3>Rest Day Details</h3>
+        <h3>休息日信息</h3>
         <p className="text-muted">
-          MOM rules: Statutory rest day pay uses 0/0.5/1/2 day + OT; Off day overtime is 1.5x hours
-          only.
+          MOM 规则：法定休息日按 0/0.5/1/2 天 + 加班计算；补休日加班仅按 1.5× 工时计算。
         </p>
       </header>
       <div className="rest-day-card__controls rest-day-card__controls--stacked">
@@ -44,7 +43,7 @@ function RestDayTimecardForm({
                 })
               }
             />
-            <span>Rest Day</span>
+            <span>休息日</span>
           </label>
           <label className="toggle">
             <input
@@ -60,7 +59,7 @@ function RestDayTimecardForm({
                 })
               }
             />
-            <span>Off Day (off-in-lieu)</span>
+            <span>补休（调休）</span>
           </label>
         </div>
         {dayType === DayType.REST_DAY && (
@@ -77,7 +76,7 @@ function RestDayTimecardForm({
                 })
               }
             />
-            <span>Statutory Rest Day (eligible for rest-day OT)</span>
+            <span>法定休息日（可按休息日加班规则计算）</span>
           </label>
         )}
         <label className="toggle">
@@ -91,13 +90,13 @@ function RestDayTimecardForm({
                 isStatutoryRestDay,
                 isEmployerRequested: event.target.checked,
               })
-            }
-          />
-          <span>Employer requested overtime</span>
+              }
+            />
+          <span>雇主要求加班</span>
         </label>
         {!isStatutoryRestDay && (
           <p className="text-muted" style={{ margin: '0.25rem 0 0' }}>
-            Off day OT: all working hours count as overtime at 1.5x.
+            补休日加班：全部工作时数按 1.5× 计为加班。
           </p>
         )}
       </div>

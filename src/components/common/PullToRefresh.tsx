@@ -84,7 +84,7 @@ export function PullToRefresh({
           {isRefreshing ? (
             <>
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
-              <span>Updating...</span>
+              <span>更新中…</span>
             </>
           ) : (
             <>
@@ -94,7 +94,7 @@ export function PullToRefresh({
               >
                 ⬇
               </span>
-              <span>{offset > PULL_THRESHOLD ? 'Release to refresh' : 'Pull to refresh'}</span>
+              <span>{offset > PULL_THRESHOLD ? '松手刷新' : '下拉刷新'}</span>
             </>
           )}
         </div>

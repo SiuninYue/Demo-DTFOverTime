@@ -10,12 +10,12 @@ interface PartIVBadgeProps {
 }
 
 const formatCurrency = (value: number): string =>
-  new Intl.NumberFormat('en-SG', { style: 'currency', currency: 'SGD', maximumFractionDigits: 0 }).format(
+  new Intl.NumberFormat('zh-SG', { style: 'currency', currency: 'SGD', maximumFractionDigits: 0 }).format(
     Math.max(0, value),
   )
 
 const getModeLabel = (mode: CalculationMode): string =>
-  mode === CalculationMode.FULL_COMPLIANCE ? 'Full compliance mode' : 'Basic tracking mode'
+  mode === CalculationMode.FULL_COMPLIANCE ? '完整合规模式' : '基础记录模式'
 
 function PartIVBadge({
   isApplicable,
@@ -26,7 +26,7 @@ function PartIVBadge({
   layout = 'inline',
 }: PartIVBadgeProps) {
   const status = isApplicable ? 'applicable' : 'not-applicable'
-  const employmentLabel = isWorkman ? 'Workman' : 'Non-workman'
+  const employmentLabel = isWorkman ? '工人' : '非工人'
 
   return (
     <div className={`part-iv-badge part-iv-badge--${status} part-iv-badge--${layout}`}>
@@ -35,10 +35,10 @@ function PartIVBadge({
       </div>
       <div>
         <p className="part-iv-badge__title">
-          {isApplicable ? 'Covered under MOM Part IV' : 'Not covered by Part IV'}
+          {isApplicable ? '适用 MOM 第四部分' : '不适用 MOM 第四部分'}
         </p>
         <p className="part-iv-badge__meta">
-          {employmentLabel} salary {formatCurrency(baseSalary)} / mo · Threshold {formatCurrency(threshold)}
+          {employmentLabel}月薪 {formatCurrency(baseSalary)} · 门槛 {formatCurrency(threshold)}
         </p>
         <p className="part-iv-badge__mode">{getModeLabel(calculationMode)}</p>
       </div>

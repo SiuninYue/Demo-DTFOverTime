@@ -78,7 +78,7 @@ const getWorkingDayWeight = (
     case WorkScheduleType.CUSTOM: {
       const workingDays = options.customWorkingDays
       if (!workingDays || workingDays.length === 0) {
-        throw new Error('customWorkingDays must be provided when using WorkScheduleType.CUSTOM')
+        throw new Error('使用自定义工作制（WorkScheduleType.CUSTOM）时必须提供 customWorkingDays。')
       }
       return workingDays.includes(dayOfWeek) ? 1 : 0
     }

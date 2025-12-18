@@ -42,7 +42,7 @@ export const formatCurrency = (
     return '—'
   }
 
-  const { locale = 'en-SG', currency = 'SGD' } = options
+  const { locale = 'zh-SG', currency = 'SGD' } = options
   const formatter = new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
@@ -63,7 +63,7 @@ const parseTime = (value: string | Date): { hours: number; minutes: number } => 
   const minutes = Number.parseInt(minutesPart ?? '0', 10)
 
   if (!Number.isFinite(hours) || !Number.isFinite(minutes)) {
-    throw new Error(`Invalid time value: ${value}`)
+    throw new Error(`时间格式无效：${value}`)
   }
 
   return { hours, minutes }
@@ -104,7 +104,7 @@ export const formatDate = (
     return options.placeholder ?? '--'
   }
 
-  const { locale = 'en-SG', format = 'medium', includeWeekday = false, includeTime = false } = options
+  const { locale = 'zh-SG', format = 'medium', includeWeekday = false, includeTime = false } = options
   const intlOptions: Intl.DateTimeFormatOptions = {
     dateStyle: format,
   }

@@ -47,8 +47,8 @@ function MCPage() {
     <section className="mc-page">
       <header className="mc-page__header">
         <div>
-          <p className="text-muted">Medical certificates</p>
-          <h1>MC tracking & attendance bonus</h1>
+          <p className="text-muted">病假证明</p>
+          <h1>病假记录与全勤奖</h1>
         </div>
         <div className="mc-page__actions">
           <button
@@ -61,7 +61,7 @@ function MCPage() {
             }}
             disabled={mcState.isLoading || mcState.isMutating}
           >
-            Refresh
+            刷新
           </button>
           <button
             type="button"
@@ -69,7 +69,7 @@ function MCPage() {
             onClick={() => setModalOpen(true)}
             disabled={mcState.isMutating}
           >
-            Add MC record
+            新增病假记录
           </button>
         </div>
       </header>
@@ -100,13 +100,12 @@ function MCPage() {
           <section className="mc-card">
             <header className="mc-card__header">
               <div>
-                <p className="label">This month</p>
-                <h3>{mcState.stats.monthlyDays} MC days</h3>
+                <p className="label">本月</p>
+                <h3>病假 {mcState.stats.monthlyDays} 天</h3>
               </div>
             </header>
             <p className="text-muted">
-              Each MC submission updates attendance bonus calculations instantly and syncs with the
-              salary overview.
+              每次提交病假记录都会立即更新全勤奖计算，并同步到工资概览。
             </p>
           </section>
           <YearlyMCQuota

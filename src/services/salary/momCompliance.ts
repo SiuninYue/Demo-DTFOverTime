@@ -29,7 +29,7 @@ export const calculateDailyRate = ({
   const workingDays = calculateWorkingDays(year, month, scheduleType, workingDayOptions)
 
   if (workingDays <= 0) {
-    throw new Error('當月工作日數需大於 0 才能計算日薪')
+    throw new Error('当月工作日数需大于 0 才能计算日薪')
   }
 
   return roundMoney(baseSalary / workingDays)

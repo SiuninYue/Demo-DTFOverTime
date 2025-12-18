@@ -28,7 +28,7 @@ const toCsvValue = (value: string | number): string => {
 
 const downloadBlob = (content: string, filename: string, mime: string) => {
   if (typeof document === 'undefined') {
-    throw new Error('File downloads are only available in the browser environment.')
+    throw new Error('文件下载仅支持在浏览器环境中使用。')
   }
   const blob = new Blob([content], { type: mime })
   const url = URL.createObjectURL(blob)
@@ -44,27 +44,27 @@ const downloadBlob = (content: string, filename: string, mime: string) => {
 
 export const exportSalaryCsv = (data: SalaryExportData): void => {
   if (typeof window === 'undefined' || typeof document === 'undefined') {
-    throw new Error('CSV export is only available in the browser environment.')
+    throw new Error('CSV 导出仅支持在浏览器环境中使用。')
   }
 
   const rows: Array<Array<string | number>> = [
-    ['Month', data.monthLabel],
-    ['Employee', data.employeeName],
-    ['Recorded Days', `${data.recordedDays}/${data.totalWorkingDays}`],
-    ['Medical Leave Days', data.mcDays],
-    ['Payday Countdown', data.countdownLabel],
+    ['月份', data.monthLabel],
+    ['员工', data.employeeName],
+    ['已记录天数', `${data.recordedDays}/${data.totalWorkingDays}`],
+    ['病假天数', data.mcDays],
+    ['发薪倒计时', data.countdownLabel],
     [],
-    ['Component', 'Amount (SGD)'],
-    ['Base Salary', data.result.baseSalary.toFixed(2)],
-    ['Attendance Bonus', data.result.attendanceBonus.toFixed(2)],
-    ['Rest Day Pay', data.result.restDayPay.toFixed(2)],
-    ['Public Holiday Pay', data.result.publicHolidayPay.toFixed(2)],
-    ['Overtime Pay', data.result.overtimePay.toFixed(2)],
-    ['Deductions', (-Math.abs(data.result.deductions)).toFixed(2)],
-    ['Total Gross', data.result.totalGross.toFixed(2)],
-    ['Net Pay', data.result.netPay.toFixed(2)],
+    ['项目', '金额（SGD）'],
+    ['底薪', data.result.baseSalary.toFixed(2)],
+    ['全勤奖', data.result.attendanceBonus.toFixed(2)],
+    ['休息日工资', data.result.restDayPay.toFixed(2)],
+    ['公假工资', data.result.publicHolidayPay.toFixed(2)],
+    ['加班工资', data.result.overtimePay.toFixed(2)],
+    ['扣款', (-Math.abs(data.result.deductions)).toFixed(2)],
+    ['应发合计', data.result.totalGross.toFixed(2)],
+    ['实发净额', data.result.netPay.toFixed(2)],
     [],
-    ['Date', 'Day Type', 'Hours Worked', 'Base Pay', 'Overtime Pay', 'Total'],
+    ['日期', '日期类型', '工时', '底薪', '加班', '合计'],
   ]
 
   data.result.breakdown.forEach((entry) => {
@@ -100,55 +100,55 @@ const buildPrintableTable = (data: SalaryExportData): string => {
     .join('\n')
 
   return `
-    <h2 style="margin-bottom: 0.25rem;">${data.monthLabel} Salary Summary</h2>
+    <h2 style="margin-bottom: 0.25rem;">${data.monthLabel} 工资汇总</h2>
     <p style="margin-top: 0; color: #475569;">${data.employeeName} · ${data.countdownLabel}</p>
     <section style="margin-top: 1rem;">
       <table style="width: 100%; border-collapse: collapse;">
         <tbody>
           <tr>
-            <td style="padding: 0.35rem; border: 1px solid #e2e8f0;">Base Salary</td>
+            <td style="padding: 0.35rem; border: 1px solid #e2e8f0;">底薪</td>
             <td style="padding: 0.35rem; border: 1px solid #e2e8f0; text-align: right;">${formatCurrency(
               data.result.baseSalary,
             )}</td>
           </tr>
           <tr>
-            <td style="padding: 0.35rem; border: 1px solid #e2e8f0;">Attendance Bonus</td>
+            <td style="padding: 0.35rem; border: 1px solid #e2e8f0;">全勤奖</td>
             <td style="padding: 0.35rem; border: 1px solid #e2e8f0; text-align: right;">${formatCurrency(
               data.result.attendanceBonus,
             )}</td>
           </tr>
           <tr>
-            <td style="padding: 0.35rem; border: 1px solid #e2e8f0;">Rest Day Pay</td>
+            <td style="padding: 0.35rem; border: 1px solid #e2e8f0;">休息日工资</td>
             <td style="padding: 0.35rem; border: 1px solid #e2e8f0; text-align: right;">${formatCurrency(
               data.result.restDayPay,
             )}</td>
           </tr>
           <tr>
-            <td style="padding: 0.35rem; border: 1px solid #e2e8f0;">Public Holiday Pay</td>
+            <td style="padding: 0.35rem; border: 1px solid #e2e8f0;">公假工资</td>
             <td style="padding: 0.35rem; border: 1px solid #e2e8f0; text-align: right;">${formatCurrency(
               data.result.publicHolidayPay,
             )}</td>
           </tr>
           <tr>
-            <td style="padding: 0.35rem; border: 1px solid #e2e8f0;">Overtime Pay</td>
+            <td style="padding: 0.35rem; border: 1px solid #e2e8f0;">加班工资</td>
             <td style="padding: 0.35rem; border: 1px solid #e2e8f0; text-align: right;">${formatCurrency(
               data.result.overtimePay,
             )}</td>
           </tr>
           <tr>
-            <td style="padding: 0.35rem; border: 1px solid #e2e8f0;">Deductions</td>
+            <td style="padding: 0.35rem; border: 1px solid #e2e8f0;">扣款</td>
             <td style="padding: 0.35rem; border: 1px solid #e2e8f0; text-align: right;">${formatCurrency(
               -Math.abs(data.result.deductions),
             )}</td>
           </tr>
           <tr>
-            <td style="padding: 0.35rem; border: 1px solid #e2e8f0; font-weight: 600;">Total Gross</td>
+            <td style="padding: 0.35rem; border: 1px solid #e2e8f0; font-weight: 600;">应发合计</td>
             <td style="padding: 0.35rem; border: 1px solid #e2e8f0; text-align: right; font-weight: 600;">${formatCurrency(
               data.result.totalGross,
             )}</td>
           </tr>
           <tr>
-            <td style="padding: 0.35rem; border: 1px solid #e2e8f0; font-weight: 700;">Net Pay</td>
+            <td style="padding: 0.35rem; border: 1px solid #e2e8f0; font-weight: 700;">实发净额</td>
             <td style="padding: 0.35rem; border: 1px solid #e2e8f0; text-align: right; font-weight: 700;">${formatCurrency(
               data.result.netPay,
             )}</td>
@@ -157,20 +157,20 @@ const buildPrintableTable = (data: SalaryExportData): string => {
       </table>
     </section>
     <section style="margin-top: 1.5rem;">
-      <h3 style="margin-bottom: 0.5rem;">Daily Breakdown</h3>
+      <h3 style="margin-bottom: 0.5rem;">每日明细</h3>
       <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
         <thead>
           <tr>
-            <th style="text-align: left; padding: 0.35rem; border-bottom: 2px solid #94a3b8;">Date</th>
-            <th style="text-align: left; padding: 0.35rem; border-bottom: 2px solid #94a3b8;">Type</th>
-            <th style="text-align: right; padding: 0.35rem; border-bottom: 2px solid #94a3b8;">Hours</th>
-            <th style="text-align: right; padding: 0.35rem; border-bottom: 2px solid #94a3b8;">Base</th>
-            <th style="text-align: right; padding: 0.35rem; border-bottom: 2px solid #94a3b8;">OT</th>
-            <th style="text-align: right; padding: 0.35rem; border-bottom: 2px solid #94a3b8;">Total</th>
+            <th style="text-align: left; padding: 0.35rem; border-bottom: 2px solid #94a3b8;">日期</th>
+            <th style="text-align: left; padding: 0.35rem; border-bottom: 2px solid #94a3b8;">类型</th>
+            <th style="text-align: right; padding: 0.35rem; border-bottom: 2px solid #94a3b8;">工时</th>
+            <th style="text-align: right; padding: 0.35rem; border-bottom: 2px solid #94a3b8;">底薪</th>
+            <th style="text-align: right; padding: 0.35rem; border-bottom: 2px solid #94a3b8;">加班</th>
+            <th style="text-align: right; padding: 0.35rem; border-bottom: 2px solid #94a3b8;">合计</th>
           </tr>
         </thead>
         <tbody>
-          ${breakdownRows || '<tr><td colspan="6" style="padding: 0.5rem; color: #94a3b8;">No timecard data recorded yet.</td></tr>'}
+          ${breakdownRows || '<tr><td colspan="6" style="padding: 0.5rem; color: #94a3b8;">暂无打卡明细。</td></tr>'}
         </tbody>
       </table>
     </section>
@@ -179,12 +179,12 @@ const buildPrintableTable = (data: SalaryExportData): string => {
 
 export const exportSalaryPdf = (data: SalaryExportData): void => {
   if (typeof window === 'undefined') {
-    throw new Error('PDF export is only supported in the browser environment.')
+    throw new Error('PDF 导出仅支持在浏览器环境中使用。')
   }
 
   const popup = window.open('', '_blank', 'noopener,noreferrer,width=900,height=700')
   if (!popup) {
-    throw new Error('Please enable popups to export the salary summary as PDF.')
+    throw new Error('请允许弹窗，以便导出工资汇总 PDF。')
   }
 
   popup.document.write(`
@@ -192,7 +192,7 @@ export const exportSalaryPdf = (data: SalaryExportData): void => {
     <html>
       <head>
         <meta charset="utf-8" />
-        <title>${data.monthLabel} - Salary Summary</title>
+        <title>${data.monthLabel} - 工资汇总</title>
         <style>
           body { font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 1.5rem; color: #0f172a; }
           h1, h2, h3 { margin: 0; }

@@ -12,14 +12,14 @@ const formatAmount = (value?: number): string => formatCurrency(value ?? null)
 function SalaryBreakdown({ summary, isLoading, variant = 'full' }: SalaryBreakdownProps) {
   const attendanceHint = summary?.result.calculationDetails.attendanceBonusImpact?.reason
   const rows = [
-    { label: 'Base salary', value: summary?.result.baseSalary },
-    { label: 'Attendance bonus', value: summary?.result.attendanceBonus, hint: attendanceHint },
-    { label: 'Rest day pay', value: summary?.result.restDayPay },
-    { label: 'Public holiday pay', value: summary?.result.publicHolidayPay },
-    { label: 'Overtime pay', value: summary?.result.overtimePay },
-    { label: 'Deductions', value: summary ? -Math.abs(summary.result.deductions) : undefined },
-    { label: 'Total gross', value: summary?.result.totalGross, highlight: true },
-    { label: 'Net pay', value: summary?.result.netPay, highlight: true },
+    { label: '底薪', value: summary?.result.baseSalary },
+    { label: '全勤奖', value: summary?.result.attendanceBonus, hint: attendanceHint },
+    { label: '休息日工资', value: summary?.result.restDayPay },
+    { label: '公假工资', value: summary?.result.publicHolidayPay },
+    { label: '加班工资', value: summary?.result.overtimePay },
+    { label: '扣款', value: summary ? -Math.abs(summary.result.deductions) : undefined },
+    { label: '应发合计', value: summary?.result.totalGross, highlight: true },
+    { label: '实发净额', value: summary?.result.netPay, highlight: true },
   ]
 
   const visibleRows = variant === 'compact' ? rows.filter((row, index) => index < 4 || row.highlight) : rows
@@ -27,10 +27,10 @@ function SalaryBreakdown({ summary, isLoading, variant = 'full' }: SalaryBreakdo
   return (
     <section className={`salary-breakdown salary-breakdown--${variant}`}>
       <header>
-        <h3>Pay breakdown</h3>
+        <h3>工资拆分</h3>
         {summary && (
           <p className="text-muted">
-            MC days: {summary.mcDays} · Logged: {summary.recordedDays}/{summary.totalWorkingDays || '—'}
+            病假：{summary.mcDays} 天 · 已记录：{summary.recordedDays}/{summary.totalWorkingDays || '—'} 天
           </p>
         )}
       </header>

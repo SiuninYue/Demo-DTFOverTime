@@ -6,7 +6,7 @@ interface LoadingProps {
 }
 
 function Loading({
-  label = 'Loading',
+  label = '加载中',
   description,
   progress,
   variant = 'inline',
@@ -22,7 +22,7 @@ function Loading({
         {description && <p className="loading__description">{description}</p>}
       </div>
       {typeof clampedProgress === 'number' && (
-        <div className="loading__progress" aria-label="Progress">
+        <div className="loading__progress" aria-label="进度">
           <div className="loading__progress-bar" style={{ width: `${clampedProgress}%` }} />
         </div>
       )}

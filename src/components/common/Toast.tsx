@@ -75,7 +75,7 @@ export const ToastProvider = ({ children }: ToastProviderProps) => {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div className="toast-viewport" role="region" aria-live="polite" aria-label="Notifications">
+      <div className="toast-viewport" role="region" aria-live="polite" aria-label="通知">
         {toasts.map((toast) => (
           <div key={toast.id} className={['toast', `toast--${toast.variant ?? 'info'}`].join(' ')}>
             <div>
@@ -83,7 +83,7 @@ export const ToastProvider = ({ children }: ToastProviderProps) => {
               {toast.description && <p className="toast__description">{toast.description}</p>}
             </div>
             <button type="button" className="ghost" onClick={() => dismissToast(toast.id)}>
-              Close
+              关闭
             </button>
           </div>
         ))}
@@ -95,7 +95,7 @@ export const ToastProvider = ({ children }: ToastProviderProps) => {
 export const useToast = () => {
   const context = useContext(ToastContext)
   if (!context) {
-    throw new Error('useToast must be used within a ToastProvider')
+    throw new Error('useToast 必须在 ToastProvider 内使用')
   }
   return context
 }

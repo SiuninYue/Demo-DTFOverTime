@@ -52,8 +52,8 @@ function SalaryInfoForm({ values, isWorkman, onChange, onSubmit, isSaving }: Sal
     <section className="settings-card">
       <header className="settings-card__header">
         <div>
-          <p className="label">Compensation</p>
-          <h3>Salary & pay day</h3>
+          <p className="label">薪酬</p>
+          <h3>工资与发薪日</h3>
         </div>
       </header>
 
@@ -68,14 +68,13 @@ function SalaryInfoForm({ values, isWorkman, onChange, onSubmit, isSaving }: Sal
 
       {showRestrictionBanner && (
         <div className="settings-alert settings-alert--warning">
-          <strong>Part IV not applicable.</strong> Overtime multipliers and rest-day premium flows are
-          disabled. The system will track base hours only (Basic tracking mode).
+          <strong>不适用 MOM 第四部分。</strong> 加班倍率与休息日加班规则将被停用，系统仅记录基础工时（基础记录模式）。
         </div>
       )}
 
       <form className="settings-form" onSubmit={handleSubmit}>
         <label className="settings-field">
-          <span>Base monthly salary (SGD)</span>
+          <span>基本月薪（SGD）</span>
           <input
             type="number"
             min={0}
@@ -87,7 +86,7 @@ function SalaryInfoForm({ values, isWorkman, onChange, onSubmit, isSaving }: Sal
         </label>
 
         <label className="settings-field">
-          <span>Attendance bonus</span>
+          <span>全勤奖</span>
           <input
             type="number"
             min={0}
@@ -98,7 +97,7 @@ function SalaryInfoForm({ values, isWorkman, onChange, onSubmit, isSaving }: Sal
         </label>
 
         <label className="settings-field">
-          <span>Pay day</span>
+          <span>发薪日（每月）</span>
           <input
             type="number"
             min={1}
@@ -107,12 +106,12 @@ function SalaryInfoForm({ values, isWorkman, onChange, onSubmit, isSaving }: Sal
             onChange={(event) => onChange({ payDay: Number(event.target.value) })}
             required
           />
-          <small className="text-muted">Used for payday countdown and exported payslips.</small>
+          <small className="text-muted">用于发薪倒计时与导出工资单。</small>
         </label>
 
         <div className="settings-form__actions">
           <button type="submit" className="secondary" disabled={isSaving}>
-            Save salary info
+            保存薪酬信息
           </button>
         </div>
       </form>

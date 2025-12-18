@@ -10,8 +10,8 @@ const describeRlsBlock = (action: string, message: string) => {
   const lower = message.toLowerCase()
   const isRls = lower.includes('row-level security') || lower.includes('rls')
   return isRls
-    ? `${action} blocked by row-level security. Ensure the signed-in user can insert/update rows where employee_id matches auth.uid().`
-    : `${action}: ${message}`
+    ? `${action} 因行级安全（RLS）被拦截。请确保已登录用户仅能对 employee_id 匹配 auth.uid() 的记录进行写入/更新。`
+    : `${action}：${message}`
 }
 
 const mapRowToRecord = (row: TimeRecordRow): TimeRecord => ({
@@ -52,7 +52,7 @@ export const getMonthlyRecords = async (employeeId: string, month: string): Prom
     .order('date', { ascending: true })
 
   if (error) {
-    throw new Error(`Failed to load time records: ${error.message}`)
+    throw new Error(`加载打卡记录失败：${error.message}`)
   }
 
   return (data ?? []).map(mapRowToRecord)
@@ -73,7 +73,7 @@ export const getTimeRecordByDate = async (
     .maybeSingle()
 
   if (error) {
-    throw new Error(`Failed to fetch time record for ${date}: ${error.message}`)
+    throw new Error(`获取 ${date} 的打卡记录失败：${error.message}`)
   }
 
   return data ? mapRowToRecord(data) : null
@@ -112,8 +112,8 @@ export const createTimeRecord = async (input: CreateTimeRecordInput): Promise<Ti
     .single()
 
   if (error || !data) {
-    const detail = error?.message ?? 'Unknown error'
-    throw new Error(describeRlsBlock('Failed to create time record', detail))
+    const detail = error?.message ?? '未知错误'
+    throw new Error(describeRlsBlock('创建打卡记录失败', detail))
   }
 
   return mapRowToRecord(data)
@@ -148,8 +148,8 @@ export const updateTimeRecord = async (
     .single()
 
   if (error || !data) {
-    const detail = error?.message ?? 'Unknown error'
-    throw new Error(describeRlsBlock('Failed to update time record', detail))
+    const detail = error?.message ?? '未知错误'
+    throw new Error(describeRlsBlock('更新打卡记录失败', detail))
   }
 
   return mapRowToRecord(data)
@@ -219,6 +219,6 @@ export const deleteTimeRecord = async (id: string): Promise<void> => {
   const supabase = getSupabaseClient()
   const { error } = await supabase.from('time_records').delete().eq('id', id)
   if (error) {
-    throw new Error(`Failed to delete time record: ${error.message}`)
+    throw new Error(`删除打卡记录失败：${error.message}`)
   }
 }

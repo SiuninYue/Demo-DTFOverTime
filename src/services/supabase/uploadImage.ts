@@ -22,16 +22,16 @@ export class UploadValidationError extends Error {
 
 export const validateImageFile = (file?: File) => {
   if (!file) {
-    throw new UploadValidationError('A file must be provided before uploading.', 'FILE_REQUIRED')
+    throw new UploadValidationError('上传前请选择文件。', 'FILE_REQUIRED')
   }
 
   if (file.size > scheduleStorage.maxFileSize) {
-    throw new UploadValidationError('Image exceeds the 5MB upload limit.', 'FILE_TOO_LARGE')
+    throw new UploadValidationError('图片大小超过 5MB 上传限制。', 'FILE_TOO_LARGE')
   }
 
   if (file.type && !ACCEPTED_IMAGE_TYPES.includes(file.type)) {
     throw new UploadValidationError(
-      `Unsupported file type "${file.type}". Please upload JPEG, PNG, WebP, HEIC, or AVIF images.`,
+      `不支持的文件类型 "${file.type}"。请上传 JPEG、PNG、WebP、HEIC 或 AVIF 图片。`,
       'UNSUPPORTED_TYPE',
     )
   }

@@ -15,15 +15,15 @@ interface WorkPreferencesFormProps {
 }
 
 const scheduleOptions: Array<{ value: WorkScheduleType; label: string; description: string }> = [
-  { value: WorkScheduleType.FIVE_DAY, label: '5-day work week', description: 'Mon–Fri' },
+  { value: WorkScheduleType.FIVE_DAY, label: '五天工作制', description: '周一至周五' },
   {
     value: WorkScheduleType.FIVE_HALF_DAY,
-    label: '5.5-day (alternate weekends)',
-    description: 'Mon–Sat with alternating off days',
+    label: '五天半（轮休）',
+    description: '周一至周六，轮流休息',
   },
-  { value: WorkScheduleType.SIX_DAY, label: '6-day work week', description: 'Mon–Sat' },
-  { value: WorkScheduleType.FOUR_DAY, label: '4-day compressed', description: 'Shift-based' },
-  { value: WorkScheduleType.CUSTOM, label: 'Custom', description: 'Manual working-day input' },
+  { value: WorkScheduleType.SIX_DAY, label: '六天工作制', description: '周一至周六' },
+  { value: WorkScheduleType.FOUR_DAY, label: '四天压缩工时', description: '按班次' },
+  { value: WorkScheduleType.CUSTOM, label: '自定义', description: '手动输入工作日' },
 ]
 
 function WorkPreferencesForm({ values, onChange, onSubmit, isSaving }: WorkPreferencesFormProps) {
@@ -36,14 +36,14 @@ function WorkPreferencesForm({ values, onChange, onSubmit, isSaving }: WorkPrefe
     <section className="settings-card">
       <header className="settings-card__header">
         <div>
-          <p className="label">Working rules</p>
-          <h3>Work preferences</h3>
+          <p className="label">工作规则</p>
+          <h3>工作偏好</h3>
         </div>
       </header>
 
       <form className="settings-form" onSubmit={handleSubmit}>
         <label className="settings-field">
-          <span>Normal work hours per day</span>
+          <span>每日正常工作时长</span>
           <input
             type="number"
             min={4}
@@ -53,11 +53,11 @@ function WorkPreferencesForm({ values, onChange, onSubmit, isSaving }: WorkPrefe
             onChange={(event) => onChange({ normalWorkHours: Number(event.target.value) })}
             required
           />
-          <small className="text-muted">Used as overtime threshold for MOM calculations.</small>
+          <small className="text-muted">用于 MOM 计算中的加班门槛。</small>
         </label>
 
         <label className="settings-field">
-          <span>Default rest hours</span>
+          <span>默认休息时长</span>
           <input
             type="number"
             min={0}
@@ -71,7 +71,7 @@ function WorkPreferencesForm({ values, onChange, onSubmit, isSaving }: WorkPrefe
 
         <div className="flex gap-4">
           <label className="settings-field flex-1">
-            <span>Default Start Time (Work)</span>
+            <span>默认开始时间（上班）</span>
             <input
               type="time"
               value={values.defaultStartTime ?? ''}
@@ -79,7 +79,7 @@ function WorkPreferencesForm({ values, onChange, onSubmit, isSaving }: WorkPrefe
             />
           </label>
           <label className="settings-field flex-1">
-            <span>Default End Time (Work)</span>
+            <span>默认结束时间（下班）</span>
             <input
               type="time"
               value={values.defaultEndTime ?? ''}
@@ -89,7 +89,7 @@ function WorkPreferencesForm({ values, onChange, onSubmit, isSaving }: WorkPrefe
         </div>
 
         <label className="settings-field">
-          <span>Work schedule type</span>
+          <span>工作制类型</span>
           <select
             value={values.workScheduleType}
             onChange={(event) =>
@@ -106,7 +106,7 @@ function WorkPreferencesForm({ values, onChange, onSubmit, isSaving }: WorkPrefe
 
         <div className="settings-form__actions">
           <button type="submit" className="secondary" disabled={isSaving}>
-            Save preferences
+            保存工作偏好
           </button>
         </div>
       </form>

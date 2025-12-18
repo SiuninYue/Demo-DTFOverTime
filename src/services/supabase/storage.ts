@@ -63,7 +63,7 @@ export const uploadScheduleImage = async ({
   cacheControl = DEFAULT_CACHE_CONTROL,
 }: UploadScheduleImageParams): Promise<ScheduleImageInfo> => {
   if (file.size > MAX_IMAGE_SIZE_BYTES) {
-    throw new Error('Image exceeds 5MB limit defined by Supabase Storage policy.')
+    throw new Error('图片大小超过 5MB（Supabase Storage 限制）。')
   }
 
   const supabase = getSupabaseClient()
@@ -77,7 +77,7 @@ export const uploadScheduleImage = async ({
   })
 
   if (error) {
-    throw new Error(`Failed to upload schedule image: ${error.message}`)
+    throw new Error(`上传排班图片失败：${error.message}`)
   }
 
   const {
@@ -99,7 +99,7 @@ export const downloadScheduleImage = async (path: string): Promise<Blob> => {
   const { data, error } = await supabase.storage.from(SCHEDULE_BUCKET).download(path)
 
   if (error || !data) {
-    throw new Error(`Unable to download image ${path}: ${error?.message ?? 'Unknown error'}`)
+    throw new Error(`下载图片失败（${path}）：${error?.message ?? '未知错误'}`)
   }
 
   return data

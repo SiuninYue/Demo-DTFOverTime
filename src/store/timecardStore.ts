@@ -198,7 +198,7 @@ export const useTimecardStore = create<TimecardStoreState>()(
       },
       upsertRecord: (record) => {
         if (!record.date) {
-          throw new Error('TimeRecord must include a date before saving to the store.')
+          throw new Error('保存到本地前，打卡记录必须包含日期。')
         }
         const month = getMonthKey(record.date)
         set((state) => {
@@ -263,7 +263,7 @@ export const useTimecardStore = create<TimecardStoreState>()(
           return records
         } catch (error) {
           const message =
-            error instanceof Error ? error.message : 'Failed to load timecard records.'
+            error instanceof Error ? error.message : '加载打卡记录失败。'
           set((state) => ({
             statusByMonth: { ...state.statusByMonth, [month]: 'error' },
             errorByMonth: { ...state.errorByMonth, [month]: message },

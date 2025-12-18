@@ -65,7 +65,7 @@ export const useSchedule = ({
       }
     } catch (fetchError) {
       const message =
-        fetchError instanceof Error ? fetchError.message : 'Failed to load schedule data.'
+        fetchError instanceof Error ? fetchError.message : '加载排班数据失败。'
       setErrorState(message)
       setError(normalizedMonth, message)
       setOffline(Boolean(schedule))

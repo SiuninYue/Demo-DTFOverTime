@@ -13,7 +13,15 @@ interface MonthCalendarProps {
   onMonthChange?: (direction: 'prev' | 'next') => void
 }
 
-const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const weekdays = [
+  { key: 'sun', label: '日' },
+  { key: 'mon', label: '一' },
+  { key: 'tue', label: '二' },
+  { key: 'wed', label: '三' },
+  { key: 'thu', label: '四' },
+  { key: 'fri', label: '五' },
+  { key: 'sat', label: '六' },
+]
 
 const getDaysInMonth = (year: number, monthIndex: number) => new Date(year, monthIndex + 1, 0).getDate()
 
@@ -113,24 +121,27 @@ function MonthCalendar({
     >
       <header className="calendar-panel__header">
         <div>
-          <p className="calendar-panel__label">Monthly Schedule</p>
+          <p className="calendar-panel__label">月排班</p>
           <h2>
             {year} / {String(monthPart).padStart(2, '0')}
           </h2>
         </div>
         <div className="calendar-panel__controls">
           <button type="button" className="ghost" onClick={() => onMonthChange?.('prev')}>
-            Prev
+            上月
           </button>
           <button type="button" className="ghost" onClick={() => onMonthChange?.('next')}>
-            Next
+            下月
           </button>
         </div>
       </header>
       <div className="calendar-grid">
-        {weekdays.map((day) => (
-          <div key={day} className="calendar-grid__weekday">
-            {day}
+        {weekdays.map((day, index) => (
+          <div
+            key={day.key}
+            className={`calendar-grid__weekday ${index === 0 ? 'calendar-grid__weekday--sun' : ''}`}
+          >
+            {day.label}
           </div>
         ))}
         {days.map(({ date: dateKey, isCurrentMonth: isCurrent }, index) => (
@@ -150,7 +161,7 @@ function MonthCalendar({
       {selectedDate && data[selectedDate] && (
         <div className="calendar-selection">
           <p>
-            Selected {selectedDate}: {data[selectedDate]?.notes || 'No notes'}
+            已选择 {selectedDate}：{data[selectedDate]?.notes || '无备注'}
           </p>
         </div>
       )}

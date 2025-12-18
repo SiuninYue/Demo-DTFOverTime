@@ -14,24 +14,23 @@ function YearlyMCQuota({ usedDays, quota, isLoading }: YearlyMCQuotaProps) {
     <section className="mc-card">
       <header className="mc-card__header">
         <div>
-          <p className="label">Yearly MC quota</p>
+          <p className="label">年度病假额度</p>
           <h3>
-            {isLoading ? 'Syncing…' : `${usedDays}/${quota} days`}
+            {isLoading ? '同步中…' : `${usedDays}/${quota} 天`}
           </h3>
         </div>
-        {remaining === 0 && <span className="badge badge--rest">Quota reached</span>}
+        {remaining === 0 && <span className="badge badge--rest">已用完额度</span>}
       </header>
       <div className="mc-progress">
         <div className="mc-progress__bar" aria-hidden="true">
           <span style={{ width: `${ratio}%` }} />
         </div>
-        <p className="text-muted">{remaining} days remaining before the annual MOM limit.</p>
+        <p className="text-muted">距离年度 MOM 上限还剩 {remaining} 天。</p>
       </div>
       <p className="text-muted">
-        MOM allows up to 14 days of outpatient MC per year. Additional days require HR approval and may
-        suspend attendance bonuses.{' '}
+        MOM 每年允许最多 14 天门诊病假；超出天数需 HR 批准，并可能影响全勤奖发放。{' '}
         <a href={MOM_REFERENCE} target="_blank" rel="noreferrer">
-          Learn more
+          了解更多
         </a>
         .
       </p>

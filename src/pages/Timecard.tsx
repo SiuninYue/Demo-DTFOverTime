@@ -72,14 +72,14 @@ function TimecardPage() {
   const handleSaveAndExit = async () => {
     if (!isOnline) {
       showToast({
-        title: 'Offline mode',
-        description: 'Reconnect to save your timecard changes.',
+        title: '离线模式',
+        description: '请连接网络后再保存打卡变更。',
         variant: 'warning',
       })
       return
     }
     await save()
-    showToast({ title: 'Timecard saved', description: date, variant: 'success' })
+    showToast({ title: '打卡已保存', description: date, variant: 'success' })
     navigate('/')
   }
 
@@ -112,14 +112,14 @@ function TimecardPage() {
   const handleDelete = async () => {
     if (!isOnline) {
       showToast({
-        title: 'Offline mode',
-        description: 'Reconnect to delete or edit timecards.',
+        title: '离线模式',
+        description: '请连接网络后再删除或编辑打卡记录。',
         variant: 'warning',
       })
       return
     }
     await remove()
-    showToast({ title: 'Timecard deleted', description: date, variant: 'info' })
+    showToast({ title: '打卡已删除', description: date, variant: 'info' })
   }
 
   const interactionDisabled = isLoading || isSaving || !isOnline
@@ -129,29 +129,29 @@ function TimecardPage() {
       <section className="timecard-page">
         {!isOnline && (
           <p className="offline-banner">
-            Offline mode: You can review timecards, but saving or deleting requires a connection.
+            离线模式：可查看打卡记录，但保存或删除需要网络连接。
           </p>
         )}
         <div className="timecard-toolbar">
           <div>
-            <p className="text-muted">Timecard date</p>
+            <p className="text-muted">打卡日期</p>
             <h1>{date}</h1>
-            {plannedWindow && <p className="text-muted">Planned shift: {plannedWindow}</p>}
+            {plannedWindow && <p className="text-muted">计划班次：{plannedWindow}</p>}
           </div>
           <div className="timecard-controls">
             <button type="button" className="ghost" onClick={() => navigate(`/timecard/${shiftDate(date, -1)}`)}>
-              Previous Day
+              前一天
             </button>
             <button type="button" className="ghost" onClick={() => navigate(`/timecard/${shiftDate(date, 1)}`)}>
-              Next Day
+              后一天
             </button>
             <button type="button" className="ghost" onClick={() => resetToSchedule()} disabled={isLoading}>
-              Reset to Schedule
+              重置为排班
             </button>
           </div>
         </div>
 
-        {error && <p className="upload-error">Error: {error}</p>}
+        {error && <p className="upload-error">错误：{error}</p>}
 
         <form
           className="timecard-form"
@@ -161,7 +161,7 @@ function TimecardPage() {
           }}
         >
           <label className="time-input">
-            <span className="time-input__label">Day Type</span>
+            <span className="time-input__label">日期类型</span>
             <select
               value={getDayTypeSelectValue()}
               onChange={(event) => {
@@ -182,43 +182,43 @@ function TimecardPage() {
               }}
               disabled={interactionDisabled}
             >
-              <option value={DayType.NORMAL_WORK_DAY}>Normal Work Day</option>
-              <option value={DayType.REST_DAY}>Rest Day</option>
-              <option value={DayType.OFF_DAY}>Off Day</option>
-              <option value={DayType.PUBLIC_HOLIDAY}>Public Holiday</option>
-              <option value={DayType.ANNUAL_LEAVE}>Annual Leave (Paid)</option>
-              <option value={DayType.MEDICAL_LEAVE}>Medical Leave (Paid)</option>
+              <option value={DayType.NORMAL_WORK_DAY}>正常工作日</option>
+              <option value={DayType.REST_DAY}>休息日</option>
+              <option value={DayType.OFF_DAY}>补休/调休</option>
+              <option value={DayType.PUBLIC_HOLIDAY}>公假</option>
+              <option value={DayType.ANNUAL_LEAVE}>年假（带薪）</option>
+              <option value={DayType.MEDICAL_LEAVE}>病假（带薪）</option>
               {isUnpaidMc && (
                 <option value={UNPAID_MC_OPTION} disabled>
-                  Medical Leave (Unpaid)
+                  病假（不带薪）
                 </option>
               )}
               {isUnpaidLeave && (
                 <option value={UNPAID_LEAVE_OPTION} disabled>
-                  Unpaid Leave
+                  不带薪假
                 </option>
               )}
             </select>
           </label>
 
           <SmartTimeInput
-            label="Actual Start"
+            label="实际开始"
             value={record.actualStartTime}
             onChange={(value) => handleFieldChange('actualStartTime', value)}
-            helperText="Tap to adjust actual clock-in time"
+            helperText="点按可快速输入/调整打卡时间"
             disabled={interactionDisabled}
           />
 
           <SmartTimeInput
-            label="Actual End"
+            label="实际结束"
             value={record.actualEndTime}
             onChange={(value) => handleFieldChange('actualEndTime', value)}
-            helperText="Required to compute hours"
+            helperText="用于计算工时"
             disabled={interactionDisabled}
           />
 
           <label className="time-input">
-            <span className="time-input__label">Rest Hours</span>
+            <span className="time-input__label">休息时数</span>
             <input
               type="number"
               min={0}
@@ -237,11 +237,11 @@ function TimecardPage() {
               onChange={(event) => handleFieldChange('spansMidnight', event.target.checked)}
               disabled={interactionDisabled}
             />
-            <span>Shift spans midnight</span>
+            <span>跨夜班次</span>
           </label>
 
           <label className="time-input" style={{ gridColumn: '1 / -1' }}>
-            <span className="time-input__label">Notes</span>
+            <span className="time-input__label">备注</span>
             <textarea
               value={stripInternalTags(record.notes)}
               onChange={(event) => {
@@ -262,7 +262,7 @@ function TimecardPage() {
                 onChange={(event) => setUnpaidMc(event.target.checked)}
                 disabled={interactionDisabled}
               />
-              <span>Mark as unpaid MC</span>
+              <span>标记为不带薪病假</span>
             </label>
           )}
           {record.dayType === DayType.ANNUAL_LEAVE && (
@@ -273,7 +273,7 @@ function TimecardPage() {
                 onChange={(event) => setUnpaidLeave(event.target.checked)}
                 disabled={interactionDisabled}
               />
-              <span>Mark as unpaid leave</span>
+              <span>标记为不带薪假</span>
             </label>
           )}
         </form>
@@ -303,14 +303,14 @@ function TimecardPage() {
             disabled={isSaving || !hasChanges || !isOnline}
             onClick={() => handleSaveAndExit().catch(() => { })}
           >
-            Save &amp; Return Home
+            保存并返回首页
           </button>
           <button type="button" className="ghost" onClick={() => handleDelete().catch(() => { })} disabled={isSaving || !isOnline}>
-            Delete Record
+            删除记录
           </button>
         </div>
 
-        {isSaving && <Loading label="Saving timecard" description="Applying MOM compliance rules" />}
+        {isSaving && <Loading label="正在保存打卡" description="正在应用 MOM 合规规则" />}
       </section>
     </PullToRefresh>
   )

@@ -59,7 +59,7 @@ export const getMonthlySummary = async (
     .maybeSingle()
 
   if (error) {
-    throw new Error(`Failed to fetch monthly salary summary: ${error.message}`)
+    throw new Error(`获取月度工资汇总失败：${error.message}`)
   }
 
   return data ? mapRowToSummary(data) : null
@@ -107,7 +107,7 @@ export const upsertMonthlySummary = async ({
     .single()
 
   if (error || !data) {
-    throw new Error(`Failed to upsert monthly salary summary: ${error?.message ?? 'Unknown error'}`)
+    throw new Error(`写入月度工资汇总失败：${error?.message ?? '未知错误'}`)
   }
 
   return mapRowToSummary(data)

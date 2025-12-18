@@ -76,15 +76,15 @@ function AddMCModalContent({
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!formState.date) {
-      setError('Select a date for this MC entry.')
+      setError('请选择病假日期。')
       return
     }
     if (formState.date < bounds.min || formState.date > bounds.max) {
-      setError('Date must be within the selected month.')
+      setError('日期必须在所选月份内。')
       return
     }
     if (!Number.isFinite(formState.days) || formState.days <= 0) {
-      setError('MC days must be at least 1 day.')
+      setError('病假天数至少为 1 天。')
       return
     }
 
@@ -100,7 +100,7 @@ function AddMCModalContent({
       await onSubmit(payload)
     } catch (submitError) {
       const message =
-        submitError instanceof Error ? submitError.message : 'Failed to add MC record.'
+        submitError instanceof Error ? submitError.message : '新增病假记录失败。'
       setError(message)
     }
   }
@@ -116,11 +116,11 @@ function AddMCModalContent({
       <div className="modal-card" role="document">
         <div className="modal-card__header">
           <div>
-            <p className="label">Add MC record</p>
-            <h3>Capture medical leave</h3>
+            <p className="label">新增病假记录</p>
+            <h3>记录病假</h3>
           </div>
           <button type="button" className="ghost" onClick={onClose} disabled={isSubmitting}>
-            Close
+            关闭
           </button>
         </div>
 
@@ -128,7 +128,7 @@ function AddMCModalContent({
 
         <form onSubmit={handleSubmit} className="mc-form">
           <label>
-            <span>Date</span>
+            <span>日期</span>
             <input
               type="date"
               value={formState.date}
@@ -139,7 +139,7 @@ function AddMCModalContent({
             />
           </label>
           <label>
-            <span>Days covered</span>
+            <span>天数</span>
             <input
               type="number"
               min={1}
@@ -152,7 +152,7 @@ function AddMCModalContent({
             />
           </label>
           <label>
-            <span>Certificate number (optional)</span>
+            <span>证明编号（可选）</span>
             <input
               type="text"
               value={formState.certificateNumber}
@@ -163,14 +163,14 @@ function AddMCModalContent({
             />
           </label>
           <label>
-            <span>Reason / clinic note</span>
+            <span>原因 / 诊所备注</span>
             <textarea
               value={formState.reason}
               onChange={(event) =>
                 setFormState((state) => ({ ...state, reason: event.target.value }))
               }
               rows={3}
-              placeholder="e.g., Flu with fever"
+              placeholder="例如：发烧流感"
             />
           </label>
           <label className="mc-checkbox">
@@ -181,12 +181,12 @@ function AddMCModalContent({
                 setFormState((state) => ({ ...state, isPaid: event.target.checked }))
               }
             />
-            <span>Paid MC (uncheck for no-pay / unpaid leave)</span>
+            <span>带薪病假（取消勾选则为不带薪）</span>
           </label>
 
           <div className="modal-card__actions">
             <button type="submit" className="secondary" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving…' : 'Save MC record'}
+              {isSubmitting ? '保存中…' : '保存病假记录'}
             </button>
           </div>
         </form>
@@ -210,17 +210,17 @@ export function ConfirmDeleteDialog({
       <div className="modal-card">
         <div className="modal-card__header">
           <div>
-            <p className="label">Delete MC record</p>
-            <h3>Are you sure?</h3>
+            <p className="label">删除病假记录</p>
+            <h3>确认删除？</h3>
           </div>
         </div>
         <p className="text-muted">删除后勤工奖将重新计算。确定要删除这条MC记录吗？</p>
         <div className="modal-card__actions">
           <button type="button" className="ghost" onClick={onCancel} disabled={isProcessing}>
-            Cancel
+            取消
           </button>
           <button type="button" className="danger" onClick={onConfirm} disabled={isProcessing}>
-            {isProcessing ? 'Deleting…' : 'Delete'}
+            {isProcessing ? '删除中…' : '删除'}
           </button>
         </div>
       </div>

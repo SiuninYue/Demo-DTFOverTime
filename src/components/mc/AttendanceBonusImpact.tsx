@@ -23,21 +23,21 @@ function AttendanceBonusImpact({ summary, isLoading }: AttendanceBonusImpactProp
     <section className="mc-card">
       <header className="mc-card__header">
         <div>
-          <p className="label">Attendance bonus impact</p>
-          <h3>{isLoading ? 'Calculating…' : formatCurrency(actualAmount)}</h3>
+          <p className="label">全勤奖影响</p>
+          <h3>{isLoading ? '计算中…' : formatCurrency(actualAmount)}</h3>
         </div>
         <span className="badge">{formatPercent(impact?.rate)}</span>
       </header>
       <p className="text-muted">
-        {impact?.reason ?? 'MC days determine how much of the attendance bonus is paid each month.'}
+        {impact?.reason ?? '病假天数会影响每月全勤奖的发放比例。'}
       </p>
       <ul className="mc-meta">
         <li>
-          <span>Eligible amount</span>
+          <span>应得金额</span>
           <strong>{formatCurrency(fullAmount)}</strong>
         </li>
         <li>
-          <span>MC days logged</span>
+          <span>已记录病假天数</span>
           <strong>{mcDays}</strong>
         </li>
       </ul>

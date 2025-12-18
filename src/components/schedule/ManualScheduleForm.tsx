@@ -7,11 +7,11 @@ import { useUserStore } from '@/store/userStore'
 import { isPublicHoliday } from '@/utils/holidays'
 
 const scheduleOptions = [
-  { label: '早班 (Work)', value: ScheduleType.WORK },
-  { label: '例休 (Rest)', value: ScheduleType.REST },
-  { label: '空场 (Off)', value: ScheduleType.OFF },
-  { label: '公假 (PH)', value: ScheduleType.PUBLIC_HOLIDAY },
-  { label: '年假 (Leave)', value: ScheduleType.LEAVE },
+  { label: '早班', value: ScheduleType.WORK },
+  { label: '例休', value: ScheduleType.REST },
+  { label: '空场', value: ScheduleType.OFF },
+  { label: '公假', value: ScheduleType.PUBLIC_HOLIDAY },
+  { label: '年假', value: ScheduleType.LEAVE },
 ]
 
 const buildDefaultDay = (
@@ -143,11 +143,11 @@ function ManualScheduleForm({
       setMessage(null)
       await onSubmit(schedule)
       setStatus('success')
-      setMessage('Schedule saved successfully.')
+      setMessage('排班已保存。')
     } catch (error) {
       setStatus('error')
       setMessage(
-        error instanceof Error ? error.message : 'Failed to save schedule. Please retry later.',
+        error instanceof Error ? error.message : '保存排班失败，请稍后重试。',
       )
     }
   }
@@ -247,7 +247,7 @@ function ManualScheduleForm({
                         }
                         disabled={disabled || isSaving}
                         className="w-4 h-4 accent-brand-600"
-                        title="Is statutory rest day?"
+                        title="是否法定休息日"
                       />
                     </td>
                     <td>
@@ -267,7 +267,7 @@ function ManualScheduleForm({
                           className="p-1.5 text-neutral-500 hover:text-brand-600 hover:bg-brand-50 rounded transition"
                           onClick={() => handleCopy(entry)}
                           disabled={disabled || isSaving}
-                          title="复制 (Copy)"
+                          title="复制"
                         >
                           <Copy className="w-4 h-4" />
                         </button>
@@ -276,7 +276,7 @@ function ManualScheduleForm({
                           className={`p-1.5 rounded transition ${clipboard ? 'text-neutral-500 hover:text-brand-600 hover:bg-brand-50' : 'text-neutral-300 cursor-not-allowed'}`}
                           onClick={() => handlePaste(dateKey)}
                           disabled={disabled || isSaving || !clipboard}
-                          title={clipboard ? '粘贴 (Paste)' : '请先复制'}
+                          title={clipboard ? '粘贴' : '请先复制'}
                         >
                           <ClipboardPaste className="w-4 h-4" />
                         </button>
@@ -291,7 +291,7 @@ function ManualScheduleForm({
 
         <footer className="manual-actions mt-6 flex justify-end">
           <button type="submit" disabled={disabled || isSaving} className="btn-primary">
-            {isSaving ? '保存中...' : '保存排班 (Save Schedule)'}
+            {isSaving ? '保存中…' : '保存排班'}
           </button>
         </footer>
       </form>

@@ -8,21 +8,21 @@ interface SalaryDetailTableProps {
 }
 
 const dayTypeLabels: Record<DayType, string> = {
-  [DayType.NORMAL_WORK_DAY]: 'Work day',
-  [DayType.REST_DAY]: 'Rest day (statutory)',
-  [DayType.PUBLIC_HOLIDAY]: 'Public holiday',
-  [DayType.ANNUAL_LEAVE]: 'Annual leave',
-  [DayType.MEDICAL_LEAVE]: 'Medical leave',
-  [DayType.OFF_DAY]: 'Off day',
+  [DayType.NORMAL_WORK_DAY]: '工作日',
+  [DayType.REST_DAY]: '休息日（法定）',
+  [DayType.PUBLIC_HOLIDAY]: '公假',
+  [DayType.ANNUAL_LEAVE]: '年假',
+  [DayType.MEDICAL_LEAVE]: '病假',
+  [DayType.OFF_DAY]: '补休/调休',
 }
 
 function SalaryDetailTable({ breakdown, isLoading }: SalaryDetailTableProps) {
   if (isLoading) {
-    return <p className="text-muted">Loading daily breakdown…</p>
+    return <p className="text-muted">正在加载每日明细…</p>
   }
 
   if (!breakdown.length) {
-    return <p className="text-muted">No timecard entries found for this month.</p>
+    return <p className="text-muted">本月暂无打卡记录。</p>
   }
 
   return (
@@ -30,12 +30,12 @@ function SalaryDetailTable({ breakdown, isLoading }: SalaryDetailTableProps) {
       <table>
         <thead>
           <tr>
-            <th>Date</th>
-            <th>Type</th>
-            <th>Hours</th>
-            <th>Base</th>
-            <th>OT</th>
-            <th>Total</th>
+            <th>日期</th>
+            <th>类型</th>
+            <th>工时</th>
+            <th>底薪</th>
+            <th>加班</th>
+            <th>合计</th>
           </tr>
         </thead>
         <tbody>
