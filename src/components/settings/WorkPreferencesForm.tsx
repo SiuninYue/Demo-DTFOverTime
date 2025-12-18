@@ -39,9 +39,6 @@ function WorkPreferencesForm({ values, onChange, onSubmit, isSaving }: WorkPrefe
           <p className="label">Working rules</p>
           <h3>Work preferences</h3>
         </div>
-        <button type="button" className="ghost" onClick={onSubmit} disabled={isSaving}>
-          Save
-        </button>
       </header>
 
       <form className="settings-form" onSubmit={handleSubmit}>
@@ -71,6 +68,25 @@ function WorkPreferencesForm({ values, onChange, onSubmit, isSaving }: WorkPrefe
             required
           />
         </label>
+
+        <div className="flex gap-4">
+          <label className="settings-field flex-1">
+            <span>Default Start Time (Work)</span>
+            <input
+              type="time"
+              value={values.defaultStartTime ?? ''}
+              onChange={(event) => onChange({ defaultStartTime: event.target.value })}
+            />
+          </label>
+          <label className="settings-field flex-1">
+            <span>Default End Time (Work)</span>
+            <input
+              type="time"
+              value={values.defaultEndTime ?? ''}
+              onChange={(event) => onChange({ defaultEndTime: event.target.value })}
+            />
+          </label>
+        </div>
 
         <label className="settings-field">
           <span>Work schedule type</span>

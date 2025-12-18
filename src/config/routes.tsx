@@ -7,9 +7,10 @@ import TimecardPage from '@/pages/Timecard'
 import SalaryPage from '@/pages/Salary'
 import MCPage from '@/pages/MC'
 import SettingsPage from '@/pages/Settings'
-import MorePage from '@/pages/More'
+
 import LoginPage from '@/pages/Login'
 import RegisterPage from '@/pages/Register'
+import MobileMenuDemoPage from '@/pages/MobileMenuDemo'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 
 const router = createBrowserRouter(
@@ -21,6 +22,10 @@ const router = createBrowserRouter(
     {
       path: '/register',
       element: <RegisterPage />,
+    },
+    {
+      path: '/mobile-menu-demo',
+      element: <MobileMenuDemoPage />,
     },
     {
       path: '/',
@@ -54,10 +59,6 @@ const router = createBrowserRouter(
         {
           path: 'settings',
           element: <SettingsPage />,
-        },
-        {
-          path: 'more',
-          element: <MorePage />,
         },
       ],
     },

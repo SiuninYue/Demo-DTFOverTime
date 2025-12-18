@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import BasicInfoForm, { type BasicInfoValues } from '@/components/settings/BasicInfoForm'
@@ -21,16 +21,17 @@ import { DEMO_EMPLOYEE_ID } from '@/hooks/useSalary'
 import { evaluatePartIV } from '@/utils/partIV'
 
 type DraftProfile = EmployeeUpsertInput
+type AuthIdentity = { id: string; email?: string | null } | null | undefined
 
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const isValidUuid = (value: string | undefined | null): boolean =>
   typeof value === 'string' && uuidRegex.test(value)
 
-const buildDefaultProfile = (employeeId = DEMO_EMPLOYEE_ID): DraftProfile => ({
-  id: employeeId,
-  email: 'demo@dtf.sg',
+const buildDefaultProfile = (identity?: AuthIdentity): DraftProfile => ({
+  id: identity?.id ?? DEMO_EMPLOYEE_ID,
+  email: identity?.email ?? 'demo@dtf.sg',
   name: 'Demo Employee',
-  employeeId: 'DTF-001',
+  employeeId: undefined,
   position: 'Crew',
   outletCode: 'DTF-SG-01',
   baseSalary: 1770,
@@ -44,27 +45,29 @@ const buildDefaultProfile = (employeeId = DEMO_EMPLOYEE_ID): DraftProfile => ({
   calculationMode: CalculationMode.FULL_COMPLIANCE,
 })
 
-const toDraft = (profile?: Employee | null): DraftProfile =>
+const toDraft = (profile?: Employee | null, identity?: AuthIdentity): DraftProfile =>
   profile
     ? {
-        id: profile.id,
-        email: profile.email,
-        name: profile.name,
-        employeeId: profile.employeeId,
-        position: profile.position,
-        outletCode: profile.outletCode,
-        baseSalary: profile.baseSalary,
-        attendanceBonus: profile.attendanceBonus,
-        workScheduleType: profile.workScheduleType,
-        normalWorkHours: profile.normalWorkHours,
-        defaultRestHours: profile.defaultRestHours,
-        isWorkman: profile.isWorkman,
-        isPartIVApplicable: profile.isPartIVApplicable,
-        payDay: profile.payDay,
-        calculationMode: profile.calculationMode,
-        startDate: profile.startDate,
-      }
-    : buildDefaultProfile()
+      id: profile.id,
+      email: profile.email,
+      name: profile.name,
+      employeeId: profile.employeeId,
+      position: profile.position,
+      outletCode: profile.outletCode,
+      baseSalary: profile.baseSalary,
+      attendanceBonus: profile.attendanceBonus,
+      workScheduleType: profile.workScheduleType,
+      normalWorkHours: profile.normalWorkHours,
+      defaultRestHours: profile.defaultRestHours,
+      defaultStartTime: profile.defaultStartTime,
+      defaultEndTime: profile.defaultEndTime,
+      isWorkman: profile.isWorkman,
+      isPartIVApplicable: profile.isPartIVApplicable,
+      payDay: profile.payDay,
+      calculationMode: profile.calculationMode,
+      startDate: profile.startDate,
+    }
+    : buildDefaultProfile(identity)
 
 const toEmployee = (draft: DraftProfile): Employee => ({
   id: draft.id ?? DEMO_EMPLOYEE_ID,
@@ -78,6 +81,8 @@ const toEmployee = (draft: DraftProfile): Employee => ({
   workScheduleType: draft.workScheduleType ?? WorkScheduleType.FIVE_DAY,
   normalWorkHours: draft.normalWorkHours ?? 8,
   defaultRestHours: draft.defaultRestHours ?? 1,
+  defaultStartTime: draft.defaultStartTime,
+  defaultEndTime: draft.defaultEndTime,
   isWorkman: draft.isWorkman,
   isPartIVApplicable: draft.isPartIVApplicable ?? true,
   payDay: draft.payDay ?? 7,
@@ -93,13 +98,14 @@ function SettingsPage() {
   const setProfile = useUserStore((state) => state.setProfile)
   const loadProfile = useUserStore((state) => state.loadProfile)
   const { user, signOut } = useAuthStore()
-  const [draft, setDraft] = useState<DraftProfile>(() => toDraft(profile))
+  const [draft, setDraft] = useState<DraftProfile>(() => toDraft(profile, user))
   const [loadError, setLoadError] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [isRecalculating, setIsRecalculating] = useState(false)
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
   const [recalcReport, setRecalcReport] = useState<SettingsPropagationResult | null>(null)
+  const lastLoadedIdRef = useRef<string | null>(null)
 
   const employeeId = user?.id ?? draft.id ?? DEMO_EMPLOYEE_ID
 
@@ -113,8 +119,8 @@ function SettingsPage() {
   }
 
   useEffect(() => {
-    setDraft(toDraft(profile))
-  }, [profile])
+    setDraft(toDraft(profile, user))
+  }, [profile, user])
 
   useEffect(() => {
     if (profile || status === 'loading') {
@@ -124,6 +130,10 @@ function SettingsPage() {
       setLoadError('No existing profile found. Fill in your details to get started.')
       return
     }
+    if (lastLoadedIdRef.current === employeeId) {
+      return
+    }
+    lastLoadedIdRef.current = employeeId
     loadProfile(() => getEmployee(employeeId))
       .then((remoteProfile) => {
         if (!remoteProfile) {
@@ -155,7 +165,7 @@ function SettingsPage() {
     setIsSaving(true)
     const payload: DraftProfile = {
       ...draft,
-      id: draft.id ?? employeeId,
+      id: user?.id ?? draft.id ?? employeeId,
       isPartIVApplicable: evaluation.isApplicable,
       calculationMode: evaluation.calculationMode,
     }
@@ -163,7 +173,14 @@ function SettingsPage() {
     let persistedProfile: Employee | null = null
 
     try {
-      if (profile?.id && isValidUuid(profile.id)) {
+      if (user?.id && isValidUuid(user.id)) {
+        try {
+          persistedProfile = await updateEmployee(user.id, payload)
+        } catch {
+          const createPayload: DraftProfile = { ...payload, id: user.id }
+          persistedProfile = await createEmployee(createPayload)
+        }
+      } else if (profile?.id && isValidUuid(profile.id)) {
         persistedProfile = await updateEmployee(profile.id, payload)
       } else {
         const createPayload: DraftProfile = { ...payload }
@@ -221,6 +238,8 @@ function SettingsPage() {
   const preferenceValues: WorkPreferencesValues = {
     normalWorkHours: draft.normalWorkHours ?? 8,
     defaultRestHours: draft.defaultRestHours ?? 1,
+    defaultStartTime: draft.defaultStartTime,
+    defaultEndTime: draft.defaultEndTime,
     workScheduleType: draft.workScheduleType ?? WorkScheduleType.FIVE_DAY,
   }
 

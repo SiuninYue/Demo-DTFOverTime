@@ -1,39 +1,27 @@
 import { MouseEvent, TouchEvent, useState } from 'react'
 import type { DaySchedule, ScheduleType } from '@/types/schedule'
 import type { TimeRecord, DayType } from '@/types/timecard'
-
-const typeLabels: Record<ScheduleType, string> = {
-  work: 'Work',
-  rest: 'Rest',
-  off: 'Off',
-  overtime_on_off_day: 'OT/Off',
-  leave: 'Leave',
-  public_holiday: 'PH',
-  training: 'Training',
-  support_incoming: 'Support In',
-  support_outgoing: 'Support Out',
-  co: 'CO',
-  unknown: 'Unknown',
-}
+import { Plus } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 const typeColors: Record<ScheduleType, string> = {
-  work: 'day-cell--work',
-  rest: 'day-cell--rest',
-  off: 'day-cell--off',
-  overtime_on_off_day: 'day-cell--ot-off',
-  leave: 'day-cell--leave',
-  public_holiday: 'day-cell--ph',
-  training: 'day-cell--training',
-  support_incoming: 'day-cell--support',
-  support_outgoing: 'day-cell--support',
-  co: 'day-cell--co',
-  unknown: 'day-cell--unknown',
+  work: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+  rest: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+  off: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+  overtime_on_off_day: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+  leave: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+  public_holiday: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+  training: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
+  support_incoming: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300',
+  support_outgoing: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+  co: 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300',
+  unknown: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
 }
 
-const typeIcons: Record<ScheduleType, string> = {
-  work: 'W',
-  rest: 'R',
-  off: 'O',
+const typeShortLabels: Record<ScheduleType, string> = {
+  work: 'WK',
+  rest: 'RD',
+  off: 'OFF',
   overtime_on_off_day: 'OT',
   leave: 'LV',
   public_holiday: 'PH',
@@ -41,7 +29,7 @@ const typeIcons: Record<ScheduleType, string> = {
   support_incoming: 'SI',
   support_outgoing: 'SO',
   co: 'CO',
-  unknown: '-',
+  unknown: '?',
 }
 
 export type QuickAction = 'edit' | 'timecard' | 'history' | 'copy' | 'paste'
@@ -56,46 +44,11 @@ interface DayCellProps {
   onQuickAction?: (date: string, action: QuickAction) => void
 }
 
-const formatTimeRange = (entry?: DaySchedule) => {
-  if (!entry) return ''
-  const start = entry.plannedStartTime ?? '--'
-  const end = entry.plannedEndTime ?? '--'
-  if (!entry.plannedStartTime && !entry.plannedEndTime) {
-    return ''
-  }
-  return `${start} -> ${end}`
+const formatTimeShort = (timeStr?: string | null) => {
+  if (!timeStr) return ''
+  // "09:00:00" -> "09:00"
+  return timeStr.slice(0, 5)
 }
-
-const formatRecordRange = (record?: TimeRecord) => {
-  if (!record) return ''
-  const start = record.actualStartTime ?? '--'
-  const end = record.actualEndTime ?? '--'
-  if (!record.actualStartTime && !record.actualEndTime) {
-    return ''
-  }
-  return `${start} -> ${end}${record.spansMidnight ? ' (overnight)' : ''}`
-}
-
-const timecardLabels: Record<DayType, string> = {
-  NORMAL_WORK_DAY: 'Workday',
-  REST_DAY: 'Rest Day',
-  PUBLIC_HOLIDAY: 'Public Holiday',
-  ANNUAL_LEAVE: 'Annual Leave',
-  MEDICAL_LEAVE: 'Medical Leave',
-  OFF_DAY: 'Off Day',
-}
-
-const dayTypeColors: Record<DayType, string> = {
-  NORMAL_WORK_DAY: 'day-cell--work',
-  REST_DAY: 'day-cell--rest',
-  PUBLIC_HOLIDAY: 'day-cell--ph',
-  ANNUAL_LEAVE: 'day-cell--leave',
-  MEDICAL_LEAVE: 'day-cell--leave',
-  OFF_DAY: 'day-cell--off',
-}
-
-const UNPAID_MC_TAG = '[UNPAID_MC]'
-const UNPAID_LEAVE_TAG = '[UNPAID_LEAVE]'
 
 function DayCell({
   date,
@@ -106,135 +59,74 @@ function DayCell({
   onSelect,
   onQuickAction,
 }: DayCellProps) {
-  const [showMenu, setShowMenu] = useState(false)
-  const isUnpaidRecord =
-    timeRecord?.notes?.includes(UNPAID_MC_TAG) || timeRecord?.notes?.includes(UNPAID_LEAVE_TAG)
-  const buildClassName = () => {
-    const classes = ['day-cell']
-    if (timeRecord) {
-      classes.push(dayTypeColors[timeRecord.dayType] ?? 'day-cell--empty')
-    } else {
-      const scheduleClass = schedule ? typeColors[schedule.type] : 'day-cell--empty'
-      classes.push(scheduleClass)
-    }
-    if (timeRecord) classes.push('day-cell--recorded')
-    if (!isCurrentMonth) classes.push('day-cell--inactive')
-    if (isToday) classes.push('day-cell--today')
-    return classes.join(' ')
-  }
+  /* Removed handleAction and showMenu state as part of UI cleanup */
+  const dayNumber = date.split('-')[2]
 
-  const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
-    event.stopPropagation()
-    if (!isCurrentMonth) return
-    if (showMenu) {
-      setShowMenu(false)
-      return
-    }
-    onSelect?.(date)
-  }
 
-  const handleAction = (action: QuickAction) => {
-    setShowMenu(false)
-    onQuickAction?.(date, action)
-  }
+  // Glassmorphism Visual State
+  const containerClasses = cn(
+    "relative flex flex-col h-full w-full border-[0.5px] border-white/20 dark:border-white/5 transition-all duration-200 select-none group backdrop-blur-[2px]",
+    isCurrentMonth
+      ? "bg-white/40 dark:bg-neutral-900/40 hover:bg-white/60 dark:hover:bg-neutral-800/60"
+      : "bg-neutral-100/30 dark:bg-neutral-900/10 text-neutral-400/50",
+    isToday && "ring-2 ring-primary-500/50 dark:ring-primary-400/50 z-10"
+  )
 
   return (
-    <button
-      type="button"
-      className={buildClassName()}
-      onClick={handleClick}
-      onTouchStart={(event: TouchEvent<HTMLButtonElement>) => event.stopPropagation()}
-      onTouchEnd={(event: TouchEvent<HTMLButtonElement>) => event.stopPropagation()}
-      onTouchCancel={(event: TouchEvent<HTMLButtonElement>) => event.stopPropagation()}
-      onMouseDown={(event: MouseEvent<HTMLButtonElement>) => event.stopPropagation()}
-      onMouseUp={(event: MouseEvent<HTMLButtonElement>) => event.stopPropagation()}
+    <div
+      className={containerClasses}
+      onClick={(e) => {
+        e.stopPropagation()
+        if (isCurrentMonth) onSelect?.(date)
+      }}
     >
-      <div className="day-cell__header">
-        <span>{date.split('-')[2]}</span>
-        {schedule?.isStatutoryRestDay && <span className="badge badge--rest">REST</span>}
-        {onQuickAction && (
-          <span
-            role="button"
-            tabIndex={0}
-            className="day-cell__menu-button"
-            onClick={(event) => {
-              event.stopPropagation()
-              setShowMenu((current) => !current)
-            }}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault()
-                event.stopPropagation()
-                setShowMenu((current) => !current)
-              }
-            }}
-            aria-label="Open quick actions"
-          >
-            ...
-          </span>
-        )}
-      </div>
-      <div className="day-cell__body">
-        <span className="day-cell__type">
-          {timeRecord ? (
-            <>
-              <span className="day-cell__icon" aria-hidden>
-                {timeRecord.dayType === 'NORMAL_WORK_DAY'
-                  ? 'W'
-                  : timeRecord.dayType === 'REST_DAY'
-                  ? 'R'
-                  : timeRecord.dayType === 'OFF_DAY'
-                  ? 'O'
-                  : timeRecord.dayType === 'PUBLIC_HOLIDAY'
-                  ? 'PH'
-                  : isUnpaidRecord
-                  ? 'NP'
-                  : '•'}
-              </span>
-              {isUnpaidRecord ? 'Unpaid leave' : timecardLabels[timeRecord.dayType]}
-            </>
-          ) : schedule ? (
-            <>
-              <span className="day-cell__icon" aria-hidden>
-                {typeIcons[schedule.type]}
-              </span>
-              {typeLabels[schedule.type]}
-            </>
-          ) : (
-            'No entry'
-          )}
+      {/* Header: Date & Menu */}
+      <div className="flex items-center justify-between p-1.5 pl-2 pb-0">
+        <span className={`text-sm font-medium ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-neutral-700 dark:text-neutral-400'}`}>
+          {dayNumber}
         </span>
-        {timeRecord && (
-          <span className="day-cell__time">
-            {formatRecordRange(timeRecord) || 'Recorded timecard'}
-          </span>
-        )}
-        {!timeRecord && schedule && <span className="day-cell__time">{formatTimeRange(schedule)}</span>}
-        {!schedule && !timeRecord && (
-          <span className="day-cell__time">Add roster or open timecard</span>
-        )}
+
+
       </div>
-      {showMenu && onQuickAction && (
-        <div className="day-cell-menu">
-          <button type="button" onClick={() => handleAction('edit')}>
-            Modify Schedule
-          </button>
-          <button type="button" onClick={() => handleAction('timecard')}>
-            Record Timecard
-          </button>
-          <button type="button" onClick={() => handleAction('history')}>
-            View History
-          </button>
-          <button type="button" onClick={() => handleAction('copy')}>
-            Copy Details
-          </button>
-          <button type="button" onClick={() => handleAction('paste')}>
-            Paste Details
-          </button>
-        </div>
-      )}
-    </button>
+
+      {/* Body: simplified content */}
+      <div className="flex-1 flex flex-col justify-start p-1.5 gap-1 min-h-[4rem] overflow-hidden">
+        {timeRecord ? (
+          // Recorded Timecard State
+          <div className={`text-xs p-1 rounded font-medium truncate ${schedule ? typeColors[schedule.type] : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'}`}>
+            <div className="flex items-center gap-1">
+              <span className="font-bold">✓</span>
+              <span className="truncate">{timeRecord.dayType === 'NORMAL_WORK_DAY' ? 'Worked' : 'Recorded'}</span>
+            </div>
+            <div className="text-[10px] opacity-80 mt-0.5">
+              {formatTimeShort(timeRecord.actualStartTime)}
+              {timeRecord.actualEndTime ? ` - ${formatTimeShort(timeRecord.actualEndTime)}` : ''}
+            </div>
+          </div>
+        ) : schedule ? (
+          // Schedule State
+          <div className={`text-xs p-1 rounded font-medium truncate ${typeColors[schedule.type]}`}>
+            <div className="truncate font-semibold">{typeShortLabels[schedule.type] || schedule.type}</div>
+            {(schedule.plannedStartTime || schedule.plannedEndTime) && (
+              <div className="text-[10px] opacity-80 mt-0.5 whitespace-nowrap">
+                {formatTimeShort(schedule.plannedStartTime)}
+                {schedule.plannedEndTime ? `-${formatTimeShort(schedule.plannedEndTime)}` : ''}
+              </div>
+            )}
+          </div>
+        ) : isCurrentMonth ? (
+          // Empty State - Minimalist "+"
+          <div className="flex-1 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+            <Plus className="w-4 h-4 text-neutral-300 dark:text-neutral-600" />
+          </div>
+        ) : null}
+      </div>
+
+
+    </div>
   )
 }
+
+
 
 export default DayCell

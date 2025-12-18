@@ -2,8 +2,7 @@ import { useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PullToRefresh from '@/components/common/PullToRefresh'
 import SalarySummaryCard from '@/components/salary/SalarySummaryCard'
-import SalaryBreakdown from '@/components/salary/SalaryBreakdown'
-import OvertimeWarning from '@/components/salary/OvertimeWarning'
+
 import { useSalary, DEMO_EMPLOYEE_ID } from '@/hooks/useSalary'
 import { useSchedule } from '@/hooks/useSchedule'
 import { useAuthStore } from '@/store/authStore'
@@ -64,7 +63,7 @@ function HomePage() {
   } = useSchedule({ employeeId, month, autoFetch: true })
 
   useEffect(() => {
-    Promise.all([refreshSalary(), refreshSchedule()]).catch(() => {})
+    Promise.all([refreshSalary(), refreshSchedule()]).catch(() => { })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -165,7 +164,10 @@ function HomePage() {
                 View details
               </button>
             </div>
-            <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+            <button
+              onClick={() => navigate(salaryRoute)}
+              className="w-full text-left overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition active:scale-[0.99]"
+            >
               {isLoading ? (
                 <SkeletonCard />
               ) : (
@@ -175,11 +177,8 @@ function HomePage() {
                   isPersisting={isPersisting}
                 />
               )}
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <SalaryBreakdown summary={summary} isLoading={isLoading} variant="compact" />
-              <OvertimeWarning summary={summary} />
-            </div>
+            </button>
+
           </div>
 
           <div className="space-y-3">
@@ -188,13 +187,7 @@ function HomePage() {
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Schedule</p>
                 <h3 className="text-lg font-bold text-slate-900">Coming up</h3>
               </div>
-              <button
-                type="button"
-                onClick={() => navigate('/calendar')}
-                className="text-sm font-semibold text-brand-600 hover:text-brand-500"
-              >
-                Open calendar
-              </button>
+
             </div>
             <div className="space-y-3">
               {isScheduleLoading && (
@@ -204,8 +197,8 @@ function HomePage() {
                 </>
               )}
               {!isScheduleLoading && upcomingEntries.length === 0 && (
-                <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-6 text-center text-slate-500 shadow-sm">
-                  No upcoming shifts. Import a roster to populate your calendar.
+                <div className="py-4 text-center text-sm text-slate-500">
+                  No upcoming shifts
                 </div>
               )}
               {!isScheduleLoading &&
@@ -232,11 +225,7 @@ function HomePage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-100 bg-white px-6 py-6 text-center shadow-sm">
-            <p className="text-3xl">🎉</p>
-            <p className="mt-2 text-base font-semibold text-slate-800">All caught up</p>
-            <p className="text-sm text-slate-500">No missing timecards or alerts.</p>
-          </div>
+
         </div>
       </section>
     </PullToRefresh>

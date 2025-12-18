@@ -37,6 +37,7 @@ interface UserStoreState {
   overridePartIV: (isApplicable: boolean, reason?: string | null) => void
   loadProfile: (loader: () => Promise<Employee | null>) => Promise<Employee | null>
   setStatus: (status: UserStoreStatus, error?: string | null) => void
+  clearProfile: () => void
   clear: () => void
 }
 
@@ -174,6 +175,15 @@ export const useUserStore = create<UserStoreState>()(
         }
       },
       setStatus: (status, error = null) => set({ status, error }),
+      clearProfile: () =>
+        set({
+          profile: null,
+          computed: null,
+          partIV: { ...defaultPartIV },
+          status: 'idle',
+          error: null,
+          lastSyncedAt: null,
+        }),
       clear: () =>
         set({
           ...initialState,

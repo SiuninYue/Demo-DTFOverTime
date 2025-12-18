@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { ChevronLeft, ChevronRight, Info, Calendar as CalendarIcon, Import } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 import PullToRefresh from '@/components/common/PullToRefresh'
 import MonthCalendar from '@/components/calendar/MonthCalendar'
 import DayDetailModal from '@/components/calendar/DayDetailModal'
-import ScheduleImageViewer from '@/components/calendar/ScheduleImageViewer'
 import { useSchedule } from '@/hooks/useSchedule'
 import { DEMO_EMPLOYEE_ID } from '@/hooks/useSalary'
 import type { QuickAction } from '@/components/calendar/DayCell'
@@ -50,7 +50,7 @@ function CalendarPage() {
 
   useEffect(() => {
     if (timecardStatus === 'idle') {
-      loadMonthRecords(monthId, () => getMonthlyRecords(employeeId, monthId)).catch(() => {})
+      loadMonthRecords(monthId, () => getMonthlyRecords(employeeId, monthId)).catch(() => { })
     }
   }, [employeeId, loadMonthRecords, monthId, timecardStatus])
 
@@ -61,7 +61,6 @@ function CalendarPage() {
 
   const [detailDate, setDetailDate] = useState<string | null>(null)
   const [isDetailOpen, setDetailOpen] = useState(false)
-  const [isViewerOpen, setViewerOpen] = useState(false)
   const { showToast } = useToast()
 
   useEffect(() => {
@@ -112,33 +111,31 @@ function CalendarPage() {
     }
   }
 
-  const handleImportRedirect = () => {
-    navigate(`/schedule/import?month=${monthId}`)
-  }
+
 
   const copyScheduleDetails = async (targetDate: string) => {
     const entry = schedule?.scheduleData[targetDate]
     const record = timeRecords[targetDate]
     const summary = record
       ? [
-          `Date: ${targetDate}`,
-          `DayType: ${record.dayType}`,
-          record.actualStartTime ? `Start: ${record.actualStartTime}` : null,
-          record.actualEndTime ? `End: ${record.actualEndTime}` : null,
-          `Rest: ${record.restHours ?? 0}`,
-          record.notes ? `Notes: ${record.notes}` : null,
-        ]
-          .filter(Boolean)
-          .join('\n')
+        `Date: ${targetDate}`,
+        `DayType: ${record.dayType}`,
+        record.actualStartTime ? `Start: ${record.actualStartTime}` : null,
+        record.actualEndTime ? `End: ${record.actualEndTime}` : null,
+        `Rest: ${record.restHours ?? 0}`,
+        record.notes ? `Notes: ${record.notes}` : null,
+      ]
+        .filter(Boolean)
+        .join('\n')
       : [
-          `Date: ${targetDate}`,
-          entry?.type ? `Type: ${entry.type}` : null,
-          entry?.plannedStartTime ? `Start: ${entry.plannedStartTime}` : null,
-          entry?.plannedEndTime ? `End: ${entry.plannedEndTime}` : null,
-          entry?.notes ? `Notes: ${entry.notes}` : null,
-        ]
-          .filter(Boolean)
-          .join('\n')
+        `Date: ${targetDate}`,
+        entry?.type ? `Type: ${entry.type}` : null,
+        entry?.plannedStartTime ? `Start: ${entry.plannedStartTime}` : null,
+        entry?.plannedEndTime ? `End: ${entry.plannedEndTime}` : null,
+        entry?.notes ? `Notes: ${entry.notes}` : null,
+      ]
+        .filter(Boolean)
+        .join('\n')
     try {
       await navigator.clipboard.writeText(summary || `Date: ${targetDate}`)
       showToast({
@@ -229,35 +226,47 @@ function CalendarPage() {
           <div className="offline-banner">Offline mode: showing cached schedule data</div>
         )}
 
-        <div className="calendar-toolbar">
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <p className="text-muted">Current month</p>
-            <h1>{monthId}</h1>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400 font-medium">Current month</p>
+            <h1 className="text-3xl font-bold tracking-tight text-neutral-900 dark:text-white mt-0.5">{monthId}</h1>
           </div>
-          <div className="calendar-toolbar__actions">
-            <button type="button" className="secondary" onClick={() => setViewerOpen(true)}>
-              ?? View Roster
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="inline-flex items-center justify-center rounded-full w-10 h-10 bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700 transition"
+              onClick={() => handleMonthChange('prev')}
+              aria-label="Previous Month"
+            >
+              <ChevronLeft className="w-5 h-5" />
             </button>
-            <button type="button" className="ghost" onClick={() => handleMonthChange('prev')}>
-              ? Previous
+            <button
+              type="button"
+              className="inline-flex items-center justify-center rounded-full w-10 h-10 bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700 transition"
+              onClick={() => handleMonthChange('next')}
+              aria-label="Next Month"
+            >
+              <ChevronRight className="w-5 h-5" />
             </button>
-            <button type="button" className="ghost" onClick={() => handleMonthChange('next')}>
-              Next ?
-            </button>
+            {/* <button
+              type="button"
+              className="inline-flex items-center gap-2 px-4 py-2 ml-2 text-sm font-medium text-white bg-blue-600 rounded-full hover:bg-blue-700 transition shadow-sm"
+              onClick={() => setViewerOpen(true)}
+            >
+              <ImageIcon className="w-4 h-4" />
+              View Roster
+            </button> */}
           </div>
         </div>
 
-        {error && <p className="upload-error">Error: {error}</p>}
-        {isLoading && <Loading label="Refreshing roster" description="Fetching schedule data" />}
-
-        {!isLoading && !hasData && (
-          <div className="empty-state">
-            <p>No schedule has been imported for this month.</p>
-            <button type="button" className="secondary" onClick={handleImportRedirect}>
-              Import Schedule
-            </button>
+        {error && (
+          <div className="mb-6 p-4 rounded-lg bg-red-50 text-red-900 border border-red-100 flex items-center gap-3">
+            <Info className="w-5 h-5 text-red-500" />
+            <p>{error}</p>
           </div>
         )}
+
+        {isLoading && <Loading label="Refreshing roster" description="Fetching schedule data" />}
 
         <MonthCalendar
           month={monthId}
@@ -274,17 +283,10 @@ function CalendarPage() {
           schedule={selectedEntry}
           isOpen={isDetailOpen && Boolean(detailDate)}
           onClose={() => setDetailOpen(false)}
-          onViewImage={() => setViewerOpen(true)}
           onEditSchedule={openScheduleEditor}
           onRecordTimecard={(date) => navigate(`/timecard/${date}`)}
           onCopyDetails={copyScheduleDetails}
-        />
-
-        <ScheduleImageViewer
-          imageUrl={schedule?.originalImageUrl ?? null}
-          fileName={schedule?.imageFileName}
-          open={isViewerOpen && Boolean(schedule?.originalImageUrl)}
-          onClose={() => setViewerOpen(false)}
+          onPasteDetails={handlePasteTimecard}
         />
 
       </section>

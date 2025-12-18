@@ -68,6 +68,9 @@ function DayDetailModal({
           <button type="button" className="ghost" onClick={() => onCopyDetails?.(date)}>
             Copy Details
           </button>
+          <button type="button" className="ghost" onClick={() => onPasteDetails?.(date)}>
+            Paste Details
+          </button>
           <button type="button" className="ghost" onClick={() => onEditSchedule?.(date)}>
             Modify Schedule
           </button>

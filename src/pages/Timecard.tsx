@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import PullToRefresh from '@/components/common/PullToRefresh'
-import TimeInput from '@/components/timecard/TimeInput'
+import SmartTimeInput from '@/components/timecard/SmartTimeInput'
 import RestDayTimecardForm from '@/components/timecard/RestDayTimecardForm'
 import PHTimecardForm from '@/components/timecard/PHTimecardForm'
 import SalaryPreview from '@/components/timecard/SalaryPreview'
@@ -58,10 +58,11 @@ function TimecardPage() {
   const isUnpaidLeave = record.dayType === DayType.ANNUAL_LEAVE && (record.notes?.includes(UNPAID_LEAVE_TAG) ?? false)
   const stripInternalTags = (value?: string | null) =>
     (value ?? '')
-      .replaceAll(UNPAID_MC_TAG, '')
-      .replaceAll(UNPAID_LEAVE_TAG, '')
+      .replace(/\[UNPAID_MC\]/g, '')
+      .replace(/\[UNPAID_LEAVE\]/g, '')
       .replace(/\s+/g, ' ')
       .trim()
+
   const joinNotesWithTags = (body: string, unpaidMc: boolean, unpaidLeave: boolean) =>
     [unpaidMc ? UNPAID_MC_TAG : null, unpaidLeave ? UNPAID_LEAVE_TAG : null, body.trim()]
       .filter(Boolean)
@@ -82,7 +83,7 @@ function TimecardPage() {
     navigate('/')
   }
 
-  const handleFieldChange = <K extends keyof typeof record>(field: K, value: typeof record[K]) => {
+  const handleFieldChange = <K extends keyof Omit<typeof record, 'id'>>(field: K, value: typeof record[K]) => {
     updateField(field, value)
   }
 
@@ -156,7 +157,7 @@ function TimecardPage() {
           className="timecard-form"
           onSubmit={(event) => {
             event.preventDefault()
-            handleSaveAndExit().catch(() => {})
+            handleSaveAndExit().catch(() => { })
           }}
         >
           <label className="time-input">
@@ -200,7 +201,7 @@ function TimecardPage() {
             </select>
           </label>
 
-          <TimeInput
+          <SmartTimeInput
             label="Actual Start"
             value={record.actualStartTime}
             onChange={(value) => handleFieldChange('actualStartTime', value)}
@@ -208,7 +209,7 @@ function TimecardPage() {
             disabled={interactionDisabled}
           />
 
-          <TimeInput
+          <SmartTimeInput
             label="Actual End"
             value={record.actualEndTime}
             onChange={(value) => handleFieldChange('actualEndTime', value)}
@@ -239,42 +240,42 @@ function TimecardPage() {
             <span>Shift spans midnight</span>
           </label>
 
-        <label className="time-input" style={{ gridColumn: '1 / -1' }}>
-          <span className="time-input__label">Notes</span>
-          <textarea
-            value={stripInternalTags(record.notes)}
-            onChange={(event) => {
-              const body = event.target.value ?? ''
-              const nextNotes = joinNotesWithTags(body, isUnpaidMc, isUnpaidLeave)
-              handleFieldChange('notes', nextNotes || undefined)
-            }}
-            rows={3}
-            disabled={interactionDisabled}
-          />
-        </label>
+          <label className="time-input" style={{ gridColumn: '1 / -1' }}>
+            <span className="time-input__label">Notes</span>
+            <textarea
+              value={stripInternalTags(record.notes)}
+              onChange={(event) => {
+                const body = event.target.value ?? ''
+                const nextNotes = joinNotesWithTags(body, isUnpaidMc, isUnpaidLeave)
+                handleFieldChange('notes', nextNotes || undefined)
+              }}
+              rows={3}
+              disabled={interactionDisabled}
+            />
+          </label>
 
-        {record.dayType === DayType.MEDICAL_LEAVE && (
-          <label className="toggle" style={{ gridColumn: '1 / -1' }}>
-            <input
-              type="checkbox"
-              checked={isUnpaidMc}
-              onChange={(event) => setUnpaidMc(event.target.checked)}
-              disabled={interactionDisabled}
-            />
-            <span>Mark as unpaid MC</span>
-          </label>
-        )}
-        {record.dayType === DayType.ANNUAL_LEAVE && (
-          <label className="toggle" style={{ gridColumn: '1 / -1' }}>
-            <input
-              type="checkbox"
-              checked={isUnpaidLeave}
-              onChange={(event) => setUnpaidLeave(event.target.checked)}
-              disabled={interactionDisabled}
-            />
-            <span>Mark as unpaid leave</span>
-          </label>
-        )}
+          {record.dayType === DayType.MEDICAL_LEAVE && (
+            <label className="toggle" style={{ gridColumn: '1 / -1' }}>
+              <input
+                type="checkbox"
+                checked={isUnpaidMc}
+                onChange={(event) => setUnpaidMc(event.target.checked)}
+                disabled={interactionDisabled}
+              />
+              <span>Mark as unpaid MC</span>
+            </label>
+          )}
+          {record.dayType === DayType.ANNUAL_LEAVE && (
+            <label className="toggle" style={{ gridColumn: '1 / -1' }}>
+              <input
+                type="checkbox"
+                checked={isUnpaidLeave}
+                onChange={(event) => setUnpaidLeave(event.target.checked)}
+                disabled={interactionDisabled}
+              />
+              <span>Mark as unpaid leave</span>
+            </label>
+          )}
         </form>
 
         {isRestOrOffDay && (
@@ -300,11 +301,11 @@ function TimecardPage() {
             type="button"
             className="secondary"
             disabled={isSaving || !hasChanges || !isOnline}
-            onClick={() => handleSaveAndExit().catch(() => {})}
+            onClick={() => handleSaveAndExit().catch(() => { })}
           >
             Save &amp; Return Home
           </button>
-          <button type="button" className="ghost" onClick={() => handleDelete().catch(() => {})} disabled={isSaving || !isOnline}>
+          <button type="button" className="ghost" onClick={() => handleDelete().catch(() => { })} disabled={isSaving || !isOnline}>
             Delete Record
           </button>
         </div>

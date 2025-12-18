@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
+import { useUserStore } from '@/store/userStore'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -8,6 +9,8 @@ interface ProtectedRouteProps {
 
 function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { user, isInitialized, initialize } = useAuthStore()
+  const clearProfile = useUserStore((state) => state.clearProfile)
+  const profileId = useUserStore((state) => state.profile?.id)
   const location = useLocation()
 
   useEffect(() => {
@@ -15,6 +18,19 @@ function ProtectedRoute({ children }: ProtectedRouteProps) {
       initialize()
     }
   }, [isInitialized, initialize])
+
+  useEffect(() => {
+    if (!isInitialized) {
+      return
+    }
+    if (!user) {
+      clearProfile()
+      return
+    }
+    if (profileId && profileId !== user.id) {
+      clearProfile()
+    }
+  }, [clearProfile, isInitialized, profileId, user])
 
   if (!isInitialized) {
     return (

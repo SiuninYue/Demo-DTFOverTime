@@ -34,9 +34,6 @@ function BasicInfoForm({ values, onChange, onSubmit, isSaving }: BasicInfoFormPr
           <p className="label">Profile</p>
           <h3>Basic information</h3>
         </div>
-        <button type="button" className="ghost" onClick={onSubmit} disabled={isSaving}>
-          Save
-        </button>
       </header>
 
       <form className="settings-form" onSubmit={handleSubmit}>

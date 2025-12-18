@@ -55,9 +55,6 @@ function SalaryInfoForm({ values, isWorkman, onChange, onSubmit, isSaving }: Sal
           <p className="label">Compensation</p>
           <h3>Salary & pay day</h3>
         </div>
-        <button type="button" className="ghost" onClick={onSubmit} disabled={isSaving}>
-          Save
-        </button>
       </header>
 
       <PartIVBadge

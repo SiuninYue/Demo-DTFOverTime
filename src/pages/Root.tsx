@@ -1,15 +1,8 @@
 import { Outlet, useLocation, useNavigation } from 'react-router-dom'
-import BottomNav from '@/components/common/BottomNav'
+import Dock from '@/components/common/Dock'
 import '@/App.css'
 
 import { CalendarDays, Home, PanelsTopLeft, Wallet2 } from 'lucide-react'
-
-const bottomNavItems = [
-  { to: '/', label: 'Home', icon: <Home className="h-6 w-6" strokeWidth={2.4} />, exact: true },
-  { to: '/calendar', label: 'Calendar', icon: <CalendarDays className="h-6 w-6" strokeWidth={2.3} /> },
-  { to: '/salary', label: 'Salary', icon: <Wallet2 className="h-6 w-6" strokeWidth={2.3} /> },
-  { to: '/more', label: 'More', icon: <PanelsTopLeft className="h-6 w-6" strokeWidth={2.3} /> },
-]
 
 const resolveSectionTitle = (pathname: string) => {
   if (pathname.startsWith('/schedule')) return 'Schedule Import'
@@ -28,24 +21,30 @@ function RootLayout() {
   const isNavigating = navigation.state !== 'idle'
   const sectionTitle = resolveSectionTitle(location.pathname)
 
+  // Determine if we should hide nav on desktop or apply specific styles
+  // The original BottomNav had 'hideOnDesktop={false}' logic.
+  // We'll keep the menu visible.
+
   return (
-    <div className="app-shell" data-navigation={isNavigating ? 'busy' : 'idle'}>
-      <header className="app-header">
-        <div className="app-header__title-row">
-          <h1 className="app-title">{sectionTitle}</h1>
-          {isNavigating && (
-            <span className="app-loading-indicator" aria-live="polite">
-              Syncing...
-            </span>
-          )}
-        </div>
+    <div className="flex flex-col min-h-screen pb-24 md:pb-0" data-navigation={isNavigating ? 'busy' : 'idle'}>
+      {/* Mobile Header (Hidden on Desktop if using Sidebar, but currently we rely on Dock) */}
+      <header className="sticky top-0 z-40 w-full glass-panel border-b-0 rounded-none border-b border-white/20 px-6 py-4 flex items-center justify-between md:hidden">
+        <h1 className="text-xl font-bold tracking-tight text-neutral-900 dark:text-white drop-shadow-sm">
+          {sectionTitle}
+        </h1>
+        {isNavigating && (
+          <span className="text-xs font-medium text-neutral-500 animate-pulse bg-white/50 px-2 py-1 rounded-full">
+            Syncing...
+          </span>
+        )}
       </header>
 
-      <main className="app-content" role="main">
+      {/* Main Content Area */}
+      <main className="flex-1 w-full max-w-2xl mx-auto px-4 py-6 md:py-10 animate-in fade-in duration-500 ease-out">
         <Outlet />
       </main>
 
-      <BottomNav items={bottomNavItems} hideOnDesktop={false} />
+      <Dock />
     </div>
   )
 }

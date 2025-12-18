@@ -22,6 +22,8 @@ export interface Employee {
   workScheduleType: WorkScheduleType
   normalWorkHours: number
   defaultRestHours: number
+  defaultStartTime?: string
+  defaultEndTime?: string
   outletCode?: string
   isWorkman: boolean
   isPartIVApplicable: boolean
