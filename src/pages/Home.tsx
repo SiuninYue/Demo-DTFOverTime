@@ -114,7 +114,7 @@ function HomePage() {
             <button
               type="button"
               onClick={() => navigate("/settings")}
-              className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-lg font-bold text-slate-700 shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition hover:-translate-y-0.5 focus:outline-none border-0"
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-lg font-bold text-slate-700 shadow-[0_4px_12px_rgba(0,0,0,0.02)] transition hover:-translate-y-0.5 focus:outline-none border-0"
               aria-label="打开设置"
             >
               {displayName.charAt(0).toUpperCase()}
@@ -126,7 +126,7 @@ function HomePage() {
             onClick={() => navigate(`/timecard/${todayKey}`)}
             className="block w-full text-left transition-transform active:scale-[0.99] outline-none bg-transparent border-0"
           >
-            <div className="relative overflow-hidden rounded-[1.5rem] bg-[#F3F6FC] p-5 shadow-sm transition-all hover:shadow-md border-0">
+            <div className="relative overflow-hidden rounded-[1.5rem] bg-[#F3F6FC] p-5 shadow-[0_1px_2px_rgba(0,0,0,0.02)] transition-all hover:shadow-[0_4px_6px_rgba(0,0,0,0.03)] border-0">
               <div className="flex items-center justify-between mb-5">
                 <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-bold text-blue-600">
                   今日 · {formatDate(todayKey, { format: "medium" })}
@@ -138,7 +138,7 @@ function HomePage() {
               <div className="flex items-center gap-5">
                 <div
                   className={[
-                    "flex h-14 w-14 items-center justify-center rounded-2xl text-3xl bg-white shadow-sm border-0",
+                    "flex h-14 w-14 items-center justify-center rounded-2xl text-3xl bg-white border-0",
                     todaySchedule ? "text-blue-600" : "text-slate-400",
                   ]
                     .filter(Boolean)
@@ -208,10 +208,10 @@ function HomePage() {
                     key={date}
                     type="button"
                     onClick={() => navigate(`/timecard/${date}`)}
-                    className="group flex w-full items-center justify-between rounded-[1.25rem] bg-[#F3F6FC] p-4 text-left shadow-sm transition-all hover:shadow-md active:scale-[0.99] outline-none border-0"
+                    className="group flex w-full items-center justify-between rounded-[1.25rem] bg-[#F3F6FC] p-4 text-left shadow-[0_1px_2px_rgba(0,0,0,0.02)] transition-all hover:shadow-[0_4px_6px_rgba(0,0,0,0.03)] active:scale-[0.99] outline-none border-0"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="flex h-12 w-12 flex-col items-center justify-center rounded-xl bg-white text-slate-900 shadow-sm border-0">
+                      <div className="flex h-12 w-12 flex-col items-center justify-center rounded-xl bg-white text-slate-900 border-0">
                         <span className="text-[10px] font-bold uppercase text-slate-400">
                           {new Date(date).getDate()}
                         </span>
