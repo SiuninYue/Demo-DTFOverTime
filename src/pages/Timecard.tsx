@@ -51,6 +51,8 @@ function TimecardPage() {
   }, [scheduleEntry])
 
   const isRestOrOffDay = record.dayType === DayType.REST_DAY || record.dayType === DayType.OFF_DAY
+  const isEmployerRequested = record.isEmployerRequested ?? false
+  const showWorkDetails = !isRestOrOffDay || isEmployerRequested
   const isStatutoryRestDay =
     record.dayType === DayType.REST_DAY ? record.isStatutoryRestDay ?? true : false
   const isPublicHoliday = record.dayType === DayType.PUBLIC_HOLIDAY
@@ -97,6 +99,13 @@ function TimecardPage() {
     const body = stripInternalTags(record.notes)
     const nextNotes = joinNotesWithTags(body, isUnpaidMc, value)
     handleFieldChange('notes', nextNotes || undefined)
+  }
+
+  const clearWorkDetails = () => {
+    handleFieldChange('actualStartTime', null)
+    handleFieldChange('actualEndTime', null)
+    handleFieldChange('restHours', 0)
+    handleFieldChange('spansMidnight', false)
   }
 
   const getDayTypeSelectValue = () => {
@@ -178,6 +187,13 @@ function TimecardPage() {
                   setUnpaidMc(false)
                   setUnpaidLeave(false)
                   setDayType(value as DayType)
+                  const nextDayType = value as DayType
+                  const isRestLike =
+                    nextDayType === DayType.REST_DAY || nextDayType === DayType.OFF_DAY
+                  if (isRestLike) {
+                    handleFieldChange('isEmployerRequested', false)
+                    clearWorkDetails()
+                  }
                 }
               }}
               disabled={interactionDisabled}
@@ -201,44 +217,54 @@ function TimecardPage() {
             </select>
           </label>
 
-          <SmartTimeInput
-            label="实际开始"
-            value={record.actualStartTime}
-            onChange={(value) => handleFieldChange('actualStartTime', value)}
-            helperText="点按可快速输入/调整打卡时间"
-            disabled={interactionDisabled}
-          />
+          {showWorkDetails ? (
+            <>
+              <SmartTimeInput
+                label="实际开始"
+                value={record.actualStartTime}
+                onChange={(value) => handleFieldChange('actualStartTime', value)}
+                helperText="点按可快速输入/调整打卡时间"
+                disabled={interactionDisabled}
+              />
 
-          <SmartTimeInput
-            label="实际结束"
-            value={record.actualEndTime}
-            onChange={(value) => handleFieldChange('actualEndTime', value)}
-            helperText="用于计算工时"
-            disabled={interactionDisabled}
-          />
+              <SmartTimeInput
+                label="实际结束"
+                value={record.actualEndTime}
+                onChange={(value) => handleFieldChange('actualEndTime', value)}
+                helperText="用于计算工时"
+                disabled={interactionDisabled}
+              />
 
-          <label className="time-input">
-            <span className="time-input__label">休息时数</span>
-            <input
-              type="number"
-              min={0}
-              max={5}
-              step={0.25}
-              value={record.restHours}
-              onChange={(event) => handleFieldChange('restHours', Number(event.target.value))}
-              disabled={interactionDisabled}
-            />
-          </label>
+              <label className="time-input">
+                <span className="time-input__label">休息时数</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={5}
+                  step={0.25}
+                  value={record.restHours}
+                  onChange={(event) => handleFieldChange('restHours', Number(event.target.value))}
+                  disabled={interactionDisabled}
+                />
+              </label>
 
-          <label className="toggle">
-            <input
-              type="checkbox"
-              checked={record.spansMidnight ?? false}
-              onChange={(event) => handleFieldChange('spansMidnight', event.target.checked)}
-              disabled={interactionDisabled}
-            />
-            <span>跨夜班次</span>
-          </label>
+              <label className="toggle">
+                <input
+                  type="checkbox"
+                  checked={record.spansMidnight ?? false}
+                  onChange={(event) =>
+                    handleFieldChange('spansMidnight', event.target.checked)
+                  }
+                  disabled={interactionDisabled}
+                />
+                <span>跨夜班次</span>
+              </label>
+            </>
+          ) : (
+            <p className="text-muted" style={{ gridColumn: '1 / -1', marginTop: '0.25rem' }}>
+              休息日无需填写工时信息，勾选「雇主要求加班」后才需要填写。
+            </p>
+          )}
 
           <label className="time-input" style={{ gridColumn: '1 / -1' }}>
             <span className="time-input__label">备注</span>
@@ -282,12 +308,15 @@ function TimecardPage() {
           <RestDayTimecardForm
             dayType={record.dayType}
             isStatutoryRestDay={isStatutoryRestDay}
-            isEmployerRequested={record.isEmployerRequested ?? true}
+            isEmployerRequested={isEmployerRequested}
             disabled={interactionDisabled}
             onChange={({ dayType, isStatutoryRestDay: nextStatRestDay, isEmployerRequested }) => {
               setDayType(dayType)
               handleFieldChange('isStatutoryRestDay', nextStatRestDay)
               handleFieldChange('isEmployerRequested', isEmployerRequested)
+              if (!isEmployerRequested) {
+                clearWorkDetails()
+              }
             }}
           />
         )}

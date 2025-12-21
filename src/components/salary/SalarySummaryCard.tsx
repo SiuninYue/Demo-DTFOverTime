@@ -40,70 +40,89 @@ function SalarySummaryCard({ summary, isLoading, isPersisting, onViewDetails }: 
   const lastSyncedLabel = formatTimestamp(summary?.lastSyncedAt)
 
   return (
-    <section className="salary-summary-card">
-      <header className="salary-summary-card__header">
+    <section className="relative overflow-hidden rounded-[1.5rem] bg-[#F3F6FC] p-5 shadow-sm transition-all text-left">
+      <header className="flex items-center justify-between">
         <div>
-          <p className="text-muted">工资概览</p>
-          <h2>{summary?.monthLabel ?? '尚未设置'}</h2>
+          <p className="text-sm font-medium text-slate-500">工资概览</p>
+          <h2 className="text-lg font-bold text-slate-900 mt-0.5">
+            {summary?.monthLabel ?? '尚未设置'}
+          </h2>
         </div>
-        <div className="salary-summary-card__status">
-          {isPersisting && <span className="salary-pill">同步中…</span>}
-          {!isPersisting && summary && <span className="salary-pill salary-pill--success">已更新</span>}
+        <div>
+          {isPersisting ? (
+            <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-600">
+              同步中…
+            </span>
+          ) : summary ? (
+            <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-600">
+              已更新
+            </span>
+          ) : null}
         </div>
       </header>
 
-      <div className="salary-summary-card__total">
-        <p className="label">预计实发（净额）</p>
-        <p className="value">{isLoading ? '计算中…' : total}</p>
+      <div className="mt-5">
+        <p className="text-sm font-medium text-slate-500">预计实发（净额）</p>
+        <p className="mt-1 text-4xl font-extrabold tracking-tight text-slate-900">
+          {isLoading ? '计算中…' : total}
+        </p>
       </div>
 
-      <div className="salary-summary-card__breakdown">
-        <div>
-          <p className="label">底薪</p>
-          <p className="value">{base}</p>
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="rounded-xl bg-white p-3 shadow-sm ring-1 ring-black/5">
+          <p className="text-xs font-medium text-slate-500">底薪</p>
+          <p className="mt-1 text-lg font-bold text-slate-900">{base}</p>
         </div>
-        <div>
-          <p className="label">全勤</p>
-          <p className="value">{attendance}</p>
+        <div className="rounded-xl bg-white p-3 shadow-sm ring-1 ring-black/5">
+          <p className="text-xs font-medium text-slate-500">全勤</p>
+          <p className="mt-1 text-lg font-bold text-slate-900">{attendance}</p>
         </div>
-        <div>
-          <p className="label">加班</p>
-          <p className="value">{overtime}</p>
+        <div className="rounded-xl bg-white p-3 shadow-sm ring-1 ring-black/5">
+          <p className="text-xs font-medium text-slate-500">加班</p>
+          <p className="mt-1 text-lg font-bold text-slate-900">{overtime}</p>
         </div>
-        <div>
-          <p className="label">扣款</p>
-          <p className="value">{deductions}</p>
+        <div className="rounded-xl bg-white p-3 shadow-sm ring-1 ring-black/5">
+          <p className="text-xs font-medium text-slate-500">扣款</p>
+          <p className="mt-1 text-lg font-bold text-slate-900">{deductions}</p>
         </div>
       </div>
 
       {summary && (
-        <div className="salary-summary-card__notice">
+        <div className="mt-4 flex items-center justify-between rounded-xl bg-blue-50/50 p-3 text-sm text-slate-700">
           <div>
-            <p className="label">病假影响</p>
-            <p>
+            <p className="font-medium text-slate-900">病假影响</p>
+            <p className="mt-0.5 text-xs text-slate-500 opacity-90">
               病假 {summary.mcDays} 天 · {attendanceImpact?.reason ?? '已计入全勤奖'}
             </p>
           </div>
-          <strong>{attendanceContext}</strong>
+          <div className="text-right font-bold tabular-nums">
+            {attendanceContext}
+          </div>
         </div>
       )}
 
-      <div className="salary-summary-card__progress">
-        <div className="salary-summary-card__progress-bar" aria-hidden="true">
-          <span style={{ width: `${progressPercent}%` }} />
+      <div className="mt-6">
+        <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
+          <div
+            className="h-full bg-gradient-to-r from-blue-500 to-teal-400 transition-all duration-500"
+            style={{ width: `${progressPercent}%` }}
+          />
         </div>
-        <div className="salary-summary-card__progress-meta">
+        <div className="mt-2 flex items-center justify-between text-xs font-medium text-slate-500">
           <p>{progressLabel}</p>
           <p>{countdown}</p>
         </div>
       </div>
 
-      <footer className="salary-summary-card__footer">
-        <div>
-          <p className="text-muted">{lastSyncedLabel}</p>
-        </div>
+      <footer className="mt-5 flex items-center justify-between border-t border-slate-200/60 pt-4">
+        <p className="text-xs text-slate-400">{lastSyncedLabel}</p>
         {onViewDetails && (
-          <button type="button" className="secondary" onClick={onViewDetails} disabled={isLoading}>
+          <button
+            type="button"
+            className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-white hover:shadow-sm hover:text-slate-900"
+            onClick={onViewDetails}
+            disabled={isLoading}
+          >
             查看详情
           </button>
         )}

@@ -704,10 +704,10 @@ button:disabled {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1rem;
-  background: #fff;
-  padding: 1rem;
-  border-radius: 1rem;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+  background: #F3F6FC;
+  padding: 1.25rem;
+  border-radius: 1.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
 }
 
 .time-input {
@@ -740,12 +740,13 @@ button:disabled {
 .rest-day-card,
 .ph-card,
 .salary-preview {
-  background: rgba(15, 23, 42, 0.03);
-  border-radius: 1rem;
-  padding: 1rem;
+  background: #F3F6FC;
+  border-radius: 1.5rem;
+  padding: 1.25rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
 }
 
 .rest-day-card__controls {

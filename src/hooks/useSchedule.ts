@@ -42,35 +42,28 @@ export const useSchedule = ({
   const setError = useScheduleStore((state) => state.setError)
   const setOffline = useScheduleStore((state) => state.setOffline)
   const isOffline = useScheduleStore((state) => state.isOffline)
-  const [isLoading, setIsLoading] = useState(status === 'loading')
-  const [error, setErrorState] = useState<string | null>(storeError)
 
   const fetchSchedule = useCallback(async () => {
     if (!autoFetch) {
       return
     }
 
-    setIsLoading(true)
     setStatus(normalizedMonth, 'loading')
     setError(normalizedMonth, null)
-    setErrorState(null)
 
     try {
-      const schedule = await getScheduleByMonth(employeeId, normalizedMonth)
-      if (schedule) {
-        setSchedule(schedule)
+      const scheduleData = await getScheduleByMonth(employeeId, normalizedMonth)
+      if (scheduleData) {
+        setSchedule(scheduleData)
         setOffline(false)
       } else {
-        setStatus(normalizedMonth, 'idle')
+        setStatus(normalizedMonth, 'ready')
       }
     } catch (fetchError) {
       const message =
         fetchError instanceof Error ? fetchError.message : '加载排班数据失败。'
-      setErrorState(message)
       setError(normalizedMonth, message)
       setOffline(Boolean(schedule))
-    } finally {
-      setIsLoading(false)
     }
   }, [autoFetch, employeeId, normalizedMonth, schedule, setError, setOffline, setSchedule, setStatus])
 
@@ -78,17 +71,16 @@ export const useSchedule = ({
     if (!autoFetch) {
       return
     }
-    if (!schedule) {
+    if (!schedule && status === 'idle') {
       fetchSchedule()
     }
-    // we intentionally skip fetchSchedule from deps to avoid duplicate invocation
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoFetch, schedule, normalizedMonth])
+  }, [autoFetch, schedule, normalizedMonth, status])
 
   return {
     schedule: useMemo(() => schedule ?? null, [schedule]),
-    isLoading,
-    error,
+    isLoading: status === 'loading',
+    error: storeError,
     isOffline,
     hasData: Boolean(schedule),
     refresh: fetchSchedule,

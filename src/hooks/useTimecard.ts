@@ -36,17 +36,20 @@ interface UseTimecardResult {
   remove: () => Promise<void>
 }
 
-const buildDefaultRecord = (date: string, dayType: DayType): TimeRecordInput => ({
-  date,
-  dayType,
-  isStatutoryRestDay: dayType === DayType.REST_DAY,
-  actualStartTime: null,
-  actualEndTime: null,
-  restHours: 1,
-  isEmployerRequested: true,
-  spansMidnight: false,
-  notes: '',
-})
+const buildDefaultRecord = (date: string, dayType: DayType): TimeRecordInput => {
+  const isRestOrOffDay = dayType === DayType.REST_DAY || dayType === DayType.OFF_DAY
+  return {
+    date,
+    dayType,
+    isStatutoryRestDay: dayType === DayType.REST_DAY,
+    actualStartTime: null,
+    actualEndTime: null,
+    restHours: isRestOrOffDay ? 0 : 1,
+    isEmployerRequested: !isRestOrOffDay,
+    spansMidnight: false,
+    notes: '',
+  }
+}
 
 const UNPAID_MC_TAG = '[UNPAID_MC]'
 
@@ -170,20 +173,32 @@ export const useTimecard = ({ employeeId, date }: UseTimecardOptions): UseTimeca
 
   const updateField = useCallback(
     <K extends keyof TimeRecordInput>(field: K, value: TimeRecordInput[K]) => {
+      let didChange = false
       setRecord((current) => {
+        if (Object.is(current[field], value)) {
+          return current
+        }
+        didChange = true
         const next = { ...current, [field]: value }
         if (current.id) {
           next.isModified = true
         }
         return next
       })
-      setHasChanges(true)
+      if (didChange) {
+        setHasChanges(true)
+      }
     },
     [],
   )
 
   const setDayType = useCallback((dayType: DayType) => {
+    let didChange = false
     setRecord((current) => {
+      if (current.dayType === dayType) {
+        return current
+      }
+      didChange = true
       const next: typeof current = {
         ...current,
         dayType,
@@ -195,7 +210,9 @@ export const useTimecard = ({ employeeId, date }: UseTimecardOptions): UseTimeca
       }
       return next
     })
-    setHasChanges(true)
+    if (didChange) {
+      setHasChanges(true)
+    }
   }, [])
 
   const resetToSchedule = useCallback(() => {
@@ -205,7 +222,8 @@ export const useTimecard = ({ employeeId, date }: UseTimecardOptions): UseTimeca
       next.isModified = current.id ? true : current.isModified
       next.actualStartTime = scheduleEntry?.plannedStartTime ?? null
       next.actualEndTime = scheduleEntry?.plannedEndTime ?? null
-      next.restHours = 1
+      next.restHours =
+        next.dayType === DayType.REST_DAY || next.dayType === DayType.OFF_DAY ? 0 : 1
       if (scheduleEntry?.isStatutoryRestDay !== undefined) {
         next.isStatutoryRestDay = scheduleEntry.isStatutoryRestDay
       }

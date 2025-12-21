@@ -23,6 +23,8 @@ const getCurrentMonthId = () => {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 }
 
+const EMPTY_OBJECT: Record<string, any> = {}
+
 const shiftMonth = (month: string, delta: number) => {
   const [yearStr, monthStr] = month.split('-')
   const year = Number(yearStr)
@@ -36,7 +38,7 @@ function CalendarPage() {
   const navigate = useNavigate()
   const employeeId = useAuthStore((state) => state.user?.id) ?? DEMO_EMPLOYEE_ID
   const monthId = params.monthId ?? getCurrentMonthId()
-  const timeRecords = useTimecardStore((state) => state.recordsByMonth[monthId] ?? {})
+  const timeRecords = useTimecardStore((state) => state.recordsByMonth[monthId] ?? EMPTY_OBJECT)
   const loadMonthRecords = useTimecardStore((state) => state.loadMonth)
   const timecardStatus = useTimecardStore((state) => state.statusByMonth[monthId] ?? 'idle')
   const clipboardRef = useRef<string | null>(null)
@@ -63,11 +65,7 @@ function CalendarPage() {
   const [isDetailOpen, setDetailOpen] = useState(false)
   const { showToast } = useToast()
 
-  useEffect(() => {
-    if (!hasData) {
-      refresh()
-    }
-  }, [hasData, refresh])
+
 
   const selectedEntry = useMemo(() => {
     if (!detailDate || !schedule) return undefined
