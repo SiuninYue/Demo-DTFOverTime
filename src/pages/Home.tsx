@@ -114,7 +114,7 @@ function HomePage() {
             <button
               type="button"
               onClick={() => navigate("/settings")}
-              className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-lg font-bold text-slate-700 shadow-[0_4px_12px_rgba(0,0,0,0.06)] ring-1 bg-white transition hover:-translate-y-0.5"
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-lg font-bold text-slate-700 shadow-[0_4px_12px_rgba(0,0,0,0.06)] ring-1 ring-black/5 transition hover:-translate-y-0.5"
               aria-label="打开设置"
             >
               {displayName.charAt(0).toUpperCase()}
@@ -138,7 +138,7 @@ function HomePage() {
               <div className="flex items-center gap-5">
                 <div
                   className={[
-                    "flex h-14 w-14 items-center justify-center rounded-2xl text-3xl bg-white shadow-sm ring-1 bg-white",
+                    "flex h-14 w-14 items-center justify-center rounded-2xl text-3xl bg-white shadow-sm ring-1 ring-black/5",
                     todaySchedule ? "text-blue-600" : "text-slate-400",
                   ]
                     .filter(Boolean)
@@ -218,7 +218,7 @@ function HomePage() {
                     className="group flex w-full items-center justify-between rounded-[1.25rem] bg-[#F3F6FC] p-4 text-left shadow-sm transition-all hover:shadow-md active:scale-[0.99]"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="flex h-12 w-12 flex-col items-center justify-center rounded-xl bg-white text-slate-900 shadow-sm ring-1 bg-white">
+                      <div className="flex h-12 w-12 flex-col items-center justify-center rounded-xl bg-white text-slate-900 shadow-sm ring-1 ring-black/5">
                         <span className="text-[10px] font-bold uppercase text-slate-400">
                           {new Date(date).getDate()}
                         </span>
