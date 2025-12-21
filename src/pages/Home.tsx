@@ -124,7 +124,7 @@ function HomePage() {
           <button
             type="button"
             onClick={() => navigate(`/timecard/${todayKey}`)}
-            className="block w-full text-left transition-transform active:scale-[0.99]"
+            className="block w-full text-left transition-transform active:scale-[0.99] outline-none"
           >
             <div className="relative overflow-hidden rounded-[1.5rem] bg-[#F3F6FC] p-5 shadow-sm transition-all hover:shadow-md">
               <div className="flex items-center justify-between mb-5">
@@ -175,7 +175,7 @@ function HomePage() {
             </div>
             <button
               onClick={() => navigate(salaryRoute)}
-              className="block w-full text-left transition-transform active:scale-[0.99]"
+              className="block w-full text-left transition-transform active:scale-[0.99] outline-none"
             >
               {isLoading ? (
                 <SkeletonCard />
@@ -215,7 +215,7 @@ function HomePage() {
                     key={date}
                     type="button"
                     onClick={() => navigate(`/timecard/${date}`)}
-                    className="group flex w-full items-center justify-between rounded-[1.25rem] bg-[#F3F6FC] p-4 text-left shadow-sm transition-all hover:shadow-md active:scale-[0.99]"
+                    className="group flex w-full items-center justify-between rounded-[1.25rem] bg-[#F3F6FC] p-4 text-left shadow-sm transition-all hover:shadow-md active:scale-[0.99] outline-none"
                   >
                     <div className="flex items-center gap-4">
                       <div className="flex h-12 w-12 flex-col items-center justify-center rounded-xl bg-white text-slate-900 shadow-sm ring-1 ring-black/5">
