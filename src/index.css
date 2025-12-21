@@ -184,10 +184,6 @@
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-
   body {
     @apply bg-background text-foreground;
     /* Mesh Gradient Background for macOS feel */
