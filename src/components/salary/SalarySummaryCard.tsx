@@ -40,7 +40,7 @@ function SalarySummaryCard({ summary, isLoading, isPersisting, onViewDetails }: 
   const lastSyncedLabel = formatTimestamp(summary?.lastSyncedAt)
 
   return (
-    <section className="relative overflow-hidden rounded-[1.5rem] bg-[#F3F6FC] p-5 shadow-sm transition-all text-left">
+    <section className="relative overflow-hidden rounded-[1.5rem] bg-[#F3F6FC] p-5 shadow-sm transition-all text-left border-0">
       <header className="flex items-center justify-between">
         <div>
           <p className="text-sm font-medium text-slate-500">工资概览</p>
