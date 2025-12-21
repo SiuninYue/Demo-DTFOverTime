@@ -114,7 +114,7 @@ function HomePage() {
             <button
               type="button"
               onClick={() => navigate("/settings")}
-              className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-lg font-bold text-slate-700 shadow-[0_4px_12px_rgba(0,0,0,0.06)] ring-1 ring-black/5 transition hover:-translate-y-0.5"
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-lg font-bold text-slate-700 shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition hover:-translate-y-0.5 focus:outline-none"
               aria-label="打开设置"
             >
               {displayName.charAt(0).toUpperCase()}
@@ -124,7 +124,7 @@ function HomePage() {
           <button
             type="button"
             onClick={() => navigate(`/timecard/${todayKey}`)}
-            className="block w-full text-left transition-transform active:scale-[0.99] outline-none"
+            className="block w-full text-left transition-transform active:scale-[0.99] outline-none bg-transparent border-0"
           >
             <div className="relative overflow-hidden rounded-[1.5rem] bg-[#F3F6FC] p-5 shadow-sm transition-all hover:shadow-md border-0">
               <div className="flex items-center justify-between mb-5">
@@ -138,7 +138,7 @@ function HomePage() {
               <div className="flex items-center gap-5">
                 <div
                   className={[
-                    "flex h-14 w-14 items-center justify-center rounded-2xl text-3xl bg-white shadow-sm ring-1 ring-black/5",
+                    "flex h-14 w-14 items-center justify-center rounded-2xl text-3xl bg-white shadow-sm",
                     todaySchedule ? "text-blue-600" : "text-slate-400",
                   ]
                     .filter(Boolean)
@@ -168,14 +168,14 @@ function HomePage() {
               <button
                 type="button"
                 onClick={() => navigate(salaryRoute)}
-                className="text-sm font-semibold text-blue-600 transition hover:text-blue-500"
+                className="link-button"
               >
                 查看详情
               </button>
             </div>
             <button
               onClick={() => navigate(salaryRoute)}
-              className="block w-full text-left transition-transform active:scale-[0.99] outline-none"
+              className="block w-full text-left transition-transform active:scale-[0.99] outline-none bg-transparent border-0"
             >
               {isLoading ? (
                 <SkeletonCard />
@@ -218,7 +218,7 @@ function HomePage() {
                     className="group flex w-full items-center justify-between rounded-[1.25rem] bg-[#F3F6FC] p-4 text-left shadow-sm transition-all hover:shadow-md active:scale-[0.99] outline-none border-0"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="flex h-12 w-12 flex-col items-center justify-center rounded-xl bg-white text-slate-900 shadow-sm ring-1 ring-black/5">
+                      <div className="flex h-12 w-12 flex-col items-center justify-center rounded-xl bg-white text-slate-900 shadow-sm">
                         <span className="text-[10px] font-bold uppercase text-slate-400">
                           {new Date(date).getDate()}
                         </span>

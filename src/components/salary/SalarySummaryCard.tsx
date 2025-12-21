@@ -69,19 +69,19 @@ function SalarySummaryCard({ summary, isLoading, isPersisting, onViewDetails }: 
       </div>
 
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div className="rounded-xl bg-white p-3 shadow-sm ring-1 ring-black/5">
+        <div className="rounded-xl bg-white p-3 shadow-sm">
           <p className="text-xs font-medium text-slate-500">底薪</p>
           <p className="mt-1 text-lg font-bold text-slate-900">{base}</p>
         </div>
-        <div className="rounded-xl bg-white p-3 shadow-sm ring-1 ring-black/5">
+        <div className="rounded-xl bg-white p-3 shadow-sm">
           <p className="text-xs font-medium text-slate-500">全勤</p>
           <p className="mt-1 text-lg font-bold text-slate-900">{attendance}</p>
         </div>
-        <div className="rounded-xl bg-white p-3 shadow-sm ring-1 ring-black/5">
+        <div className="rounded-xl bg-white p-3 shadow-sm">
           <p className="text-xs font-medium text-slate-500">加班</p>
           <p className="mt-1 text-lg font-bold text-slate-900">{overtime}</p>
         </div>
-        <div className="rounded-xl bg-white p-3 shadow-sm ring-1 ring-black/5">
+        <div className="rounded-xl bg-white p-3 shadow-sm">
           <p className="text-xs font-medium text-slate-500">扣款</p>
           <p className="mt-1 text-lg font-bold text-slate-900">{deductions}</p>
         </div>
