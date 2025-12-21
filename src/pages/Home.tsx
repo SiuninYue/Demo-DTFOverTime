@@ -94,7 +94,7 @@ function HomePage() {
   const displayName = user?.email?.split("@")[0] ?? "员工";
 
   return (
-    <PullToRefresh onRefresh={handleRefresh} className="bg-slate-100">
+    <PullToRefresh onRefresh={handleRefresh} className="">
       <section className="min-h-screen px-4 py-6 pb-28 md:px-6 md:pb-16">
         <div className="mx-auto max-w-4xl space-y-8">
           {(error || scheduleError) && (
