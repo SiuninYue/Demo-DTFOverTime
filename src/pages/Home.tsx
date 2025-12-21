@@ -107,7 +107,7 @@ function HomePage() {
           <header className="flex items-center justify-between gap-3 px-1">
             <div>
               <p className="text-sm font-semibold text-slate-500">{greeting}</p>
-              <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+              <h1 className="text-3xl font-bold tracking-tight text-slate-900">
                 {displayName}
               </h1>
             </div>
