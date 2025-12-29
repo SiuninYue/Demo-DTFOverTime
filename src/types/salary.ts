@@ -1,6 +1,11 @@
 import { DayType } from './timecard'
 import { WorkScheduleType } from './employee'
 
+export interface DailyPayResult {
+  hoursWorked: number
+  pay: PayComponents
+}
+
 export interface PayComponents {
   basePay: number
   overtimePay: number

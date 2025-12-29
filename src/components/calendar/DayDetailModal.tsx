@@ -5,11 +5,13 @@ interface DayDetailModalProps {
   schedule?: DaySchedule
   isOpen: boolean
   onClose: () => void
-  onViewImage?: () => void
   onEditSchedule?: (date: string) => void
   onRecordTimecard?: (date: string) => void
   onCopyDetails?: (date: string) => void
   onPasteDetails?: (date: string) => void
+  quickConfirmLabel?: string
+  quickConfirmDisabled?: boolean
+  onQuickConfirm?: () => void
 }
 
 const describeSchedule = (entry?: DaySchedule) => {
@@ -33,11 +35,13 @@ function DayDetailModal({
   schedule,
   isOpen,
   onClose,
-  onViewImage,
   onEditSchedule,
   onRecordTimecard,
   onCopyDetails,
   onPasteDetails,
+  quickConfirmLabel,
+  quickConfirmDisabled = false,
+  onQuickConfirm,
 }: DayDetailModalProps) {
   if (!isOpen) {
     return null
@@ -66,7 +70,7 @@ function DayDetailModal({
           </p>
           {schedule?.isStatutoryRestDay && <p className="badge badge--rest">法定休息日</p>}
         </div>
-        <div className="modal-card__actions">
+        <div className="modal-card__actions day-detail-actions">
           <button type="button" className="ghost" onClick={() => onCopyDetails?.(date)}>
             复制详情
           </button>
@@ -81,15 +85,20 @@ function DayDetailModal({
           <button type="button" className="ghost" onClick={() => onRecordTimecard?.(date)}>
             记录打卡
           </button>
-        </div>
-        <footer className="modal-card__footer">
-          <button type="button" className="secondary" onClick={onViewImage}>
-            查看原始图片
-          </button>
+          {onQuickConfirm && (
+            <button
+              type="button"
+              className="secondary"
+              onClick={onQuickConfirm}
+              disabled={quickConfirmDisabled}
+            >
+              {quickConfirmLabel ?? '确认出勤'}
+            </button>
+          )}
           <button type="button" onClick={onClose}>
             完成
           </button>
-        </footer>
+        </div>
       </div>
     </div>
   )

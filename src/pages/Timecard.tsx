@@ -51,10 +51,13 @@ function TimecardPage() {
   }, [scheduleEntry])
 
   const isRestOrOffDay = record.dayType === DayType.REST_DAY || record.dayType === DayType.OFF_DAY
+  const isLeaveOrHolidayDay =
+    record.dayType === DayType.PUBLIC_HOLIDAY ||
+    record.dayType === DayType.ANNUAL_LEAVE ||
+    record.dayType === DayType.MEDICAL_LEAVE
+  const isNonWorkDay = isRestOrOffDay || isLeaveOrHolidayDay
   const isEmployerRequested = record.isEmployerRequested ?? false
-  const showWorkDetails = !isRestOrOffDay || isEmployerRequested
-  const isStatutoryRestDay =
-    record.dayType === DayType.REST_DAY ? record.isStatutoryRestDay ?? true : false
+  const showWorkDetails = !isNonWorkDay || isEmployerRequested
   const isPublicHoliday = record.dayType === DayType.PUBLIC_HOLIDAY
   const isUnpaidMc = record.dayType === DayType.MEDICAL_LEAVE && (record.notes?.includes(UNPAID_MC_TAG) ?? false)
   const isUnpaidLeave = record.dayType === DayType.ANNUAL_LEAVE && (record.notes?.includes(UNPAID_LEAVE_TAG) ?? false)
@@ -82,7 +85,7 @@ function TimecardPage() {
     }
     await save()
     showToast({ title: '打卡已保存', description: date, variant: 'success' })
-    navigate('/')
+    navigate('/calendar')
   }
 
   const handleFieldChange = <K extends keyof Omit<typeof record, 'id'>>(field: K, value: typeof record[K]) => {
@@ -189,7 +192,11 @@ function TimecardPage() {
                   setDayType(value as DayType)
                   const nextDayType = value as DayType
                   const isRestLike =
-                    nextDayType === DayType.REST_DAY || nextDayType === DayType.OFF_DAY
+                    nextDayType === DayType.REST_DAY ||
+                    nextDayType === DayType.OFF_DAY ||
+                    nextDayType === DayType.PUBLIC_HOLIDAY ||
+                    nextDayType === DayType.ANNUAL_LEAVE ||
+                    nextDayType === DayType.MEDICAL_LEAVE
                   if (isRestLike) {
                     handleFieldChange('isEmployerRequested', false)
                     clearWorkDetails()
@@ -223,7 +230,6 @@ function TimecardPage() {
                 label="实际开始"
                 value={record.actualStartTime}
                 onChange={(value) => handleFieldChange('actualStartTime', value)}
-                helperText="点按可快速输入/调整打卡时间"
                 disabled={interactionDisabled}
               />
 
@@ -231,7 +237,6 @@ function TimecardPage() {
                 label="实际结束"
                 value={record.actualEndTime}
                 onChange={(value) => handleFieldChange('actualEndTime', value)}
-                helperText="用于计算工时"
                 disabled={interactionDisabled}
               />
 
@@ -306,13 +311,9 @@ function TimecardPage() {
 
         {isRestOrOffDay && (
           <RestDayTimecardForm
-            dayType={record.dayType}
-            isStatutoryRestDay={isStatutoryRestDay}
             isEmployerRequested={isEmployerRequested}
             disabled={interactionDisabled}
-            onChange={({ dayType, isStatutoryRestDay: nextStatRestDay, isEmployerRequested }) => {
-              setDayType(dayType)
-              handleFieldChange('isStatutoryRestDay', nextStatRestDay)
+            onChange={({ isEmployerRequested }) => {
               handleFieldChange('isEmployerRequested', isEmployerRequested)
               if (!isEmployerRequested) {
                 clearWorkDetails()
@@ -328,11 +329,11 @@ function TimecardPage() {
         <div className="timecard-controls">
           <button
             type="button"
-            className="secondary"
+            className="ghost"
             disabled={isSaving || !hasChanges || !isOnline}
             onClick={() => handleSaveAndExit().catch(() => { })}
           >
-            保存并返回首页
+            保存
           </button>
           <button type="button" className="ghost" onClick={() => handleDelete().catch(() => { })} disabled={isSaving || !isOnline}>
             删除记录

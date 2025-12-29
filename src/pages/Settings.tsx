@@ -176,10 +176,9 @@ function SettingsPage() {
       } else if (profile?.id && isValidUuid(profile.id)) {
         persistedProfile = await updateEmployee(profile.id, payload)
       } else {
-        const createPayload: DraftProfile = { ...payload }
-        if (!isValidUuid(createPayload.id)) {
-          createPayload.id = undefined
-        }
+        const createPayload: DraftProfile = isValidUuid(payload.id)
+          ? payload
+          : { ...payload, id: undefined }
         persistedProfile = await createEmployee(createPayload)
       }
     } catch (error) {
@@ -237,77 +236,100 @@ function SettingsPage() {
   }
 
   return (
-    <section className="settings-page">
-      <header className="settings-page__header">
-        <div>
-          <p className="text-muted">个人资料与合规</p>
-          <h1>设置</h1>
-          <p>请保持以下信息准确，以确保工资计算符合 MOM 规定。</p>
-        </div>
-        <div className="settings-page__meta">
-          <p aria-live="polite">状态：{status === 'loading' ? '同步中…' : '就绪'}</p>
-          <p>
-            上次保存：
-            {lastSavedAt ? new Date(lastSavedAt).toLocaleString('zh-SG') : '尚未保存'}
+    <section className="min-h-screen px-4 py-6 pb-28 md:px-6 md:pb-16">
+      <div className="mx-auto max-w-6xl space-y-6">
+        <header className="space-y-2 px-1">
+          <p className="text-sm font-semibold text-slate-500">个人资料与合规</p>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">设置</h1>
+          <p className="text-sm text-slate-600">
+            请保持以下信息准确，以确保工资计算符合 MOM 规定。
           </p>
+          <div className="mt-4 flex items-center gap-4 text-xs text-slate-500">
+            <span aria-live="polite">
+              状态：{status === 'loading' ? '同步中…' : '就绪'}
+            </span>
+            <span className="text-slate-300">•</span>
+            <span>
+              上次保存：
+              {lastSavedAt ? new Date(lastSavedAt).toLocaleString('zh-SG') : '尚未保存'}
+            </span>
+          </div>
+        </header>
+
+        {(loadError || saveError) && (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            <strong className="font-semibold">错误：</strong>
+            {loadError ?? saveError}
+          </div>
+        )}
+
+        {isRecalculating && (
+          <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+            正在重新计算工资缓存数据…
+          </div>
+        )}
+
+        <div className="grid gap-6 lg:grid-cols-2">
+          <BasicInfoForm
+            values={basicValues}
+            onChange={updateDraft}
+            onSubmit={handleSave}
+            isSaving={isSaving}
+          />
+          <SalaryInfoForm
+            values={salaryValues}
+            isWorkman={draft.isWorkman}
+            onChange={updateDraft}
+            onSubmit={handleSave}
+            isSaving={isSaving}
+          />
+          <WorkPreferencesForm
+            values={preferenceValues}
+            onChange={updateDraft}
+            onSubmit={handleSave}
+            isSaving={isSaving}
+          />
+
+          <section className="settings-card space-y-4">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">账户</p>
+              <h3 className="mt-1 text-lg font-bold text-slate-900">登录信息</h3>
+            </div>
+            <div className="rounded-xl bg-slate-50 px-4 py-3">
+              <p className="text-sm text-slate-600">当前登录</p>
+              <p className="mt-1 font-mono text-sm font-semibold text-slate-900">
+                {user?.email}
+              </p>
+            </div>
+            <button
+              type="button"
+              className="danger w-full"
+              onClick={handleLogout}
+            >
+              退出登录
+            </button>
+          </section>
         </div>
-      </header>
 
-      {(loadError || saveError) && (
-        <div className="settings-alert settings-alert--error">
-          错误：{loadError ?? saveError}
-        </div>
-      )}
-
-      {isRecalculating && (
-        <div className="settings-alert settings-alert--info">正在重新计算工资缓存数据…</div>
-      )}
-
-      <div className="settings-grid">
-        <BasicInfoForm
-          values={basicValues}
-          onChange={updateDraft}
-          onSubmit={handleSave}
-          isSaving={isSaving}
-        />
-        <SalaryInfoForm
-          values={salaryValues}
-          isWorkman={draft.isWorkman}
-          onChange={updateDraft}
-          onSubmit={handleSave}
-          isSaving={isSaving}
-        />
-        <WorkPreferencesForm
-          values={preferenceValues}
-          onChange={updateDraft}
-          onSubmit={handleSave}
-          isSaving={isSaving}
-        />
-
-        <section className="settings-section">
-          <h3>账户</h3>
-          <p className="settings-description">当前登录：{user?.email}</p>
-          <button className="logout-button" onClick={handleLogout}>
-            退出登录
-          </button>
-        </section>
+        {recalcReport && (
+          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <h3 className="text-lg font-bold text-slate-900">重新计算摘要</h3>
+            <p className="mt-2 text-sm text-slate-600">
+              已更新 {recalcReport.summariesPersisted}/{recalcReport.monthsProcessed} 份工资缓存汇总。
+            </p>
+            {recalcReport.warnings.length > 0 && (
+              <ul className="mt-3 space-y-1 text-sm text-amber-700">
+                {recalcReport.warnings.map((warning) => (
+                  <li key={warning} className="flex items-start gap-2">
+                    <span className="mt-0.5">⚠️</span>
+                    <span>{warning}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        )}
       </div>
-
-      {recalcReport && (
-        <section className="settings-recalc">
-          <h3>重新计算摘要</h3>
-          <p>
-            已更新 {recalcReport.summariesPersisted}/{recalcReport.monthsProcessed} 份工资缓存汇总。
-          </p>
-          {recalcReport.warnings.length > 0 && (
-            <ul>
-              {recalcReport.warnings.map((warning) => (
-                <li key={warning}>{warning}</li>
-              ))}
-            </ul>
-          )}
-        </section>
-      )}
     </section>
   )
 }

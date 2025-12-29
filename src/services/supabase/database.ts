@@ -13,7 +13,7 @@ type EmployeeRow = Database['public']['Tables']['employees']['Row']
 type EmployeeInsert = Database['public']['Tables']['employees']['Insert']
 type EmployeeUpdate = Database['public']['Tables']['employees']['Update']
 
-export type EmployeeUpsertInput = Omit<Employee, 'createdAt' | 'updatedAt'> & { id?: string }
+export type EmployeeUpsertInput = Omit<Employee, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }
 export type EmployeeUpdateInput = Partial<EmployeeUpsertInput>
 
 const serializeScheduleData = (data: ScheduleData): Json =>
@@ -28,7 +28,7 @@ const mapRowToSchedule = (row: ScheduleRow): Schedule => ({
   imageSize: row.image_size ?? undefined,
   recognitionAccuracy: row.recognition_accuracy ?? undefined,
   recognitionMethod: (row.recognition_method as ScheduleRecognitionMethod | null) ?? undefined,
-  scheduleData: (row.schedule_data as ScheduleData) ?? {},
+  scheduleData: (row.schedule_data as unknown as ScheduleData) ?? {},
   importedAt: row.imported_at ?? undefined,
   createdAt: row.created_at ?? undefined,
   updatedAt: row.updated_at ?? undefined,

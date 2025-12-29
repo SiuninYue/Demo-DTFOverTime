@@ -22,7 +22,6 @@ export const Dock = React.forwardRef<HTMLDivElement, DockProps>(
             children,
             magnification = DEFAULT_MAGNIFICATION,
             distance = DEFAULT_DISTANCE,
-            direction = "bottom",
             ...props
         },
         ref,
@@ -36,7 +35,7 @@ export const Dock = React.forwardRef<HTMLDivElement, DockProps>(
                         mouseX,
                         magnification,
                         distance,
-                    } as any);
+                    } as DockIconProps);
                 }
                 return child;
             });
@@ -63,19 +62,17 @@ export const Dock = React.forwardRef<HTMLDivElement, DockProps>(
 Dock.displayName = "Dock";
 
 export interface DockIconProps {
-    size?: number;
     magnification?: number;
     distance?: number;
-    mouseX?: any;
+    mouseX?: ReturnType<typeof useMotionValue<number>>;
     className?: string;
     children?: React.ReactNode;
     to?: string;
-    label?: string; // Add label support for clarity
+    label?: string;
     onClick?: () => void;
 }
 
 export const DockIcon = ({
-    size,
     magnification = DEFAULT_MAGNIFICATION,
     distance = DEFAULT_DISTANCE,
     mouseX,
@@ -86,8 +83,10 @@ export const DockIcon = ({
     onClick
 }: DockIconProps) => {
     const ref = useRef<HTMLDivElement>(null);
+    const defaultMouseX = useMotionValue(Infinity);
+    const effectiveMouseX = mouseX ?? defaultMouseX;
 
-    const distanceCalc = useTransform(mouseX, (val: number) => {
+    const distanceCalc = useTransform(effectiveMouseX, (val: number) => {
         const bounds = ref.current?.getBoundingClientRect() ?? { x: 0, width: 0 };
         return val - bounds.x - bounds.width / 2;
     });
@@ -134,7 +133,7 @@ export const DockIcon = ({
                         initial={{ opacity: 0, y: 10, x: "-50%" }}
                         animate={{ opacity: 1, y: 0, x: "-50%" }}
                         exit={{ opacity: 0, y: 2, x: "-50%" }}
-                        className="absolute -top-8 left-1/2 -translate-x-1/2 w-auto whitespace-nowrap rounded-md border border-neutral-200 bg-neutral-900/90 px-2 py-0.5 text-xs text-white dark:border-neutral-700 dark:bg-neutral-50/90 dark:text-black"
+                        className="absolute -top-8 left-1/2 -translate-x-1/2 w-auto whitespace-nowrap rounded-md border border-neutral-200 bg-white/90 px-2 py-0.5 text-xs text-slate-900 shadow-sm dark:border-neutral-700 dark:bg-neutral-100/90 dark:text-neutral-900"
                     >
                         {label}
                     </motion.div>

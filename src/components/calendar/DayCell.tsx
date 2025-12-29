@@ -1,4 +1,3 @@
-import { MouseEvent, TouchEvent, useState } from 'react'
 import type { DaySchedule, ScheduleType } from '@/types/schedule'
 import { DayType, type TimeRecord } from '@/types/timecard'
 import { Plus } from 'lucide-react'
@@ -6,7 +5,7 @@ import { cn } from '@/lib/utils'
 import { getPublicHolidayName } from '@/utils/holidays'
 
 const typeColors: Record<ScheduleType, string> = {
-  work: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+  work: 'bg-gray-100 text-gray-700 dark:bg-gray-800/60 dark:text-gray-200',
   rest: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
   off: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
   overtime_on_off_day: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
@@ -22,10 +21,10 @@ const typeColors: Record<ScheduleType, string> = {
 const timeRecordColors: Record<DayType, string> = {
   NORMAL_WORK_DAY: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
   REST_DAY: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-  OFF_DAY: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+  OFF_DAY: 'bg-[#343442] text-white',
   PUBLIC_HOLIDAY: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
   ANNUAL_LEAVE: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
-  MEDICAL_LEAVE: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300',
+  MEDICAL_LEAVE: 'bg-amber-900/20 text-amber-900 dark:bg-amber-900/40 dark:text-amber-100',
 }
 
 const typeShortLabels: Record<ScheduleType, string> = {
@@ -76,7 +75,6 @@ function DayCell({
   isCurrentMonth,
   isToday = false,
   onSelect,
-  onQuickAction,
 }: DayCellProps) {
   /* Removed handleAction and showMenu state as part of UI cleanup */
   const dayNumber = date.split('-')[2]
@@ -94,8 +92,8 @@ function DayCell({
   const containerClasses = cn(
     "relative flex flex-col h-full w-full border-[0.5px] border-white/20 dark:border-white/5 transition-all duration-200 select-none group backdrop-blur-[2px]",
     isCurrentMonth
-      ? "bg-white/40 dark:bg-neutral-900/40 hover:bg-white/60 dark:hover:bg-neutral-800/60"
-      : "bg-neutral-100/30 dark:bg-neutral-900/10 text-neutral-400/50",
+      ? "bg-white/40 dark:bg-neutral-800/40 hover:bg-white/60 dark:hover:bg-neutral-700/60"
+      : "bg-neutral-100/30 dark:bg-neutral-800/10 text-neutral-400/50",
     isToday && "ring-2 ring-primary-500/50 dark:ring-primary-400/50 z-10"
   )
 
@@ -133,9 +131,9 @@ function DayCell({
               </span>
             </div>
             {showRecordedTimes && (
-              <div className="text-[10px] opacity-80 mt-0.5">
+              <div className="text-[9px] opacity-80 mt-0.5">
                 {formatTimeShort(timeRecord.actualStartTime)}
-                {timeRecord.actualEndTime ? ` - ${formatTimeShort(timeRecord.actualEndTime)}` : ''}
+                {timeRecord.actualEndTime ? ` / ${formatTimeShort(timeRecord.actualEndTime)}` : ''}
               </div>
             )}
           </div>
@@ -146,9 +144,9 @@ function DayCell({
               {typeShortLabels[schedule.type] || schedule.type}
             </div>
             {(schedule.plannedStartTime || schedule.plannedEndTime) && (
-              <div className="text-[10px] opacity-80 mt-0.5 whitespace-nowrap">
+              <div className="text-[9px] opacity-80 mt-0.5">
                 {formatTimeShort(schedule.plannedStartTime)}
-                {schedule.plannedEndTime ? `-${formatTimeShort(schedule.plannedEndTime)}` : ''}
+                {schedule.plannedEndTime ? ` / ${formatTimeShort(schedule.plannedEndTime)}` : ''}
               </div>
             )}
           </div>

@@ -182,12 +182,8 @@ export const exportSalaryPdf = (data: SalaryExportData): void => {
     throw new Error('PDF 导出仅支持在浏览器环境中使用。')
   }
 
-  const popup = window.open('', '_blank', 'noopener,noreferrer,width=900,height=700')
-  if (!popup) {
-    throw new Error('请允许弹窗，以便导出工资汇总 PDF。')
-  }
-
-  popup.document.write(`
+  // 生成完整的HTML内容
+  const htmlContent = `
     <!doctype html>
     <html>
       <head>
@@ -201,10 +197,27 @@ export const exportSalaryPdf = (data: SalaryExportData): void => {
       </head>
       <body>
         ${buildPrintableTable(data)}
+        <script>
+          window.addEventListener('load', function() {
+            setTimeout(function() {
+              window.print();
+            }, 300);
+          });
+        </script>
       </body>
     </html>
-  `)
-  popup.document.close()
-  popup.focus()
-  popup.setTimeout(() => popup.print(), 300)
+  `
+
+  // 使用 Blob URL 而不是 document.write
+  const blob = new Blob([htmlContent], { type: 'text/html' })
+  const url = URL.createObjectURL(blob)
+
+  const popup = window.open(url, '_blank', 'noopener,noreferrer,width=900,height=700')
+  if (!popup) {
+    URL.revokeObjectURL(url)
+    throw new Error('请允许弹窗，以便导出工资汇总 PDF。')
+  }
+
+  // 清理资源
+  setTimeout(() => URL.revokeObjectURL(url), 5000)
 }

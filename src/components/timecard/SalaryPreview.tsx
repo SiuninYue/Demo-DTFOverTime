@@ -1,4 +1,4 @@
-import type { DailyPayResult } from '@/types/salary'
+import type { DailyPayResult } from '@/services/salary/calculator'
 import { DayType } from '@/types/timecard'
 
 interface SalaryPreviewProps {

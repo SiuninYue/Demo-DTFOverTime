@@ -1,6 +1,4 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import SalarySummaryCard from '@/components/salary/SalarySummaryCard'
 import MCRecordList from '@/components/mc/MCRecordList'
 import AddMCModal, { ConfirmDeleteDialog } from '@/components/mc/AddMCModal'
 import AttendanceBonusImpact from '@/components/mc/AttendanceBonusImpact'
@@ -16,7 +14,6 @@ const getCurrentMonthKey = () => {
 }
 
 function MCPage() {
-  const navigate = useNavigate()
   const [isModalOpen, setModalOpen] = useState(false)
   const [pendingDelete, setPendingDelete] = useState<MCRecord | null>(null)
   const month = getCurrentMonthKey()
@@ -48,30 +45,16 @@ function MCPage() {
       <header className="mc-page__header">
         <div>
           <p className="text-muted">病假证明</p>
-          <h1>病假记录与全勤奖</h1>
+          <h1>病假记录</h1>
         </div>
-        <div className="mc-page__actions">
-          <button
-            type="button"
-            className="ghost"
-            onClick={() => {
-              mcState.refresh().catch(() => {
-                /* handled in hook state */
-              })
-            }}
-            disabled={mcState.isLoading || mcState.isMutating}
-          >
-            刷新
-          </button>
-          <button
-            type="button"
-            className="secondary"
-            onClick={() => setModalOpen(true)}
-            disabled={mcState.isMutating}
-          >
-            新增病假记录
-          </button>
-        </div>
+        <button
+          type="button"
+          className="mc-add-btn"
+          onClick={() => setModalOpen(true)}
+          disabled={mcState.isMutating}
+        >
+          + 新增病假
+        </button>
       </header>
 
       {(mcState.error || salaryState.error) && (
@@ -80,15 +63,37 @@ function MCPage() {
         </p>
       )}
 
+      {/* 顶部统计卡片 - 移动端优先显示 */}
+      <div className="mc-stats-row">
+        <div className="mc-stat-card mc-stat-card--primary">
+          <div className="mc-stat-card__icon">📋</div>
+          <div className="mc-stat-card__content">
+            <span className="mc-stat-card__value">{mcState.stats.monthlyDays}</span>
+            <span className="mc-stat-card__label">本月病假天数</span>
+          </div>
+        </div>
+        <div className="mc-stat-card">
+          <div className="mc-stat-card__icon">📅</div>
+          <div className="mc-stat-card__content">
+            <span className="mc-stat-card__value">{mcState.stats.yearlyDays}/{mcState.stats.quota}</span>
+            <span className="mc-stat-card__label">年度额度使用</span>
+          </div>
+        </div>
+        <div className="mc-stat-card">
+          <div className="mc-stat-card__icon">💰</div>
+          <div className="mc-stat-card__content">
+            <span className="mc-stat-card__value">
+              {salaryState.summary?.result.attendanceBonus
+                ? `$${salaryState.summary.result.attendanceBonus.toFixed(0)}`
+                : '--'}
+            </span>
+            <span className="mc-stat-card__label">当前全勤奖</span>
+          </div>
+        </div>
+      </div>
+
       <div className="mc-page__grid">
         <div className="mc-page__main">
-          <SalarySummaryCard
-            summary={salaryState.summary}
-            isLoading={salaryState.isLoading}
-            isPersisting={salaryState.isPersisting}
-            onViewDetails={() => navigate('/salary')}
-          />
-          <AttendanceBonusImpact summary={salaryState.summary} isLoading={salaryState.isLoading} />
           <MCRecordList
             records={mcState.records}
             isLoading={mcState.isLoading}
@@ -97,22 +102,27 @@ function MCPage() {
           />
         </div>
         <aside className="mc-page__sidebar">
-          <section className="mc-card">
-            <header className="mc-card__header">
-              <div>
-                <p className="label">本月</p>
-                <h3>病假 {mcState.stats.monthlyDays} 天</h3>
-              </div>
-            </header>
-            <p className="text-muted">
-              每次提交病假记录都会立即更新全勤奖计算，并同步到工资概览。
-            </p>
-          </section>
+          <AttendanceBonusImpact summary={salaryState.summary} isLoading={salaryState.isLoading} />
           <YearlyMCQuota
             usedDays={mcState.stats.yearlyDays}
             quota={mcState.stats.quota}
             isLoading={mcState.isYearlyLoading}
           />
+          <div className="mc-tip-card">
+            <p>每次提交病假记录都会立即更新全勤奖计算，并同步到工资概览。</p>
+            <button
+              type="button"
+              className="ghost mc-refresh-btn"
+              onClick={() => {
+                mcState.refresh().catch(() => {
+                  /* handled in hook state */
+                })
+              }}
+              disabled={mcState.isLoading || mcState.isMutating}
+            >
+              刷新数据
+            </button>
+          </div>
         </aside>
       </div>
 

@@ -47,11 +47,13 @@ function SalaryPage() {
             <h1>{summary?.monthLabel ?? '工资概览'}</h1>
           </div>
           <div className="salary-page__actions">
-            <button type="button" className="ghost" onClick={exportCsv} disabled={!summary}>
-              导出 CSV
+            <button type="button" className="salary-export-btn" onClick={exportCsv} disabled={!summary}>
+              <span className="salary-export-btn__icon">📊</span>
+              CSV
             </button>
-            <button type="button" className="secondary" onClick={exportPdf} disabled={!summary}>
-              导出 PDF
+            <button type="button" className="salary-export-btn" onClick={exportPdf} disabled={!summary}>
+              <span className="salary-export-btn__icon">📄</span>
+              PDF
             </button>
           </div>
         </header>
@@ -62,18 +64,24 @@ function SalaryPage() {
         {error && <p className="upload-error">错误：{error}</p>}
         {isLoading && <Loading label="正在计算工资" description="正在应用 MOM 合规规则" />}
 
-        <SalarySummaryCard summary={summary} isLoading={isLoading} isPersisting={isPersisting} />
+        <SalarySummaryCard summary={summary} isLoading={isLoading} isPersisting={isPersisting} showShadow={true} />
 
         <div className="salary-layout">
-          <SalaryBreakdown summary={summary} isLoading={isLoading} />
-          <OvertimeWarning summary={summary} />
-          <CalculationTransparency summary={summary} />
+          <div className="salary-layout__main">
+            <SalaryBreakdown summary={summary} isLoading={isLoading} />
+          </div>
+          <div className="salary-layout__side">
+            <OvertimeWarning summary={summary} />
+            <CalculationTransparency summary={summary} />
+          </div>
         </div>
 
         <section className="salary-detail-section">
           <div className="salary-detail-section__header">
-            <h3>每日明细</h3>
-            <span className="text-muted">{summary?.result.breakdown.length ?? 0} 条</span>
+            <div>
+              <h3>每日明细</h3>
+              <span className="text-muted">{summary?.result.breakdown.length ?? 0} 条打卡记录</span>
+            </div>
           </div>
           <SalaryDetailTable breakdown={summary?.result.breakdown ?? []} isLoading={isLoading} />
         </section>

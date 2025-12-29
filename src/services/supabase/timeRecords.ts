@@ -1,6 +1,7 @@
 import { getSupabaseClient } from '@/config/supabase'
 import type { Database } from '@/types/supabase'
 import { DayType, type TimeRecord, type TimeRecordInput } from '@/types/timecard'
+import { normalizeTimeToMinutes } from '@/utils/timeUtils'
 
 type TimeRecordRow = Database['public']['Tables']['time_records']['Row']
 type TimeRecordInsert = Database['public']['Tables']['time_records']['Insert']
@@ -19,8 +20,8 @@ const mapRowToRecord = (row: TimeRecordRow): TimeRecord => ({
   employeeId: row.employee_id,
   date: row.date,
   dayType: row.day_type as TimeRecord['dayType'],
-  actualStartTime: row.actual_start_time,
-  actualEndTime: row.actual_end_time,
+  actualStartTime: normalizeTimeToMinutes(row.actual_start_time),
+  actualEndTime: normalizeTimeToMinutes(row.actual_end_time),
   restHours: row.rest_hours ?? 0,
   isEmployerRequested: row.is_employer_requested ?? undefined,
   spansMidnight: row.spans_midnight ?? undefined,
@@ -87,8 +88,8 @@ const buildInsertPayload = (input: CreateTimeRecordInput): TimeRecordInsert => (
   employee_id: input.employeeId,
   date: input.date,
   day_type: input.dayType,
-  actual_start_time: input.actualStartTime ?? null,
-  actual_end_time: input.actualEndTime ?? null,
+  actual_start_time: normalizeTimeToMinutes(input.actualStartTime) ?? null,
+  actual_end_time: normalizeTimeToMinutes(input.actualEndTime) ?? null,
   rest_hours: input.restHours,
   is_employer_requested: input.isEmployerRequested ?? null,
   spans_midnight: input.spansMidnight ?? null,
@@ -125,8 +126,8 @@ export const updateTimeRecord = async (
 ): Promise<TimeRecord> => {
   const supabase = getSupabaseClient()
   const payload: TimeRecordUpdate = {
-    actual_start_time: input.actualStartTime ?? null,
-    actual_end_time: input.actualEndTime ?? null,
+    actual_start_time: normalizeTimeToMinutes(input.actualStartTime) ?? null,
+    actual_end_time: normalizeTimeToMinutes(input.actualEndTime) ?? null,
     rest_hours: input.restHours,
     day_type: input.dayType,
     is_employer_requested: input.isEmployerRequested ?? null,

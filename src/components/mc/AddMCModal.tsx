@@ -185,7 +185,7 @@ function AddMCModalContent({
           </label>
 
           <div className="modal-card__actions">
-            <button type="submit" className="secondary" disabled={isSubmitting}>
+            <button type="submit" className="ghost" disabled={isSubmitting}>
               {isSubmitting ? '保存中…' : '保存病假记录'}
             </button>
           </div>

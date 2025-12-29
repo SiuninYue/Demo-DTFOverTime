@@ -111,7 +111,7 @@ function BasicInfoForm({ values, onChange, onSubmit, isSaving }: BasicInfoFormPr
         </fieldset>
 
         <div className="settings-form__actions">
-          <button type="submit" className="secondary" disabled={isSaving}>
+          <button type="submit" className="ghost" disabled={isSaving}>
             保存基本信息
           </button>
         </div>

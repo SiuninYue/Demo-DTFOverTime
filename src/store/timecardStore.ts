@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { DayType, type TimeRecord } from '@/types/timecard'
+import { normalizeTimeRecord } from '@/utils/timeUtils'
 
 export type TimecardStatus = 'idle' | 'loading' | 'ready' | 'error'
 
@@ -99,7 +100,7 @@ const mapRecords = (records: TimeRecord[]) => {
   const map: Record<string, TimeRecord> = {}
   records.forEach((record) => {
     if (record.date) {
-      map[record.date] = record
+      map[record.date] = normalizeTimeRecord(record)
     }
   })
   return map
@@ -197,14 +198,15 @@ export const useTimecardStore = create<TimecardStoreState>()(
         }))
       },
       upsertRecord: (record) => {
-        if (!record.date) {
+        const normalized = normalizeTimeRecord(record)
+        if (!normalized.date) {
           throw new Error('保存到本地前，打卡记录必须包含日期。')
         }
-        const month = getMonthKey(record.date)
+        const month = getMonthKey(normalized.date)
         set((state) => {
           const monthRecords = {
             ...(state.recordsByMonth[month] ?? {}),
-            [record.date]: record,
+            [normalized.date]: normalized,
           }
           return {
             recordsByMonth: {

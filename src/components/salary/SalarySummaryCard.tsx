@@ -6,6 +6,7 @@ interface SalarySummaryCardProps {
   isLoading?: boolean
   isPersisting?: boolean
   onViewDetails?: () => void
+  showShadow?: boolean
 }
 
 const formatTimestamp = (value?: string | null): string => {
@@ -22,7 +23,7 @@ const formatTimestamp = (value?: string | null): string => {
   }
 }
 
-function SalarySummaryCard({ summary, isLoading, isPersisting, onViewDetails }: SalarySummaryCardProps) {
+function SalarySummaryCard({ summary, isLoading, isPersisting, onViewDetails, showShadow = false }: SalarySummaryCardProps) {
   const total = summary ? formatCurrency(summary.result.netPay) : '--'
   const base = summary ? formatCurrency(summary.result.baseSalary) : '--'
   const attendance = summary ? formatCurrency(summary.result.attendanceBonus) : '--'
@@ -40,7 +41,7 @@ function SalarySummaryCard({ summary, isLoading, isPersisting, onViewDetails }: 
   const lastSyncedLabel = formatTimestamp(summary?.lastSyncedAt)
 
   return (
-    <section className="relative overflow-hidden rounded-[1.5rem] bg-[#F3F6FC] p-5 shadow-sm transition-all text-left border-0">
+    <section className={`relative overflow-hidden rounded-[1.5rem] bg-[#F3F6FC] p-5 transition-all text-left border-0 ${showShadow ? 'shadow-sm' : ''}`}>
       <header className="flex items-center justify-between">
         <div>
           <p className="text-sm font-medium text-slate-500">工资概览</p>
@@ -69,19 +70,19 @@ function SalarySummaryCard({ summary, isLoading, isPersisting, onViewDetails }: 
       </div>
 
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div className="rounded-xl bg-white p-3 shadow-sm">
+        <div className={`rounded-xl bg-white p-3 ${showShadow ? 'shadow-sm' : ''}`}>
           <p className="text-xs font-medium text-slate-500">底薪</p>
           <p className="mt-1 text-lg font-bold text-slate-900">{base}</p>
         </div>
-        <div className="rounded-xl bg-white p-3 shadow-sm">
+        <div className={`rounded-xl bg-white p-3 ${showShadow ? 'shadow-sm' : ''}`}>
           <p className="text-xs font-medium text-slate-500">全勤</p>
           <p className="mt-1 text-lg font-bold text-slate-900">{attendance}</p>
         </div>
-        <div className="rounded-xl bg-white p-3 shadow-sm">
+        <div className={`rounded-xl bg-white p-3 ${showShadow ? 'shadow-sm' : ''}`}>
           <p className="text-xs font-medium text-slate-500">加班</p>
           <p className="mt-1 text-lg font-bold text-slate-900">{overtime}</p>
         </div>
-        <div className="rounded-xl bg-white p-3 shadow-sm">
+        <div className={`rounded-xl bg-white p-3 ${showShadow ? 'shadow-sm' : ''}`}>
           <p className="text-xs font-medium text-slate-500">扣款</p>
           <p className="mt-1 text-lg font-bold text-slate-900">{deductions}</p>
         </div>

@@ -110,7 +110,7 @@ function SalaryInfoForm({ values, isWorkman, onChange, onSubmit, isSaving }: Sal
         </label>
 
         <div className="settings-form__actions">
-          <button type="submit" className="secondary" disabled={isSaving}>
+          <button type="submit" className="ghost" disabled={isSaving}>
             保存薪酬信息
           </button>
         </div>

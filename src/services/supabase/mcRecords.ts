@@ -123,25 +123,17 @@ export const upsertMcRecordForDate = async ({
   date: string
   isPaid: boolean
 }): Promise<MCRecord> => {
-  const supabase = getSupabaseClient()
-  const payload: MCRecordInsert = {
-    employee_id: employeeId,
+  const updated = await updateMcRecordByDate({
+    employeeId,
     date,
-    days: 1,
-    is_paid: isPaid,
+    updates: { is_paid: isPaid, days: 1 },
+  })
+
+  if (updated) {
+    return updated
   }
 
-  const { data, error } = await supabase
-    .from('mc_records')
-    .upsert(payload, { onConflict: 'employee_id,date' })
-    .select('id, employee_id, date, days, certificate_number, reason, is_paid, created_at, updated_at')
-    .single()
-
-  if (error || !data) {
-    throw new Error(`保存 ${date} 的病假记录失败：${error?.message ?? '未知错误'}`)
-  }
-
-  return mapRowToRecord(data)
+  return createMcRecord({ employeeId, date, days: 1, isPaid })
 }
 
 export const updateMcRecordByDate = async ({
@@ -160,13 +152,16 @@ export const updateMcRecordByDate = async ({
     .eq('employee_id', employeeId)
     .eq('date', date)
     .select('id, employee_id, date, days, certificate_number, reason, is_paid, created_at, updated_at')
-    .maybeSingle()
 
   if (error) {
     throw new Error(`更新 ${date} 的病假记录失败：${error.message}`)
   }
 
-  return data ? mapRowToRecord(data) : null
+  if (!data?.length) {
+    return null
+  }
+
+  return mapRowToRecord(data[0])
 }
 
 export const deleteMcRecordByDate = async ({

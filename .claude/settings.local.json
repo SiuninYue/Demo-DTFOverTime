@@ -46,7 +46,12 @@
       "mcp__plugin_testing-suite_playwright-server__browser_take_screenshot",
       "mcp__plugin_testing-suite_playwright-server__browser_resize",
       "mcp__plugin_testing-suite_playwright-server__browser_type",
-      "mcp__plugin_testing-suite_playwright-server__browser_click"
+      "mcp__plugin_testing-suite_playwright-server__browser_click",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(npx tsc:*)",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []

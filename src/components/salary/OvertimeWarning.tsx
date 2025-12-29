@@ -37,7 +37,7 @@ function OvertimeWarning({ summary }: OvertimeWarningProps) {
     neutral: '本月尚未记录加班。',
   }
 
-  const tone = warnings[0] ?? messages[severity]
+  const tone = warnings[0]?.message ?? messages[severity]
 
   return (
     <section className={`salary-warning salary-warning--${severity}`}>
@@ -49,7 +49,7 @@ function OvertimeWarning({ summary }: OvertimeWarningProps) {
       {warnings.length > 1 && (
         <ul>
           {warnings.map((warning) => (
-            <li key={warning}>{warning}</li>
+            <li key={warning.type + warning.message}>{warning.message}</li>
           ))}
         </ul>
       )}

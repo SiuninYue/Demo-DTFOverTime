@@ -6,6 +6,7 @@ import SalarySummaryCard from "@/components/salary/SalarySummaryCard";
 import { useSalary, DEMO_EMPLOYEE_ID } from "@/hooks/useSalary";
 import { useSchedule } from "@/hooks/useSchedule";
 import { useAuthStore } from "@/store/authStore";
+import { useUserStore } from "@/store/userStore";
 import { formatDate } from "@/utils/formatting";
 
 const getCurrentMonthKey = () => {
@@ -80,18 +81,12 @@ function HomePage() {
     [schedule, todayKey],
   );
 
-  const greeting = useMemo(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "早上好";
-    if (hour < 18) return "下午好";
-    return "晚上好";
-  }, []);
-
   const handleRefresh = async () => {
     await Promise.all([refreshSalary(), refreshSchedule()]);
   };
 
-  const displayName = user?.email?.split("@")[0] ?? "员工";
+  const profileName = useUserStore((state) => state.profile?.name?.trim());
+  const displayName = profileName || "新员工";
 
   return (
     <PullToRefresh onRefresh={handleRefresh} className="">
@@ -106,7 +101,7 @@ function HomePage() {
 
           <header className="flex items-center justify-between gap-3 px-1">
             <div>
-              <p className="text-sm font-semibold text-slate-500">{greeting}</p>
+              <p className="text-sm font-semibold text-slate-500">个人资料</p>
               <h1 className="text-3xl font-bold tracking-tight text-slate-900">
                 {displayName}
               </h1>

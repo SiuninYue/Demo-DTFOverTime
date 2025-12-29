@@ -3,13 +3,14 @@ import { Copy, ClipboardPaste } from 'lucide-react'
 import { ScheduleType, type DaySchedule, type ScheduleData } from '@/types/schedule'
 import { getDaysInMonth } from '@/utils/dateUtils'
 import { useUserStore } from '@/store/userStore'
+import type { TimeRecord } from '@/types/timecard'
 
 import { isPublicHoliday } from '@/utils/holidays'
 
 const scheduleOptions = [
   { label: '早班', value: ScheduleType.WORK },
   { label: '例休', value: ScheduleType.REST },
-  { label: '空场', value: ScheduleType.OFF },
+  { label: '调休', value: ScheduleType.OFF },
   { label: '公假', value: ScheduleType.PUBLIC_HOLIDAY },
   { label: '年假', value: ScheduleType.LEAVE },
 ]
@@ -21,26 +22,15 @@ const buildDefaultDay = (
   type: ScheduleType.WORK,
   plannedStartTime: defaultStartTime || '10:00',
   plannedEndTime: defaultEndTime || '19:00',
-  isStatutoryRestDay: true,
+  isStatutoryRestDay: false,
   notes: '',
   isConfirmed: false,
 })
 
-const buildMonthTemplate = (month: string, data?: ScheduleData): ScheduleData => {
-  if (data) {
-    return { ...data }
-  }
 
-  const [year, monthPart] = month.split('-').map(Number)
-  const totalDays = getDaysInMonth(Number.isNaN(year) ? new Date().getFullYear() : year, monthPart || 1)
-  const template: ScheduleData = {}
-
-  for (let day = 1; day <= totalDays; day += 1) {
-    const dateKey = `${month}-${String(day).padStart(2, '0')}`
-    template[dateKey] = buildDefaultDay()
-  }
-
-  return template
+const formatTimeValue = (value?: string | null) => {
+  if (!value) return ''
+  return value.length >= 5 ? value.slice(0, 5) : value
 }
 
 interface ManualScheduleFormProps {
@@ -51,6 +41,7 @@ interface ManualScheduleFormProps {
   onChange?: (data: ScheduleData) => void
   disabled?: boolean
   disabledReason?: string | null
+  timeRecords?: Record<string, TimeRecord>
 }
 
 function ManualScheduleForm({
@@ -61,6 +52,7 @@ function ManualScheduleForm({
   onChange,
   disabled = false,
   disabledReason = null,
+  timeRecords,
 }: ManualScheduleFormProps) {
   const userProfile = useUserStore((state) => state.profile)
   const defaultStartTime = userProfile?.defaultStartTime
@@ -71,21 +63,24 @@ function ManualScheduleForm({
   const [message, setMessage] = useState<string | null>(null)
   const [clipboard, setClipboard] = useState<DaySchedule | null>(null)
 
-  useEffect(() => {
+  const computedSchedule = useMemo(() => {
     if (initialData) {
-      setSchedule(initialData)
-    } else {
-      // If no initialData, generate an empty schedule for the month
-      const [year, monthPart] = month.split('-').map(Number);
-      const totalDays = getDaysInMonth(Number.isNaN(year) ? new Date().getFullYear() : year, monthPart || 1);
-      const emptySchedule: ScheduleData = {};
-      for (let day = 1; day <= totalDays; day += 1) {
-        const dateKey = `${month}-${String(day).padStart(2, '0')}`;
-        emptySchedule[dateKey] = buildDefaultDay(defaultStartTime, defaultEndTime); // Pre-fill with defaults
-      }
-      setSchedule(emptySchedule);
+      return initialData
     }
+    // If no initialData, generate an empty schedule for the month
+    const [year, monthPart] = month.split('-').map(Number);
+    const totalDays = getDaysInMonth(Number.isNaN(year) ? new Date().getFullYear() : year, monthPart || 1);
+    const emptySchedule: ScheduleData = {};
+    for (let day = 1; day <= totalDays; day += 1) {
+      const dateKey = `${month}-${String(day).padStart(2, '0')}`;
+      emptySchedule[dateKey] = buildDefaultDay(defaultStartTime, defaultEndTime);
+    }
+    return emptySchedule
   }, [month, initialData, defaultStartTime, defaultEndTime])
+
+  useEffect(() => {
+    setSchedule(computedSchedule)
+  }, [computedSchedule])
 
   const dates = useMemo(() => {
     const [year, monthPart] = month.split('-').map(Number);
@@ -101,11 +96,25 @@ function ManualScheduleForm({
   const handleDayChange = (date: string, field: keyof DaySchedule, value: string | boolean | null) => {
     setSchedule((current) => {
       const existing = current[date] ?? buildDefaultDay(defaultStartTime, defaultEndTime)
+      const shouldClearTimes =
+        field === 'type' &&
+        value !== ScheduleType.WORK &&
+        value !== ScheduleType.OFF
+      const shouldClearStatutory =
+        field === 'type' &&
+        value !== ScheduleType.REST &&
+        value !== ScheduleType.OFF
       const updated: ScheduleData = {
         ...current,
         [date]: {
           ...existing,
           [field]: value,
+          ...(shouldClearTimes
+            ? { plannedStartTime: null, plannedEndTime: null }
+            : null),
+          ...(shouldClearStatutory
+            ? { isStatutoryRestDay: false }
+            : null),
         },
       }
       onChange?.(updated)
@@ -167,11 +176,16 @@ function ManualScheduleForm({
           <table className="schedule-table">
             <thead>
               <tr>
-                <th className="w-24">日期</th>
+                <th className="w-14 schedule-date-cell">日期</th>
                 <th>类型</th>
                 <th>开始</th>
                 <th>结束</th>
-                <th className="text-center">法定休</th>
+                <th
+                  className="text-center"
+                  title="法定休息日会影响加班与补休的计算方式"
+                >
+                  法定休
+                </th>
                 <th>备注</th>
                 <th>操作</th>
               </tr>
@@ -179,14 +193,28 @@ function ManualScheduleForm({
             <tbody>
               {dates.map((dateKey) => {
                 const entry = schedule[dateKey] ?? buildDefaultDay(defaultStartTime, defaultEndTime)
+                const confirmedRecord = timeRecords?.[dateKey]
+                const isConfirmed = Boolean(confirmedRecord)
+                const isStatutoryApplicable =
+                  entry.type === ScheduleType.REST || entry.type === ScheduleType.OFF
+                const canEditWorkTime =
+                  entry.type === ScheduleType.WORK || entry.isStatutoryRestDay
+                const displayStartTime = formatTimeValue(
+                  confirmedRecord?.actualStartTime ?? entry.plannedStartTime,
+                )
+                const displayEndTime = formatTimeValue(
+                  confirmedRecord?.actualEndTime ?? entry.plannedEndTime,
+                )
                 const dateObj = new Date(dateKey)
                 const dayOfWeek = dateObj.getDay() // 0 = Sunday, 6 = Saturday
                 const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
                 const isPH = isPublicHoliday(dateKey)
+                const isRowDisabled = disabled || isSaving || isConfirmed
 
                 let rowClass = 'hover:bg-neutral-50 dark:hover:bg-neutral-800'
                 if (isPH) rowClass = 'bg-red-50 hover:bg-red-100 dark:bg-red-900/10 dark:hover:bg-red-900/20'
                 else if (isWeekend) rowClass = 'bg-orange-50 hover:bg-orange-100 dark:bg-orange-900/10 dark:hover:bg-orange-900/20'
+                if (isConfirmed) rowClass = `${rowClass} schedule-row--confirmed`
 
                 // Weekday label in Chinese
                 const weekdays = ['日', '一', '二', '三', '四', '五', '六']
@@ -194,9 +222,9 @@ function ManualScheduleForm({
 
                 return (
                   <tr key={dateKey} className={rowClass}>
-                    <td className="whitespace-nowrap">
+                    <td className="whitespace-nowrap schedule-date-cell">
                       <div className="flex flex-col">
-                        <span className="font-medium text-sm">{dateKey}</span>
+                        <span className="font-medium text-sm">{dateKey.slice(5)}</span>
                         <span className="text-xs text-muted-foreground opacity-70">
                           周{weekdayLabel} {isPH ? '(公假)' : ''}
                         </span>
@@ -206,8 +234,8 @@ function ManualScheduleForm({
                       <select
                         value={entry.type}
                         onChange={(event) => handleDayChange(dateKey, 'type', event.target.value)}
-                        disabled={disabled || isSaving}
-                        className="text-sm"
+                        disabled={isRowDisabled}
+                        className="text-sm schedule-type-select"
                       >
                         {scheduleOptions.map((option) => (
                           <option key={option.value} value={option.value}>
@@ -217,26 +245,34 @@ function ManualScheduleForm({
                       </select>
                     </td>
                     <td>
-                      <input
-                        type="time"
-                        value={entry.plannedStartTime ?? ''}
-                        onChange={(event) =>
-                          handleDayChange(dateKey, 'plannedStartTime', event.target.value)
-                        }
-                        disabled={disabled || isSaving}
-                        className="text-sm w-full min-w-[5rem]"
-                      />
+                      {canEditWorkTime ? (
+                        <input
+                          type="time"
+                          value={displayStartTime}
+                          onChange={(event) =>
+                            handleDayChange(dateKey, 'plannedStartTime', event.target.value)
+                          }
+                          disabled={isRowDisabled}
+                          className="text-sm w-full min-w-[5rem]"
+                        />
+                      ) : (
+                        <span className="time-placeholder">--:--</span>
+                      )}
                     </td>
                     <td>
-                      <input
-                        type="time"
-                        value={entry.plannedEndTime ?? ''}
-                        onChange={(event) =>
-                          handleDayChange(dateKey, 'plannedEndTime', event.target.value)
-                        }
-                        disabled={disabled || isSaving}
-                        className="text-sm w-full min-w-[5rem]"
-                      />
+                      {canEditWorkTime ? (
+                        <input
+                          type="time"
+                          value={displayEndTime}
+                          onChange={(event) =>
+                            handleDayChange(dateKey, 'plannedEndTime', event.target.value)
+                          }
+                          disabled={isRowDisabled}
+                          className="text-sm w-full min-w-[5rem]"
+                        />
+                      ) : (
+                        <span className="time-placeholder">--:--</span>
+                      )}
                     </td>
                     <td className="text-center">
                       <input
@@ -245,20 +281,30 @@ function ManualScheduleForm({
                         onChange={(event) =>
                           handleDayChange(dateKey, 'isStatutoryRestDay', event.target.checked)
                         }
-                        disabled={disabled || isSaving}
+                        disabled={isRowDisabled || !isStatutoryApplicable}
                         className="w-4 h-4 accent-brand-600"
                         title="是否法定休息日"
                       />
                     </td>
                     <td>
-                      <input
-                        type="text"
-                        value={entry.notes ?? ''}
-                        placeholder="备注..."
-                        onChange={(event) => handleDayChange(dateKey, 'notes', event.target.value)}
-                        disabled={disabled || isSaving}
-                        className="text-sm w-full min-w-[6rem]"
-                      />
+                      <div className="schedule-notes">
+                        {isConfirmed ? (
+                          <span className="schedule-confirmed-tag">已确认</span>
+                        ) : (
+                          <input
+                            type="text"
+                            value={entry.notes ?? ''}
+                            placeholder="备注"
+                            onChange={(event) =>
+                              handleDayChange(dateKey, 'notes', event.target.value)
+                            }
+                            disabled={isRowDisabled}
+                            maxLength={20}
+                            title={entry.notes ?? ''}
+                            className="text-sm w-full min-w-[6rem]"
+                          />
+                        )}
+                      </div>
                     </td>
                     <td>
                       <div className="flex items-center gap-1">
@@ -275,7 +321,7 @@ function ManualScheduleForm({
                           type="button"
                           className={`p-1.5 rounded transition ${clipboard ? 'text-neutral-500 hover:text-brand-600 hover:bg-brand-50' : 'text-neutral-300 cursor-not-allowed'}`}
                           onClick={() => handlePaste(dateKey)}
-                          disabled={disabled || isSaving || !clipboard}
+                          disabled={isRowDisabled || !clipboard}
                           title={clipboard ? '粘贴' : '请先复制'}
                         >
                           <ClipboardPaste className="w-4 h-4" />

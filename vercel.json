@@ -8,7 +8,7 @@
       "runtime": "edge",
       "maxDuration": 15,
       "memory": 256,
-      "envVarsIn": ["OPENAI_API_KEY", "SUPABASE_URL", "SUPABASE_ANON_KEY"]
+      "envVarsIn": ["SUPABASE_URL", "SUPABASE_ANON_KEY"]
     }
   },
   "routes": [

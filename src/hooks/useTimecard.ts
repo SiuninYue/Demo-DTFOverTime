@@ -12,7 +12,8 @@ import {
 } from '@/services/supabase/timeRecords'
 import { deleteMcRecordByDate, upsertMcRecordForDate } from '@/services/supabase/mcRecords'
 import { calculateDailyPay } from '@/services/salary/calculator'
-import type { DailyPayResult } from '@/types/salary'
+import type { DailyPayResult } from '@/services/salary/calculator'
+import { normalizeTimeRecord, normalizeTimeToMinutes } from '@/utils/timeUtils'
 
 interface UseTimecardOptions {
   employeeId: string
@@ -90,7 +91,11 @@ export const useTimecard = ({ employeeId, date }: UseTimecardOptions): UseTimeca
 
     const cached = store.recordsByMonth[month]?.[date]
     if (cached) {
-      setRecord(cached)
+      const normalized = normalizeTimeRecord(cached)
+      setRecord(normalized)
+      if (normalized !== cached) {
+        store.upsertRecord(normalized)
+      }
       setIsLoading(false)
       setHasChanges(false)
       return
@@ -99,19 +104,22 @@ export const useTimecard = ({ employeeId, date }: UseTimecardOptions): UseTimeca
     try {
       const remote = await getTimeRecordByDate(employeeId, date)
       if (remote) {
-        setRecord(remote)
-        store.upsertRecord(remote)
+        const normalized = normalizeTimeRecord(remote)
+        setRecord(normalized)
+        store.upsertRecord(normalized)
         setHasChanges(false)
       } else {
         const baseRecord = buildDefaultRecord(
           date,
           scheduleToDayType(schedule?.scheduleData[date]),
         )
-        if (scheduleEntry?.plannedStartTime) {
-          baseRecord.actualStartTime = scheduleEntry.plannedStartTime
+        const plannedStart = normalizeTimeToMinutes(scheduleEntry?.plannedStartTime ?? null)
+        const plannedEnd = normalizeTimeToMinutes(scheduleEntry?.plannedEndTime ?? null)
+        if (plannedStart) {
+          baseRecord.actualStartTime = plannedStart
         }
-        if (scheduleEntry?.plannedEndTime) {
-          baseRecord.actualEndTime = scheduleEntry.plannedEndTime
+        if (plannedEnd) {
+          baseRecord.actualEndTime = plannedEnd
         }
         if (scheduleEntry?.isStatutoryRestDay) {
           baseRecord.isStatutoryRestDay = true
@@ -144,8 +152,10 @@ export const useTimecard = ({ employeeId, date }: UseTimecardOptions): UseTimeca
       }
       const updated = { ...current }
       updated.dayType = scheduleToDayType(scheduleEntry)
-      updated.actualStartTime = scheduleEntry.plannedStartTime ?? updated.actualStartTime
-      updated.actualEndTime = scheduleEntry.plannedEndTime ?? updated.actualEndTime
+      const plannedStart = normalizeTimeToMinutes(scheduleEntry.plannedStartTime ?? null)
+      const plannedEnd = normalizeTimeToMinutes(scheduleEntry.plannedEndTime ?? null)
+      updated.actualStartTime = plannedStart ?? updated.actualStartTime
+      updated.actualEndTime = plannedEnd ?? updated.actualEndTime
       return updated
     })
   }, [scheduleEntry])
@@ -173,55 +183,46 @@ export const useTimecard = ({ employeeId, date }: UseTimecardOptions): UseTimeca
 
   const updateField = useCallback(
     <K extends keyof TimeRecordInput>(field: K, value: TimeRecordInput[K]) => {
-      let didChange = false
       setRecord((current) => {
         if (Object.is(current[field], value)) {
           return current
         }
-        didChange = true
         const next = { ...current, [field]: value }
         if (current.id) {
           next.isModified = true
         }
+        setHasChanges(true)
         return next
       })
-      if (didChange) {
-        setHasChanges(true)
-      }
     },
     [],
   )
 
   const setDayType = useCallback((dayType: DayType) => {
-    let didChange = false
     setRecord((current) => {
       if (current.dayType === dayType) {
         return current
       }
-      didChange = true
       const next: typeof current = {
         ...current,
         dayType,
-        isStatutoryRestDay:
-          dayType === DayType.REST_DAY ? current.isStatutoryRestDay ?? true : false,
+        isStatutoryRestDay: dayType === DayType.REST_DAY,
       }
       if (current.id) {
         next.isModified = true
       }
+      setHasChanges(true)
       return next
     })
-    if (didChange) {
-      setHasChanges(true)
-    }
   }, [])
 
   const resetToSchedule = useCallback(() => {
     setRecord((current) => {
-      const next = buildDefaultRecord(date, scheduleToDayType(scheduleEntry))
+      const next: TimeRecordInput & { id?: string } = buildDefaultRecord(date, scheduleToDayType(scheduleEntry))
       next.id = current.id
       next.isModified = current.id ? true : current.isModified
-      next.actualStartTime = scheduleEntry?.plannedStartTime ?? null
-      next.actualEndTime = scheduleEntry?.plannedEndTime ?? null
+      next.actualStartTime = normalizeTimeToMinutes(scheduleEntry?.plannedStartTime ?? null) ?? null
+      next.actualEndTime = normalizeTimeToMinutes(scheduleEntry?.plannedEndTime ?? null) ?? null
       next.restHours =
         next.dayType === DayType.REST_DAY || next.dayType === DayType.OFF_DAY ? 0 : 1
       if (scheduleEntry?.isStatutoryRestDay !== undefined) {

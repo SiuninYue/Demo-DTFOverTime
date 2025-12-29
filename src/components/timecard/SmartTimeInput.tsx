@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 
 interface SmartTimeInputProps {
@@ -24,8 +24,8 @@ const parseTime = (input: string): string | null => {
 
     let hours = 0
     let minutes = 0
-    let isPm = clean.includes('p')
-    let isAm = clean.includes('a')
+    const isPm = clean.includes('p')
+    const isAm = clean.includes('a')
 
     // Extract numbers
     const nums = clean.replace(/[^\d]/g, '')
@@ -76,10 +76,14 @@ export default function SmartTimeInput({
     const [inputValue, setInputValue] = useState(value ?? '')
     const [error, setError] = useState(false)
 
-    // Sync internal state when prop changes externally
+    // Sync internal state when prop changes externally - only if different from current
+    const normalizedValue = value ?? ''
     useEffect(() => {
-        setInputValue(value ?? '')
-    }, [value])
+        if (inputValue !== normalizedValue) {
+            setInputValue(normalizedValue)
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [normalizedValue])
 
     const handleBlur = () => {
         if (!inputValue.trim()) {

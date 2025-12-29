@@ -1,4 +1,3 @@
-import process from 'process'
 const rateBuckets = new Map<
   string,
   {
@@ -20,7 +19,8 @@ const unauthorizedResponse = () =>
   )
 
 export const requireAuth = (request: Request) => {
-  if (process.env.NODE_ENV !== 'production') {
+  // eslint-disable-next-line no-undef
+  if (typeof process !== 'undefined' && (process as NodeJS.Process).env?.NODE_ENV !== 'production') {
     return null
   }
 

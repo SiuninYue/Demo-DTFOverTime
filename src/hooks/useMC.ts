@@ -4,13 +4,15 @@ import {
   type CreateMcRecordInput,
   createMcRecord,
   deleteMcRecord,
+  deleteMcRecordByDate,
   getMonthlyMcRecords,
   getYearlyMcCount,
+  updateMcRecordByDate,
 } from '@/services/supabase/mcRecords'
 import { upsertMcDates, getMonthlyRecords } from '@/services/supabase/timeRecords'
 import { useTimecardStore } from '@/store/timecardStore'
 import { useScheduleStore } from '@/store/scheduleStore'
-import type { TimeRecord } from '@/types/timecard'
+import { DayType, type TimeRecord } from '@/types/timecard'
 
 export type NewMcRecordInput = Omit<CreateMcRecordInput, 'employeeId'>
 
@@ -43,6 +45,12 @@ export interface UseMCResult {
 }
 
 const DEFAULT_YEARLY_MC_QUOTA = 14
+const UNPAID_MC_TAG = '[UNPAID_MC]'
+
+const selectPreferredMcRecord = (records: MCRecord[]): MCRecord => {
+  const withMeta = records.find((record) => record.certificateNumber || record.reason)
+  return withMeta ?? records[0]
+}
 
 const extractYear = (month: string): number => {
   const match = month.match(/^(\d{4})-/)
@@ -87,7 +95,8 @@ export const useMC = ({
   const [isMonthLoading, setMonthLoading] = useState(autoLoad)
   const [isYearLoading, setYearLoading] = useState(autoLoad)
   const [isMutating, setIsMutating] = useState(false)
-  const refreshRef = useRef<() => Promise<void>>()
+  const duplicateIdsRef = useRef<string[]>([])
+  const refreshRef = useRef<() => Promise<void>>(undefined)
   const year = useMemo(() => extractYear(month), [month])
   const loadMonthRecords = useTimecardStore((state) => state.loadMonth)
   const schedule = useScheduleStore((state) => state.schedules[month])
@@ -136,6 +145,88 @@ export const useMC = ({
     [employeeId, ensureRecordsForMonth, loadMonthRecords, month, schedule],
   )
 
+  const normalizeMonthlyRecords = useCallback((records: MCRecord[]) => {
+    const grouped = new Map<string, MCRecord[]>()
+    records.forEach((record) => {
+      if (!record.date) return
+      const list = grouped.get(record.date) ?? []
+      list.push(record)
+      grouped.set(record.date, list)
+    })
+
+    const normalized: MCRecord[] = []
+    const duplicates: string[] = []
+
+    grouped.forEach((list) => {
+      if (list.length === 1) {
+        normalized.push(list[0])
+        return
+      }
+      const keep = selectPreferredMcRecord(list)
+      normalized.push(keep)
+      list.forEach((record) => {
+        if (record.id !== keep.id) {
+          duplicates.push(record.id)
+        }
+      })
+    })
+
+    duplicateIdsRef.current = duplicates
+    return normalized
+  }, [])
+
+  const cleanupDuplicateRecords = useCallback(async () => {
+    const ids = duplicateIdsRef.current
+    if (!ids.length) {
+      return false
+    }
+    await Promise.all(ids.map((id) => deleteMcRecord(id)))
+    duplicateIdsRef.current = []
+    return true
+  }, [])
+
+  const syncTimecardsToMc = useCallback(
+    async (mcList: MCRecord[]) => {
+      const recordsByDate = await ensureRecordsForMonth()
+      const monthPrefix = `${month}-`
+      const mcMap = new Map(mcList.map((record) => [record.date, record]))
+      const tasks: Array<Promise<unknown>> = []
+
+      Object.values(recordsByDate).forEach((record) => {
+        if (!record.date || !record.date.startsWith(monthPrefix)) {
+          return
+        }
+        if (record.dayType !== DayType.MEDICAL_LEAVE) {
+          return
+        }
+        const isPaid = !(record.notes?.includes(UNPAID_MC_TAG) ?? false)
+        const existing = mcMap.get(record.date)
+        if (!existing) {
+          tasks.push(
+            createMcRecord({
+              employeeId,
+              date: record.date,
+              days: 1,
+              isPaid,
+            }),
+          )
+          return
+        }
+        if (existing.isPaid !== isPaid) {
+          tasks.push(updateMcRecordByDate({ employeeId, date: record.date, updates: { is_paid: isPaid } }))
+        }
+      })
+
+      if (!tasks.length) {
+        return false
+      }
+
+      await Promise.all(tasks)
+      return true
+    },
+    [employeeId, ensureRecordsForMonth, month],
+  )
+
   const handleRecalculate = useCallback(async () => {
     if (!onRecalculate) {
       return
@@ -147,11 +238,12 @@ export const useMC = ({
     setMonthLoading(true)
     try {
       const data = await getMonthlyMcRecords(employeeId, month)
-      setRecords(data)
-      const total = data.reduce((acc, record) => acc + Math.max(0, record.days), 0)
+      const normalized = normalizeMonthlyRecords(data)
+      setRecords(normalized)
+      const total = normalized.reduce((acc, record) => acc + Math.max(0, record.days), 0)
       setMonthlyDays(total)
       setError(null)
-      return data
+      return normalized
     } catch (loadError) {
       const message =
         loadError instanceof Error ? loadError.message : '加载病假记录失败。'
@@ -160,7 +252,7 @@ export const useMC = ({
     } finally {
       setMonthLoading(false)
     }
-  }, [employeeId, month])
+  }, [employeeId, month, normalizeMonthlyRecords])
 
   const loadYearly = useCallback(async () => {
     setYearLoading(true)
@@ -183,8 +275,13 @@ export const useMC = ({
     await loadYearly().catch(() => null)
     if (monthly) {
       await applyMcToTimecards(monthly)
+      const didSync = await syncTimecardsToMc(monthly)
+      const didCleanup = await cleanupDuplicateRecords()
+      if (didSync || didCleanup) {
+        await loadMonthly().catch(() => null)
+      }
     }
-  }, [applyMcToTimecards, loadMonthly, loadYearly])
+  }, [applyMcToTimecards, cleanupDuplicateRecords, loadMonthly, loadYearly, syncTimecardsToMc])
 
   refreshRef.current = refresh
 
@@ -208,6 +305,11 @@ export const useMC = ({
         const monthly = await loadMonthly()
         await loadYearly()
         await applyMcToTimecards(monthly)
+        const didCleanup = await cleanupDuplicateRecords()
+        if (didCleanup) {
+          const refreshed = await loadMonthly()
+          await applyMcToTimecards(refreshed)
+        }
         await handleRecalculate()
       } catch (mutationError) {
         const message =
@@ -220,7 +322,7 @@ export const useMC = ({
         setIsMutating(false)
       }
     },
-    [applyMcToTimecards, handleRecalculate, loadMonthly, loadYearly],
+    [applyMcToTimecards, cleanupDuplicateRecords, handleRecalculate, loadMonthly, loadYearly],
   )
 
   const addRecord = useCallback(
@@ -228,9 +330,19 @@ export const useMC = ({
       const normalizedDays = Math.max(1, Math.round(input.days))
       const willExceedQuota = yearlyDays + normalizedDays > DEFAULT_YEARLY_MC_QUOTA
       const isPaid = input.isPaid !== false && !willExceedQuota
-      await mutate(() => createMcRecord({ ...input, days: normalizedDays, isPaid, employeeId }))
+      const existing = records.find((record) => record.date === input.date)
+      if (existing) {
+        await mutate(async () => {
+          await deleteMcRecordByDate({ employeeId, date: input.date })
+          await createMcRecord({ ...input, days: normalizedDays, isPaid, employeeId })
+        })
+        return
+      }
+      await mutate(async () => {
+        await createMcRecord({ ...input, days: normalizedDays, isPaid, employeeId })
+      })
     },
-    [employeeId, mutate, yearlyDays],
+    [employeeId, mutate, records, yearlyDays],
   )
 
   const removeRecord = useCallback(

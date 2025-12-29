@@ -36,7 +36,7 @@ const pickColumns = <T extends Record<string, unknown>>(row: T, columns?: string
   columns
     ? columns.reduce<Partial<T>>((acc, key) => {
         if (key in row) {
-          acc[key as keyof T] = row[key]
+          acc[key as keyof T] = row[key as keyof T]
         }
         return acc
       }, {})
@@ -239,7 +239,8 @@ class TableQuery<T extends TableName> {
       }
       case 'update': {
         const targets = this.filteredRows()
-        targets.forEach((row) => Object.assign(row, this.prepareUpdatePayload(this.mutation!.payload)))
+        const mutation = this.mutation as { type: 'update'; payload: TableUpdate<T> }
+        targets.forEach((row) => Object.assign(row, this.prepareUpdatePayload(mutation.payload)))
         this.lastMutationRows = targets
         break
       }
@@ -273,8 +274,8 @@ class TableQuery<T extends TableName> {
     if ('updated_at' in record) {
       record.updated_at = nowISO() as TableRow<T>['updated_at']
     }
-    if ('imported_at' in record && !record.imported_at) {
-      record.imported_at = nowISO() as TableRow<T>['imported_at']
+    if ('imported_at' in record && !(record as Record<string, unknown>).imported_at) {
+      (record as Record<string, unknown>).imported_at = nowISO()
     }
     return record
   }

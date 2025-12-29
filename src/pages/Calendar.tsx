@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ChevronLeft, ChevronRight, Info } from 'lucide-react'
+import { Info } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 import PullToRefresh from '@/components/common/PullToRefresh'
 import MonthCalendar from '@/components/calendar/MonthCalendar'
@@ -16,14 +16,15 @@ import {
   getMonthlyRecords,
   updateTimeRecord,
 } from '@/services/supabase/timeRecords'
-import type { TimeRecord } from '@/types/timecard'
+import { DayType, type TimeRecordInput, type TimeRecord } from '@/types/timecard'
+import type { DaySchedule } from '@/types/schedule'
 
 const getCurrentMonthId = () => {
   const now = new Date()
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 }
 
-const EMPTY_OBJECT: Record<string, any> = {}
+const EMPTY_OBJECT: Record<string, TimeRecord> = {}
 
 const shiftMonth = (month: string, delta: number) => {
   const [yearStr, monthStr] = month.split('-')
@@ -41,6 +42,7 @@ function CalendarPage() {
   const timeRecords = useTimecardStore((state) => state.recordsByMonth[monthId] ?? EMPTY_OBJECT)
   const loadMonthRecords = useTimecardStore((state) => state.loadMonth)
   const timecardStatus = useTimecardStore((state) => state.statusByMonth[monthId] ?? 'idle')
+  const upsertRecord = useTimecardStore((state) => state.upsertRecord)
   const clipboardRef = useRef<string | null>(null)
   const clipboardRecordRef = useRef<TimeRecord | null>(null)
 
@@ -56,16 +58,15 @@ function CalendarPage() {
     }
   }, [employeeId, loadMonthRecords, monthId, timecardStatus])
 
-  const { schedule, isLoading, error, isOffline, hasData, refresh } = useSchedule({
+  const { schedule, isLoading, error, isOffline, refresh } = useSchedule({
     employeeId,
     month: monthId,
   })
 
   const [detailDate, setDetailDate] = useState<string | null>(null)
   const [isDetailOpen, setDetailOpen] = useState(false)
+  const [isConfirming, setIsConfirming] = useState(false)
   const { showToast } = useToast()
-
-
 
   const selectedEntry = useMemo(() => {
     if (!detailDate || !schedule) return undefined
@@ -106,6 +107,125 @@ function CalendarPage() {
         break
       default:
         break
+    }
+  }
+
+  const scheduleToDayType = (entry?: DaySchedule): DayType => {
+    if (!entry) return DayType.NORMAL_WORK_DAY
+    if (entry.type === 'rest') {
+      return entry.isStatutoryRestDay ? DayType.REST_DAY : DayType.OFF_DAY
+    }
+    if (entry.type === 'off') return DayType.OFF_DAY
+    if (entry.type === 'public_holiday') return DayType.PUBLIC_HOLIDAY
+    if (entry.type === 'leave') return DayType.ANNUAL_LEAVE
+    if (entry.type === 'unknown') return DayType.NORMAL_WORK_DAY
+    return DayType.NORMAL_WORK_DAY
+  }
+
+  const getConfirmLabel = (entry?: DaySchedule) => {
+    const dayType = scheduleToDayType(entry)
+    switch (dayType) {
+      case DayType.OFF_DAY:
+      case DayType.REST_DAY:
+        return '确认休息'
+      case DayType.PUBLIC_HOLIDAY:
+        return '确认公假'
+      case DayType.ANNUAL_LEAVE:
+        return '确认年假'
+      case DayType.MEDICAL_LEAVE:
+        return '确认病假'
+      default:
+        return '确认出勤'
+    }
+  }
+
+  const buildAutoTimecardPayload = (
+    date: string,
+    entry: DaySchedule,
+    existing?: TimeRecord,
+  ): TimeRecordInput => {
+    const dayType = scheduleToDayType(entry)
+    const isWorkDay = dayType === DayType.NORMAL_WORK_DAY
+    const shouldUsePlannedTimes = isWorkDay
+    return {
+      date,
+      dayType,
+      isStatutoryRestDay: dayType === DayType.REST_DAY,
+      actualStartTime: shouldUsePlannedTimes ? entry.plannedStartTime ?? null : null,
+      actualEndTime: shouldUsePlannedTimes ? entry.plannedEndTime ?? null : null,
+      restHours: isWorkDay ? existing?.restHours ?? 1 : 0,
+      isEmployerRequested: isWorkDay ? existing?.isEmployerRequested ?? true : false,
+      spansMidnight: existing?.spansMidnight ?? false,
+      hoursWorked: existing?.hoursWorked ?? null,
+      basePay: existing?.basePay ?? null,
+      overtimePay: existing?.overtimePay ?? null,
+      notes: existing?.notes ?? null,
+      isModified: existing?.id ? true : undefined,
+    }
+  }
+
+  const canQuickConfirm =
+    selectedEntry &&
+    (scheduleToDayType(selectedEntry) !== DayType.NORMAL_WORK_DAY ||
+      Boolean(selectedEntry.plannedStartTime && selectedEntry.plannedEndTime))
+
+  const handleConfirmAttendance = async () => {
+    if (!detailDate || !selectedEntry) {
+      setDetailOpen(false)
+      return
+    }
+
+    if (!canQuickConfirm) {
+      setDetailOpen(false)
+      return
+    }
+
+    if (isConfirming) {
+      return
+    }
+
+    setIsConfirming(true)
+    try {
+      const existing = timeRecords[detailDate]
+      const payload = buildAutoTimecardPayload(detailDate, selectedEntry, existing)
+
+      if (existing?.id) {
+        const sameAsPlanned =
+          existing.dayType === payload.dayType &&
+          existing.actualStartTime === payload.actualStartTime &&
+          existing.actualEndTime === payload.actualEndTime
+
+        if (sameAsPlanned) {
+          showToast({
+            title: '已确认出勤',
+            description: detailDate,
+            variant: 'success',
+          })
+          setDetailOpen(false)
+          return
+        }
+
+        const saved = await updateTimeRecord(existing.id, payload)
+        upsertRecord(saved)
+      } else {
+        const saved = await createTimeRecord({ ...payload, employeeId })
+        upsertRecord(saved)
+      }
+
+      showToast({
+        title: '出勤已确认',
+        description: detailDate,
+        variant: 'success',
+      })
+      setDetailOpen(false)
+    } catch {
+      showToast({
+        title: '确认失败',
+        description: '无法保存当天的出勤记录，请稍后重试。',
+        variant: 'error',
+      })
+    } finally {
+      setIsConfirming(false)
     }
   }
 
@@ -224,39 +344,6 @@ function CalendarPage() {
           <div className="offline-banner">离线模式：正在显示缓存的排班数据</div>
         )}
 
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400 font-medium">当前月份</p>
-            <h1 className="text-3xl font-bold tracking-tight text-neutral-900 dark:text-white mt-0.5">{monthId}</h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              className="inline-flex items-center justify-center rounded-full w-10 h-10 bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700 transition"
-              onClick={() => handleMonthChange('prev')}
-              aria-label="上个月"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <button
-              type="button"
-              className="inline-flex items-center justify-center rounded-full w-10 h-10 bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700 transition"
-              onClick={() => handleMonthChange('next')}
-              aria-label="下个月"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-            {/* <button
-              type="button"
-              className="inline-flex items-center gap-2 px-4 py-2 ml-2 text-sm font-medium text-white bg-blue-600 rounded-full hover:bg-blue-700 transition shadow-sm"
-              onClick={() => setViewerOpen(true)}
-            >
-              <ImageIcon className="w-4 h-4" />
-              查看排班图
-            </button> */}
-          </div>
-        </div>
-
         {error && (
           <div className="mb-6 p-4 rounded-lg bg-red-50 text-red-900 border border-red-100 flex items-center gap-3">
             <Info className="w-5 h-5 text-red-500" />
@@ -285,6 +372,9 @@ function CalendarPage() {
           onRecordTimecard={(date) => navigate(`/timecard/${date}`)}
           onCopyDetails={copyScheduleDetails}
           onPasteDetails={handlePasteTimecard}
+          quickConfirmLabel={getConfirmLabel(selectedEntry)}
+          quickConfirmDisabled={isConfirming}
+          onQuickConfirm={canQuickConfirm ? handleConfirmAttendance : undefined}
         />
 
       </section>

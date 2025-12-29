@@ -4,6 +4,8 @@ import { WorkScheduleType } from '@/types/employee'
 export interface WorkPreferencesValues {
   normalWorkHours: number
   defaultRestHours: number
+  defaultStartTime?: string
+  defaultEndTime?: string
   workScheduleType: WorkScheduleType
 }
 
@@ -105,7 +107,7 @@ function WorkPreferencesForm({ values, onChange, onSubmit, isSaving }: WorkPrefe
         </label>
 
         <div className="settings-form__actions">
-          <button type="submit" className="secondary" disabled={isSaving}>
+          <button type="submit" className="ghost" disabled={isSaving}>
             保存工作偏好
           </button>
         </div>

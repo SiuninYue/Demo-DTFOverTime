@@ -76,7 +76,8 @@ describe('Integration: salary pipeline', () => {
     useTimecardStore.getState().setRecordsForMonth(month, [normalDay, restDay])
 
     const tables = inspectSupabaseTables()
-    expect(tables.time_records).toHaveLength(2)
+    expect(tables).toBeDefined()
+    expect(tables!.time_records).toHaveLength(2)
 
     const cachedRecords = await getMonthlyRecords(employeeId, month)
     expect(cachedRecords).toHaveLength(2)

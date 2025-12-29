@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useScheduleStore } from '@/store/scheduleStore'
 import type { Schedule } from '@/types/schedule'
 import { getScheduleByMonth } from '@/services/supabase/database'

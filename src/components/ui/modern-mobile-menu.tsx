@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Home, Briefcase, Calendar, Shield, Settings } from 'lucide-react'
 
@@ -38,7 +38,7 @@ const InteractiveMenu = ({ items, accentColor, className }: InteractiveMenuProps
     return items
   }, [items])
 
-  const getActiveIndexFromPath = () => {
+  const getActiveIndexFromPath = useCallback(() => {
     if (location.pathname === '/' && finalItems.some((item) => item.to === '/')) {
       return finalItems.findIndex((item) => item.to === '/')
     }
@@ -52,13 +52,13 @@ const InteractiveMenu = ({ items, accentColor, className }: InteractiveMenuProps
     }
 
     return index !== -1 ? index : 0
-  }
+  }, [location.pathname, finalItems])
 
   const [activeIndex, setActiveIndex] = useState(getActiveIndexFromPath)
 
   useEffect(() => {
     setActiveIndex(getActiveIndexFromPath())
-  }, [location.pathname, finalItems])
+  }, [getActiveIndexFromPath])
 
   const textRefs = useRef<(HTMLElement | null)[]>([])
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([])
