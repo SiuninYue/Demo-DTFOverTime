@@ -6,9 +6,7 @@
   "functions": {
     "api/**/*.{ts,js}": {
       "runtime": "edge",
-      "maxDuration": 15,
-      "memory": 256,
-      "envVarsIn": ["SUPABASE_URL", "SUPABASE_ANON_KEY"]
+      "maxDuration": 15
     }
   },
   "routes": [
