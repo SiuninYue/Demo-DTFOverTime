@@ -29,3 +29,9 @@ coverage
 *.sw?
 *:Zone.Identifier
 .venv-supabase/
+
+# Claude Code / SpecKit directories
+.claude/
+.codex/
+.specify/
+.claude-flow/

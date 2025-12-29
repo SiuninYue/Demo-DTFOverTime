@@ -1,3 +1,0 @@
-# 僅允許改動以下路徑（相對於倉庫根）
-ALLOW: .
-DENY: /, /home, /etc, /usr, /var, /mnt, /root
