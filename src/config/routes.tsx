@@ -1,31 +1,42 @@
+import { lazy, Suspense, type ReactNode } from 'react'
 import { createBrowserRouter } from 'react-router-dom'
 import AppLayout from '@/App'
-import HomePage from '@/pages/Home'
-import ScheduleImportPage from '@/pages/ScheduleImport'
-import CalendarPage from '@/pages/Calendar'
-import TimecardPage from '@/pages/Timecard'
-import SalaryPage from '@/pages/Salary'
-import MCPage from '@/pages/MC'
-import SettingsPage from '@/pages/Settings'
-
-import LoginPage from '@/pages/Login'
-import RegisterPage from '@/pages/Register'
-import MobileMenuDemoPage from '@/pages/MobileMenuDemo'
+import Loading from '@/components/common/Loading'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
+
+// Lazy load all pages for code splitting
+const HomePage = lazy(() => import('@/pages/Home'))
+const ScheduleImportPage = lazy(() => import('@/pages/ScheduleImport'))
+const CalendarPage = lazy(() => import('@/pages/Calendar'))
+const TimecardPage = lazy(() => import('@/pages/Timecard'))
+const SalaryPage = lazy(() => import('@/pages/Salary'))
+const MCPage = lazy(() => import('@/pages/MC'))
+const SettingsPage = lazy(() => import('@/pages/Settings'))
+const LoginPage = lazy(() => import('@/pages/Login'))
+const RegisterPage = lazy(() => import('@/pages/Register'))
+const MobileMenuDemoPage = lazy(() => import('@/pages/MobileMenuDemo'))
+
+// Suspense wrapper for lazy components
+// eslint-disable-next-line react-refresh/only-export-components
+const LazyPage = ({ children }: { children: ReactNode }) => (
+  <Suspense fallback={<Loading variant="full" label="加载页面" />}>
+    {children}
+  </Suspense>
+)
 
 const router = createBrowserRouter(
   [
     {
       path: '/login',
-      element: <LoginPage />,
+      element: <LazyPage><LoginPage /></LazyPage>,
     },
     {
       path: '/register',
-      element: <RegisterPage />,
+      element: <LazyPage><RegisterPage /></LazyPage>,
     },
     {
       path: '/mobile-menu-demo',
-      element: <MobileMenuDemoPage />,
+      element: <LazyPage><MobileMenuDemoPage /></LazyPage>,
     },
     {
       path: '/',
@@ -35,30 +46,30 @@ const router = createBrowserRouter(
         </ProtectedRoute>
       ),
       children: [
-        { index: true, element: <HomePage /> },
+        { index: true, element: <LazyPage><HomePage /></LazyPage> },
         {
           path: 'schedule/import',
-          element: <ScheduleImportPage />,
+          element: <LazyPage><ScheduleImportPage /></LazyPage>,
         },
         {
           path: 'calendar/:monthId?',
-          element: <CalendarPage />,
+          element: <LazyPage><CalendarPage /></LazyPage>,
         },
         {
           path: 'timecard/:dateId?',
-          element: <TimecardPage />,
+          element: <LazyPage><TimecardPage /></LazyPage>,
         },
         {
           path: 'salary/:monthId?',
-          element: <SalaryPage />,
+          element: <LazyPage><SalaryPage /></LazyPage>,
         },
         {
           path: 'mc',
-          element: <MCPage />,
+          element: <LazyPage><MCPage /></LazyPage>,
         },
         {
           path: 'settings',
-          element: <SettingsPage />,
+          element: <LazyPage><SettingsPage /></LazyPage>,
         },
       ],
     },

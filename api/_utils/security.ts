@@ -18,9 +18,12 @@ const unauthorizedResponse = () =>
     },
   )
 
+// Declare process for Vercel Edge environment
+declare const process: { env?: { NODE_ENV?: string } } | undefined
+
 export const requireAuth = (request: Request) => {
-  // eslint-disable-next-line no-undef
-  if (typeof process !== 'undefined' && (process as NodeJS.Process).env?.NODE_ENV !== 'production') {
+  // Skip auth check in development - Vercel Edge provides process
+  if (typeof process !== 'undefined' && process?.env?.NODE_ENV !== 'production') {
     return null
   }
 
