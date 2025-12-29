@@ -15,6 +15,8 @@ interface AuthState {
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>
   signOut: () => Promise<void>
+  requestPasswordReset: (email: string) => Promise<{ error: Error | null }>
+  resetPassword: (newPassword: string) => Promise<{ error: Error | null }>
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -116,6 +118,58 @@ export const useAuthStore = create<AuthState>()(
           user: null,
           session: null,
         })
+      },
+
+      requestPasswordReset: async (email: string) => {
+        set({ isLoading: true })
+        const supabase = getSupabaseClient()
+        const sanitizedEmail = email.trim().toLowerCase()
+
+        try {
+          const redirectTo = `${window.location.origin}/reset-password`
+
+          const { error } = await supabase.auth.resetPasswordForEmail(sanitizedEmail, {
+            redirectTo,
+          })
+
+          if (error) {
+            return { error }
+          }
+
+          return { error: null }
+        } catch (error) {
+          return { error: error as Error }
+        } finally {
+          set({ isLoading: false })
+        }
+      },
+
+      resetPassword: async (newPassword: string) => {
+        set({ isLoading: true })
+        const supabase = getSupabaseClient()
+
+        try {
+          const { error } = await supabase.auth.updateUser({
+            password: newPassword,
+          })
+
+          if (error) {
+            return { error }
+          }
+
+          // After password reset, sign out to force re-login with new password
+          await supabase.auth.signOut()
+          set({
+            user: null,
+            session: null,
+          })
+
+          return { error: null }
+        } catch (error) {
+          return { error: error as Error }
+        } finally {
+          set({ isLoading: false })
+        }
       },
     }),
     {

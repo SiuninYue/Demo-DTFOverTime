@@ -95,6 +95,10 @@ function LoginPage() {
             />
           </div>
 
+          <div className="auth-form-link">
+            <Link to="/forgot-password">{t('auth.forgotPassword')}</Link>
+          </div>
+
           <button
             type="submit"
             className="auth-button"

@@ -143,3 +143,38 @@
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+/* Forgot Password Link */
+.auth-form-link {
+  text-align: right;
+  margin-top: -0.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.auth-form-link a {
+  color: #667eea;
+  text-decoration: none;
+}
+
+.auth-form-link a:hover {
+  text-decoration: underline;
+}
+
+/* Success Message */
+.auth-success {
+  background: #efe;
+  border: 1px solid #cfc;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  color: #363;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+/* Password Requirements Hint */
+.password-hint {
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: -0.5rem;
+}

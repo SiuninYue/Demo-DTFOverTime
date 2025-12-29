@@ -14,6 +14,8 @@ const MCPage = lazy(() => import('@/pages/MC'))
 const SettingsPage = lazy(() => import('@/pages/Settings'))
 const LoginPage = lazy(() => import('@/pages/Login'))
 const RegisterPage = lazy(() => import('@/pages/Register'))
+const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPassword'))
+const ResetPasswordPage = lazy(() => import('@/pages/ResetPassword'))
 const MobileMenuDemoPage = lazy(() => import('@/pages/MobileMenuDemo'))
 
 // Suspense wrapper for lazy components
@@ -33,6 +35,14 @@ const router = createBrowserRouter(
     {
       path: '/register',
       element: <LazyPage><RegisterPage /></LazyPage>,
+    },
+    {
+      path: '/forgot-password',
+      element: <LazyPage><ForgotPasswordPage /></LazyPage>,
+    },
+    {
+      path: '/reset-password',
+      element: <LazyPage><ResetPasswordPage /></LazyPage>,
     },
     {
       path: '/mobile-menu-demo',
