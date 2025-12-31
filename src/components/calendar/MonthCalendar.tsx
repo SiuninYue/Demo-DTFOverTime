@@ -1,5 +1,6 @@
 import { useMemo, useRef, type TouchEvent } from 'react'
 import DayCell, { type QuickAction } from './DayCell'
+import DayCellCompact from './DayCellCompact'
 import type { Schedule } from '@/types/schedule'
 import type { TimeRecord } from '@/types/timecard'
 
@@ -11,6 +12,7 @@ interface MonthCalendarProps {
   onSelectDate?: (date: string) => void
   onQuickAction?: (date: string, action: QuickAction) => void
   onMonthChange?: (direction: 'prev' | 'next') => void
+  compact?: boolean
 }
 
 const weekdays = [
@@ -75,6 +77,7 @@ function MonthCalendar({
   onSelectDate,
   onQuickAction,
   onMonthChange,
+  compact = false,
 }: MonthCalendarProps) {
   const [year, monthPart] = month.split('-').map(Number)
   const monthIndex = (monthPart ?? 1) - 1
@@ -111,30 +114,13 @@ function MonthCalendar({
   }
 
   return (
-    <section
-      className="calendar-panel"
+    <div
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
       onTouchCancel={() => {
         swipeOrigin.current = null
       }}
     >
-      <header className="calendar-panel__header">
-        <div>
-          <p className="calendar-panel__label">月排班</p>
-          <h2>
-            {year} / {String(monthPart).padStart(2, '0')}
-          </h2>
-        </div>
-        <div className="calendar-panel__controls">
-          <button type="button" className="ghost" onClick={() => onMonthChange?.('prev')}>
-            上月
-          </button>
-          <button type="button" className="ghost" onClick={() => onMonthChange?.('next')}>
-            下月
-          </button>
-        </div>
-      </header>
       <div className="calendar-grid">
         {weekdays.map((day, index) => (
           <div
@@ -146,26 +132,30 @@ function MonthCalendar({
         ))}
         {days.map(({ date: dateKey, isCurrentMonth: isCurrent }, index) => (
           <div key={`${dateKey}-${index}`} className="calendar-grid__cell">
-            <DayCell
-              date={dateKey}
-              schedule={data[dateKey]}
-              timeRecord={timeRecords?.[dateKey]}
-              isCurrentMonth={isCurrent}
-              isToday={dateKey === todayKey}
-              onSelect={onSelectDate}
-              onQuickAction={onQuickAction}
-            />
+            {compact ? (
+              <DayCellCompact
+                date={dateKey}
+                schedule={data[dateKey]}
+                timeRecord={timeRecords?.[dateKey]}
+                isCurrentMonth={isCurrent}
+                isToday={dateKey === todayKey}
+                onSelect={onSelectDate}
+              />
+            ) : (
+              <DayCell
+                date={dateKey}
+                schedule={data[dateKey]}
+                timeRecord={timeRecords?.[dateKey]}
+                isCurrentMonth={isCurrent}
+                isToday={dateKey === todayKey}
+                onSelect={onSelectDate}
+                onQuickAction={onQuickAction}
+              />
+            )}
           </div>
         ))}
       </div>
-      {selectedDate && data[selectedDate] && (
-        <div className="calendar-selection">
-          <p>
-            已选择 {selectedDate}：{data[selectedDate]?.notes || '无备注'}
-          </p>
-        </div>
-      )}
-    </section>
+    </div>
   )
 }
 

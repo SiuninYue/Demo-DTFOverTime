@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Info } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import PullToRefresh from '@/components/common/PullToRefresh'
 import MonthCalendar from '@/components/calendar/MonthCalendar'
+import WeekCalendar from '@/components/calendar/WeekCalendar'
+import CalendarViewToggle from '@/components/calendar/CalendarViewToggle'
 import DayDetailModal from '@/components/calendar/DayDetailModal'
 import { useSchedule } from '@/hooks/useSchedule'
 import { DEMO_EMPLOYEE_ID } from '@/hooks/useSalary'
@@ -11,6 +14,8 @@ import Loading from '@/components/common/Loading'
 import { useToast } from '@/components/common/Toast'
 import { useTimecardStore } from '@/store/timecardStore'
 import { useAuthStore } from '@/store/authStore'
+import { useUserStore } from '@/store/userStore'
+import { useScheduleStore } from '@/store/scheduleStore'
 import {
   createTimeRecord,
   getMonthlyRecords,
@@ -18,6 +23,8 @@ import {
 } from '@/services/supabase/timeRecords'
 import { DayType, type TimeRecordInput, type TimeRecord } from '@/types/timecard'
 import type { DaySchedule } from '@/types/schedule'
+import { getWeekStart, formatWeekRange, formatISODate } from '@/utils/dateUtils'
+import { getScheduleByMonth } from '@/services/supabase/database'
 
 const getCurrentMonthId = () => {
   const now = new Date()
@@ -34,6 +41,9 @@ const shiftMonth = (month: string, delta: number) => {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
 }
 
+const toMonthId = (date: Date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+
 function CalendarPage() {
   const params = useParams<{ monthId?: string }>()
   const navigate = useNavigate()
@@ -45,6 +55,34 @@ function CalendarPage() {
   const upsertRecord = useTimecardStore((state) => state.upsertRecord)
   const clipboardRef = useRef<string | null>(null)
   const clipboardRecordRef = useRef<TimeRecord | null>(null)
+
+  // 视图模式状态管理
+  const calendarViewMode = useUserStore((state) => state.preferences.calendarViewMode)
+  const updatePreferences = useUserStore((state) => state.updatePreferences)
+  const schedulesByMonth = useScheduleStore((state) => state.schedules)
+  const statusByMonth = useScheduleStore((state) => state.statusByMonth)
+  const setSchedule = useScheduleStore((state) => state.setSchedule)
+  const setScheduleStatus = useScheduleStore((state) => state.setStatus)
+  const setScheduleError = useScheduleStore((state) => state.setError)
+
+  // 周视图状态：当前周的起始日期（周日）
+  const [currentWeekStart, setCurrentWeekStart] = useState<string>(() => {
+    const today = new Date()
+    const sunday = getWeekStart(today)
+    return formatISODate(sunday)
+  })
+
+  // 响应式检测：移动端 vs 桌面端
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768)
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 767px)')
+    setIsMobile(mediaQuery.matches)
+
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches)
+    mediaQuery.addEventListener('change', handler)
+    return () => mediaQuery.removeEventListener('change', handler)
+  }, [])
 
   useEffect(() => {
     if (!params.monthId) {
@@ -63,6 +101,80 @@ function CalendarPage() {
     month: monthId,
   })
 
+  const weekMonths = useMemo(() => {
+    if (calendarViewMode !== 'week') {
+      return [monthId]
+    }
+    const start = new Date(currentWeekStart)
+    const end = new Date(start)
+    end.setDate(start.getDate() + 6)
+    return Array.from(new Set([toMonthId(start), toMonthId(end)]))
+  }, [calendarViewMode, currentWeekStart, monthId])
+
+  useEffect(() => {
+    if (calendarViewMode !== 'week') {
+      return
+    }
+
+    const monthsToLoad = weekMonths.filter(
+      (month) => !schedulesByMonth[month] && statusByMonth[month] !== 'loading',
+    )
+
+    if (!monthsToLoad.length) {
+      return
+    }
+
+    monthsToLoad.forEach(async (month) => {
+      try {
+        setScheduleStatus(month, 'loading')
+        const scheduleData = await getScheduleByMonth(employeeId, month)
+        if (scheduleData) {
+          setSchedule(scheduleData)
+        } else {
+          setScheduleStatus(month, 'ready')
+        }
+      } catch (fetchError) {
+        const message =
+          fetchError instanceof Error ? fetchError.message : '加载排班数据失败。'
+        setScheduleError(month, message)
+      }
+    })
+  }, [
+    calendarViewMode,
+    employeeId,
+    schedulesByMonth,
+    setSchedule,
+    setScheduleError,
+    setScheduleStatus,
+    statusByMonth,
+    weekMonths,
+  ])
+
+  const weekSchedule = useMemo(() => {
+    if (calendarViewMode !== 'week') {
+      return schedule ?? null
+    }
+
+    const sources = weekMonths
+      .map((month) => schedulesByMonth[month])
+      .filter(Boolean)
+
+    if (sources.length === 0) {
+      return schedule ?? null
+    }
+
+    const mergedData = sources.reduce<Record<string, DaySchedule>>((acc, entry) => {
+      return { ...acc, ...entry.scheduleData }
+    }, {})
+
+    const base = sources.find((entry) => entry.month === monthId) ?? sources[0]
+
+    return {
+      ...base,
+      scheduleData: mergedData,
+    }
+  }, [calendarViewMode, monthId, schedule, schedulesByMonth, weekMonths])
+
   const [detailDate, setDetailDate] = useState<string | null>(null)
   const [isDetailOpen, setDetailOpen] = useState(false)
   const [isConfirming, setIsConfirming] = useState(false)
@@ -76,6 +188,23 @@ function CalendarPage() {
   const handleMonthChange = (direction: 'prev' | 'next') => {
     const target = shiftMonth(monthId, direction === 'prev' ? -1 : 1)
     navigate(`/calendar/${target}`)
+  }
+
+  const handleViewChange = (view: 'month' | 'week') => {
+    updatePreferences({ calendarViewMode: view })
+  }
+
+  const handleWeekChange = (direction: 'prev' | 'next') => {
+    const current = new Date(currentWeekStart)
+    current.setDate(current.getDate() + (direction === 'prev' ? -7 : 7))
+    const newWeekStart = formatISODate(current)
+    setCurrentWeekStart(newWeekStart)
+
+    // 如果跨月，更新 URL
+    const newMonth = newWeekStart.slice(0, 7)
+    if (newMonth !== monthId) {
+      navigate(`/calendar/${newMonth}`)
+    }
   }
 
   const handleSelectDate = (date: string) => {
@@ -353,15 +482,90 @@ function CalendarPage() {
 
         {isLoading && <Loading label="正在刷新排班" description="正在获取排班数据" />}
 
-        <MonthCalendar
-          month={monthId}
-          schedule={schedule ?? undefined}
-          timeRecords={timeRecords}
-          selectedDate={detailDate}
-          onSelectDate={handleSelectDate}
-          onQuickAction={handleQuickAction}
-          onMonthChange={handleMonthChange}
-        />
+        <section className="calendar-panel">
+          <header className="calendar-panel__header">
+            <div>
+              <p className="calendar-panel__label">
+                {calendarViewMode === 'month' ? '月排班' : '周排班'}
+              </p>
+              <h2>
+                {calendarViewMode === 'month'
+                  ? monthId.replace('-', ' / ')
+                  : formatWeekRange(new Date(currentWeekStart))}
+              </h2>
+            </div>
+            <div className="flex items-center gap-3">
+              <CalendarViewToggle
+                currentView={calendarViewMode}
+                onViewChange={handleViewChange}
+              />
+              <div className="calendar-panel__controls">
+                <button
+                  type="button"
+                  className="ghost"
+                  onClick={() =>
+                    calendarViewMode === 'month'
+                      ? handleMonthChange('prev')
+                      : handleWeekChange('prev')
+                  }
+                >
+                  {calendarViewMode === 'month' ? '上月' : '上周'}
+                </button>
+                <button
+                  type="button"
+                  className="ghost"
+                  onClick={() =>
+                    calendarViewMode === 'month'
+                      ? handleMonthChange('next')
+                      : handleWeekChange('next')
+                  }
+                >
+                  {calendarViewMode === 'month' ? '下月' : '下周'}
+                </button>
+              </div>
+            </div>
+          </header>
+
+          <AnimatePresence mode="wait">
+            {calendarViewMode === 'month' ? (
+              <motion.div
+                key="month-view"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2, ease: 'easeInOut' }}
+              >
+                <MonthCalendar
+                  month={monthId}
+                  schedule={schedule ?? undefined}
+                  timeRecords={timeRecords}
+                  selectedDate={detailDate}
+                  onSelectDate={handleSelectDate}
+                  onQuickAction={handleQuickAction}
+                  onMonthChange={handleMonthChange}
+                  compact={isMobile}
+                />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="week-view"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2, ease: 'easeInOut' }}
+              >
+                <WeekCalendar
+                  weekStart={currentWeekStart}
+                  schedule={weekSchedule ?? undefined}
+                  timeRecords={timeRecords}
+                  selectedDate={detailDate}
+                  onSelectDate={handleSelectDate}
+                  onWeekChange={handleWeekChange}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </section>
 
         <DayDetailModal
           date={detailDate ?? ''}

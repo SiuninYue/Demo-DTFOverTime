@@ -137,3 +137,52 @@ export const getDaysInMonth = (year: number, month: number): number => {
   validateMonth(month)
   return new Date(Date.UTC(year, month, 0)).getUTCDate()
 }
+
+/**
+ * 获取某日期所在周的周日（一周的起始日期）
+ * @param date 日期对象
+ * @returns 该周的周日
+ */
+export const getWeekStart = (date: Date): Date => {
+  const dayOfWeek = date.getDay() // 0 (Sunday) to 6 (Saturday)
+  const sunday = new Date(date)
+  sunday.setDate(date.getDate() - dayOfWeek)
+  sunday.setHours(0, 0, 0, 0)
+  return sunday
+}
+
+/**
+ * 计算该周的 7 天日期数组（从周日到周六）
+ * @param weekStart 周日的日期
+ * @returns 包含 7 天日期的数组
+ */
+export const getWeekDates = (weekStart: Date): Date[] => {
+  return Array.from({ length: 7 }, (_, i) => {
+    const day = new Date(weekStart)
+    day.setDate(weekStart.getDate() + i)
+    return day
+  })
+}
+
+/**
+ * 格式化 ISO 日期字符串（YYYY-MM-DD）
+ * @param date 日期对象
+ * @returns ISO 格式的日期字符串
+ */
+export const formatISODate = (date: Date): string => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+/**
+ * 格式化周范围显示（如 "2025-01-06 至 2025-01-12"）
+ * @param weekStart 周日的日期
+ * @returns 格式化的周范围字符串
+ */
+export const formatWeekRange = (weekStart: Date): string => {
+  const weekEnd = new Date(weekStart)
+  weekEnd.setDate(weekStart.getDate() + 6)
+  return `${formatISODate(weekStart)} 至 ${formatISODate(weekEnd)}`
+}

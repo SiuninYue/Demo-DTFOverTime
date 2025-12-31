@@ -14,6 +14,7 @@ export interface UserPreferences {
   enableNotifications: boolean
   locale: string
   timeFormat: '24h' | '12h'
+  calendarViewMode: 'month' | 'week'
 }
 
 export interface PartIVState {
@@ -49,6 +50,7 @@ const defaultPreferences: UserPreferences = {
   enableNotifications: false,
   locale: 'zh-SG',
   timeFormat: '24h',
+  calendarViewMode: 'month',
 }
 
 const defaultPartIV: PartIVState = {

@@ -43,7 +43,7 @@ describe('salary calculator - monthly summary', () => {
 
     const result = calculateMonthlySummary({
       ...baseParams,
-      mcDays: 2,
+      mcDays: 3, // 3天MC时，根据companyRules，rate=0.5
       records,
     })
 
