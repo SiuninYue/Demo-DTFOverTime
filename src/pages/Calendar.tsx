@@ -179,6 +179,7 @@ function CalendarPage() {
   const [isDetailOpen, setDetailOpen] = useState(false)
   const [isConfirming, setIsConfirming] = useState(false)
   const { showToast } = useToast()
+  const lastWeekRefreshKeyRef = useRef<string | null>(null)
 
   const selectedEntry = useMemo(() => {
     if (!detailDate || !schedule) return undefined
@@ -459,12 +460,46 @@ function CalendarPage() {
     }
   }
 
+  const refreshWeekSchedules = async () => {
+    const monthsToRefresh = weekMonths
+    await Promise.all(
+      monthsToRefresh.map(async (month) => {
+        try {
+          setScheduleStatus(month, 'loading')
+          setScheduleError(month, null)
+          const scheduleData = await getScheduleByMonth(employeeId, month)
+          if (scheduleData) {
+            setSchedule(scheduleData)
+          } else {
+            setScheduleStatus(month, 'ready')
+          }
+        } catch (fetchError) {
+          const message =
+            fetchError instanceof Error ? fetchError.message : '加载排班数据失败。'
+          setScheduleError(month, message)
+        }
+      }),
+    )
+  }
+
   const handleRefresh = async () => {
     await Promise.all([
-      refresh(),
+      calendarViewMode === 'week' ? refreshWeekSchedules() : refresh(),
       loadMonthRecords(monthId, () => getMonthlyRecords(employeeId, monthId)),
     ])
   }
+
+  useEffect(() => {
+    if (calendarViewMode !== 'week') {
+      return
+    }
+    const refreshKey = `${currentWeekStart}:${weekMonths.join(',')}`
+    if (lastWeekRefreshKeyRef.current === refreshKey) {
+      return
+    }
+    lastWeekRefreshKeyRef.current = refreshKey
+    refreshWeekSchedules()
+  }, [calendarViewMode, currentWeekStart, refreshWeekSchedules, weekMonths])
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
