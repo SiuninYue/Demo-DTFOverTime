@@ -86,8 +86,20 @@ export const calculateRestDayPay = ({
   halfDayThreshold = DEFAULT_HALF_DAY_HOURS,
   overtimeMultiplier = DEFAULT_OVERTIME_MULTIPLIER,
 }: RestDayPayInput): PayComponents => {
+  // MOM规定：休息日不是带薪日。如果没有上班，不应该有任何额外工资
+  // https://www.mom.gov.sg/employment-practices/salary/calculate-pay-for-work-on-rest-day
+  if (hoursWorked <= 0) {
+    return buildPayComponents(0, 0)
+  }
+
   if (!isStatutoryRestDay) {
-    const overtimeOnly = roundMoney(hoursWorked * hourlyRate * overtimeMultiplier)
+    // 非法定休息日：只有超过正常工时的部分才按加班费计算
+    const overtimeOnly = calculateOvertimePay({
+      hoursWorked,
+      normalHours,
+      hourlyRate,
+      multiplier: overtimeMultiplier,
+    })
     return buildPayComponents(0, overtimeOnly)
   }
 
