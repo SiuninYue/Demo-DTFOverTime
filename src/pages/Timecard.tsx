@@ -32,9 +32,11 @@ function TimecardPage() {
   const date = params.dateId ?? today
   const employeeId = useAuthStore((state) => state.user?.id) ?? DEMO_EMPLOYEE_ID
 
-  if (!params.dateId) {
-    navigate(`/timecard/${date}`, { replace: true })
-  }
+  useEffect(() => {
+    if (!params.dateId) {
+      navigate(`/timecard/${date}`, { replace: true })
+    }
+  }, [date, navigate, params.dateId])
 
   const { record, scheduleEntry, preview, updateField, setDayType, resetToSchedule, refresh, save, remove, isLoading, isSaving, error, hasChanges, normalHours } =
     useTimecard({
