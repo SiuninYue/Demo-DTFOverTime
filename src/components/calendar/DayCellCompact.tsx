@@ -45,20 +45,20 @@ function DayCellCompact({
 
   // 容器样式
   const containerClasses = cn(
-    'day-cell-compact',
+    'day-cell-compact relative flex flex-col items-center justify-center w-full h-full transition-all duration-200 select-none rounded-xl border-[0.5px] border-white/20 dark:border-white/5 backdrop-blur-[2px]',
     isCurrentMonth
       ? 'bg-white/40 dark:bg-neutral-800/40 hover:bg-white/60 dark:hover:bg-neutral-700/60'
-      : 'bg-neutral-100/30 dark:bg-neutral-800/10',
-    isToday && 'ring-2 ring-primary-500/50 dark:ring-primary-400/50',
+      : 'bg-neutral-100/30 dark:bg-neutral-800/10 text-neutral-400/50',
+    isToday && 'ring-2 ring-primary-500/50 dark:ring-primary-400/50 z-10',
     backgroundClass
   )
 
   // 日期号样式
+  // 日期号样式
   const dateNumberClasses = cn(
-    'day-cell-compact__date',
-    isToday && 'day-cell-compact__date--today',
-    holidayName && 'day-cell-compact__date--holiday',
-    !isCurrentMonth && 'day-cell-compact__date--dimmed'
+    'text-sm font-medium transition-colors',
+    isToday ? 'text-blue-600 font-bold' : isCurrentMonth ? 'text-slate-900 dark:text-slate-100' : 'text-slate-200 dark:text-slate-700',
+    holidayName && 'text-red-500'
   )
 
   return (

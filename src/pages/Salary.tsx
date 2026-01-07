@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import PullToRefresh from '@/components/common/PullToRefresh'
 import SalarySummaryCard from '@/components/salary/SalarySummaryCard'
 import SalaryBreakdown from '@/components/salary/SalaryBreakdown'
@@ -18,8 +19,21 @@ const getCurrentMonthKey = () => {
 const isValidMonthKey = (value?: string | null): value is string =>
   typeof value === 'string' && /^(\d{4})-(0[1-9]|1[0-2])$/.test(value)
 
+const getPreviousMonthKey = (current: string) => {
+  const [yearStr, monthStr] = current.split('-')
+  const date = new Date(Number(yearStr), Number(monthStr) - 1 - 1, 1)
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+}
+
+const getNextMonthKey = (current: string) => {
+  const [yearStr, monthStr] = current.split('-')
+  const date = new Date(Number(yearStr), Number(monthStr) - 1 + 1, 1)
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+}
+
 function SalaryPage() {
   const params = useParams<{ monthId?: string }>()
+  const navigate = useNavigate()
   const defaultMonth = getCurrentMonthKey()
   const hasInvalidParam = Boolean(params.monthId && !isValidMonthKey(params.monthId))
   const month = isValidMonthKey(params.monthId) ? params.monthId : defaultMonth
@@ -38,13 +52,40 @@ function SalaryPage() {
     await refresh()
   }
 
+  const handlePrevMonth = () => {
+    const prev = getPreviousMonthKey(month)
+    navigate(`/salary/${prev}`)
+  }
+
+  const handleNextMonth = () => {
+    const next = getNextMonthKey(month)
+    navigate(`/salary/${next}`)
+  }
+
   return (
     <PullToRefresh onRefresh={handleRefresh}>
       <section className="salary-page">
         <header className="salary-page__header">
           <div>
             <p className="text-muted">月度汇总</p>
-            <h1>{summary?.monthLabel ?? '工资概览'}</h1>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handlePrevMonth}
+                className="p-1 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <h1>{summary?.monthLabel ?? '工资概览'}</h1>
+              <button
+                type="button"
+                onClick={handleNextMonth}
+                className="p-1 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+                disabled={month === getCurrentMonthKey()}
+              >
+                <ChevronRight className={`w-5 h-5 ${month === getCurrentMonthKey() ? 'opacity-30' : ''}`} />
+              </button>
+            </div>
           </div>
           <div className="salary-page__actions">
             <button type="button" className="salary-export-btn" onClick={exportCsv} disabled={!summary}>

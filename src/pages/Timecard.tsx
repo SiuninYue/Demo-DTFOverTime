@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import PullToRefresh from '@/components/common/PullToRefresh'
 import SmartTimeInput from '@/components/timecard/SmartTimeInput'

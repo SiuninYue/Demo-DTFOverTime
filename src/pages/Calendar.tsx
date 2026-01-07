@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Info } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Info } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PullToRefresh from '@/components/common/PullToRefresh'
@@ -534,30 +534,28 @@ function CalendarPage() {
                 currentView={calendarViewMode}
                 onViewChange={handleViewChange}
               />
-              <div className="calendar-panel__controls">
-                <button
-                  type="button"
-                  className="ghost"
-                  onClick={() =>
-                    calendarViewMode === 'month'
-                      ? handleMonthChange('prev')
-                      : handleWeekChange('prev')
-                  }
-                >
-                  {calendarViewMode === 'month' ? '上月' : '上周'}
-                </button>
-                <button
-                  type="button"
-                  className="ghost"
-                  onClick={() =>
-                    calendarViewMode === 'month'
-                      ? handleMonthChange('next')
-                      : handleWeekChange('next')
-                  }
-                >
-                  {calendarViewMode === 'month' ? '下月' : '下周'}
-                </button>
-              </div>
+              <button
+                type="button"
+                className="p-1 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+                onClick={() =>
+                  calendarViewMode === 'month'
+                    ? handleMonthChange('prev')
+                    : handleWeekChange('prev')
+                }
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button
+                type="button"
+                className="p-1 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+                onClick={() =>
+                  calendarViewMode === 'month'
+                    ? handleMonthChange('next')
+                    : handleWeekChange('next')
+                }
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
             </div>
           </header>
 

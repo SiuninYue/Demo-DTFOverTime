@@ -49,7 +49,7 @@ export const Dock = React.forwardRef<HTMLDivElement, DockProps>(
                 {...props}
                 className={cn(
                     "supports-backdrop-blur:bg-white/10 supports-backdrop-blur:dark:bg-black/10 mx-auto flex h-[58px] w-max gap-2 rounded-2xl border p-2 backdrop-blur-md",
-                    "border-neutral-200 bg-white/10 dark:border-neutral-800 dark:bg-black/10", // Glassmorphism
+                    "border-neutral-200 bg-white/40 dark:border-neutral-800 dark:bg-black/40", // Glassmorphism
                     className
                 )}
             >
@@ -119,7 +119,7 @@ export const DockIcon = ({
             onMouseLeave={() => setHovered(false)}
         >
             {/* Icon Container */}
-            <div className="flex h-full w-full items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 shadow-sm transition-colors hover:bg-neutral-200 dark:hover:bg-neutral-700">
+            <div className="flex h-full w-full items-center justify-center rounded-full bg-white/50 dark:bg-neutral-800/50 border border-white/20 dark:border-white/10 shadow-sm backdrop-blur-sm transition-colors hover:bg-white/70 dark:hover:bg-neutral-700/70">
                 {children}
             </div>
 
