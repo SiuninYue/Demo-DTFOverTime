@@ -483,30 +483,34 @@ button:disabled {
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 0.75rem;
-  margin-top: 1rem;
+  gap: 4px;
+  margin-top: 0.75rem;
+  padding: 0 2px;
 }
 
 .calendar-grid__weekday {
   text-align: center;
+  font-size: 11px;
   font-weight: 600;
-  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
   padding-bottom: 0.5rem;
 }
 
 .calendar-grid__weekday--sun {
-  color: #dc2626;
+  color: #f43f5e;
 }
 
 .calendar-grid__cell {
-  aspect-ratio: 0.8;
-  min-height: 56px;
-  min-width: 56px;
+  aspect-ratio: 1;
+  min-height: 44px;
+  min-width: 44px;
 }
 
 @media (min-width: 768px) {
   .calendar-grid {
-    gap: 0.5rem;
+    gap: 6px;
   }
 
   .calendar-grid__cell {
@@ -1855,67 +1859,22 @@ button:disabled {
 
 
 /* ===================================================================
-   Day Cell Compact (简化的月视图单元格)
+   Day Cell Compact (简化的月视图单元格) - iPhone 15 Pro 优化版
    =================================================================== */
 
 .day-cell-compact {
   position: relative;
-  min-height: 56px;
-  min-width: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
-  transition: all 0.2s ease;
+  border-radius: 12px;
+  transition: transform 0.15s ease;
   cursor: pointer;
-  padding: 0.5rem;
-  border: 0.5px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(2px);
+  -webkit-tap-highlight-color: transparent;
 }
 
 .day-cell-compact:active {
-  transform: scale(0.95);
-}
-
-.day-cell-compact__date {
-  font-size: 18px;
-  font-weight: 600;
-  color: #374151;
-}
-
-.day-cell-compact__date--today {
-  color: #3b82f6;
-  font-weight: 700;
-}
-
-.day-cell-compact__date--holiday {
-  color: #dc2626;
-  font-weight: 700;
-}
-
-.day-cell-compact__date--dimmed {
-  color: #9ca3af;
-  opacity: 0.4;
-}
-
-.day-cell-compact__indicator {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #3b82f6;
-}
-
-@media (prefers-color-scheme: dark) {
-  .day-cell-compact__date {
-    color: #f3f4f6;
-  }
-
-  .day-cell-compact {
-    border-color: rgba(255, 255, 255, 0.05);
-  }
+  transform: scale(0.92);
 }
 
 /* ===================================================================

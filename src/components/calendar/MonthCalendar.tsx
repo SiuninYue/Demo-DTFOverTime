@@ -3,6 +3,7 @@ import DayCell, { type QuickAction } from './DayCell'
 import DayCellCompact from './DayCellCompact'
 import type { Schedule } from '@/types/schedule'
 import type { TimeRecord } from '@/types/timecard'
+import { cn } from '@/lib/utils'
 
 interface MonthCalendarProps {
   month: string
@@ -125,7 +126,10 @@ function MonthCalendar({
         {weekdays.map((day, index) => (
           <div
             key={day.key}
-            className={`calendar-grid__weekday ${index === 0 ? 'calendar-grid__weekday--sun' : ''}`}
+            className={cn(
+              'calendar-grid__weekday',
+              index === 0 && 'calendar-grid__weekday--sun'
+            )}
           >
             {day.label}
           </div>
