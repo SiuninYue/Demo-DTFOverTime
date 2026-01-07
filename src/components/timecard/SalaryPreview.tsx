@@ -8,8 +8,8 @@ interface SalaryPreviewProps {
 }
 
 const dayTypeLabels: Record<DayType, string> = {
-  [DayType.NORMAL_WORK_DAY]: '正常工作日',
-  [DayType.REST_DAY]: '休息日',
+  [DayType.NORMAL_WORK_DAY]: '正常工作',
+  [DayType.REST_DAY]: '休息',
   [DayType.PUBLIC_HOLIDAY]: '公假',
   [DayType.ANNUAL_LEAVE]: '年假',
   [DayType.MEDICAL_LEAVE]: '病假',

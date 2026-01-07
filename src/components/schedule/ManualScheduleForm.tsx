@@ -6,6 +6,7 @@ import { useUserStore } from '@/store/userStore'
 import type { TimeRecord } from '@/types/timecard'
 
 import { isPublicHoliday } from '@/utils/holidays'
+import ManualScheduleMobile from './ManualScheduleMobile'
 
 const scheduleOptions = [
   { label: '早班', value: ScheduleType.WORK },
@@ -171,176 +172,194 @@ function ManualScheduleForm({
       )}
       {disabled && disabledReason && <p className="offline-banner">{disabledReason}</p>}
 
-      <form onSubmit={handleSubmit}>
-        <div className="table-wrapper">
-          <table className="schedule-table">
-            <thead>
-              <tr>
-                <th className="w-14 schedule-date-cell">日期</th>
-                <th>类型</th>
-                <th>开始</th>
-                <th>结束</th>
-                <th
-                  className="text-center"
-                  title="法定休息日会影响加班与补休的计算方式"
-                >
-                  法定休
-                </th>
-                <th>备注</th>
-                <th>操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              {dates.map((dateKey) => {
-                const entry = schedule[dateKey] ?? buildDefaultDay(defaultStartTime, defaultEndTime)
-                const confirmedRecord = timeRecords?.[dateKey]
-                const isConfirmed = Boolean(confirmedRecord)
-                const isStatutoryApplicable =
-                  entry.type === ScheduleType.REST || entry.type === ScheduleType.OFF
-                const canEditWorkTime =
-                  entry.type === ScheduleType.WORK || entry.isStatutoryRestDay
-                const displayStartTime = formatTimeValue(
-                  confirmedRecord?.actualStartTime ?? entry.plannedStartTime,
-                )
-                const displayEndTime = formatTimeValue(
-                  confirmedRecord?.actualEndTime ?? entry.plannedEndTime,
-                )
-                const dateObj = new Date(dateKey)
-                const dayOfWeek = dateObj.getDay() // 0 = Sunday, 6 = Saturday
-                const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
-                const isPH = isPublicHoliday(dateKey)
-                const isRowDisabled = disabled || isSaving || isConfirmed
+      <div className="block md:hidden">
+        <ManualScheduleMobile
+          month={month}
+          schedule={schedule}
+          onChange={(updated) => {
+            setSchedule(updated)
+            onChange?.(updated)
+          }}
+          disabled={disabled}
+          timeRecords={timeRecords}
+          isSaving={isSaving}
+          onSubmit={disabled ? undefined : () => handleSubmit({ preventDefault: () => { } } as any)}
+        />
+      </div>
 
-                let rowClass = 'hover:bg-neutral-50 dark:hover:bg-neutral-800'
-                if (isPH) rowClass = 'bg-red-50 hover:bg-red-100 dark:bg-red-900/10 dark:hover:bg-red-900/20'
-                else if (isWeekend) rowClass = 'bg-orange-50 hover:bg-orange-100 dark:bg-orange-900/10 dark:hover:bg-orange-900/20'
-                if (isConfirmed) rowClass = `${rowClass} schedule-row--confirmed`
+      <div className="hidden md:block">
+        <form onSubmit={handleSubmit}>
+          <div className="table-wrapper">
+            {/* ... existing table code ... */}
+            <table className="schedule-table">
+              <thead>
+                <tr>
+                  <th className="w-14 schedule-date-cell">日期</th>
+                  <th>类型</th>
+                  <th>开始</th>
+                  <th>结束</th>
+                  <th
+                    className="text-center"
+                    title="法定休息日会影响加班与补休的计算方式"
+                  >
+                    法定休
+                  </th>
+                  <th>备注</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {dates.map((dateKey) => {
+                  const entry = schedule[dateKey] ?? buildDefaultDay(defaultStartTime, defaultEndTime)
+                  const confirmedRecord = timeRecords?.[dateKey]
+                  const isConfirmed = Boolean(confirmedRecord)
+                  const isStatutoryApplicable =
+                    entry.type === ScheduleType.REST || entry.type === ScheduleType.OFF
+                  const canEditWorkTime =
+                    entry.type === ScheduleType.WORK || entry.isStatutoryRestDay
+                  const displayStartTime = formatTimeValue(
+                    confirmedRecord?.actualStartTime ?? entry.plannedStartTime,
+                  )
+                  const displayEndTime = formatTimeValue(
+                    confirmedRecord?.actualEndTime ?? entry.plannedEndTime,
+                  )
+                  const dateObj = new Date(dateKey)
+                  const dayOfWeek = dateObj.getDay() // 0 = Sunday, 6 = Saturday
+                  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+                  const isPH = isPublicHoliday(dateKey)
+                  const isRowDisabled = disabled || isSaving || isConfirmed
 
-                // Weekday label in Chinese
-                const weekdays = ['日', '一', '二', '三', '四', '五', '六']
-                const weekdayLabel = weekdays[dayOfWeek]
+                  let rowClass = 'hover:bg-neutral-50 dark:hover:bg-neutral-800'
+                  if (isPH) rowClass = 'bg-red-50 hover:bg-red-100 dark:bg-red-900/10 dark:hover:bg-red-900/20'
+                  else if (isWeekend) rowClass = 'bg-orange-50 hover:bg-orange-100 dark:bg-orange-900/10 dark:hover:bg-orange-900/20'
+                  if (isConfirmed) rowClass = `${rowClass} schedule-row--confirmed`
 
-                return (
-                  <tr key={dateKey} className={rowClass}>
-                    <td className="whitespace-nowrap schedule-date-cell">
-                      <div className="flex flex-col">
-                        <span className="font-medium text-sm">{dateKey.slice(5)}</span>
-                        <span className="text-xs text-muted-foreground opacity-70">
-                          周{weekdayLabel} {isPH ? '(公假)' : ''}
-                        </span>
-                      </div>
-                    </td>
-                    <td>
-                      <select
-                        value={entry.type}
-                        onChange={(event) => handleDayChange(dateKey, 'type', event.target.value)}
-                        disabled={isRowDisabled}
-                        className="text-sm schedule-type-select"
-                      >
-                        {scheduleOptions.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td>
-                      {canEditWorkTime ? (
-                        <input
-                          type="time"
-                          value={displayStartTime}
-                          onChange={(event) =>
-                            handleDayChange(dateKey, 'plannedStartTime', event.target.value)
-                          }
+                  // Weekday label in Chinese
+                  const weekdays = ['日', '一', '二', '三', '四', '五', '六']
+                  const weekdayLabel = weekdays[dayOfWeek]
+
+                  return (
+                    <tr key={dateKey} className={rowClass}>
+                      <td className="whitespace-nowrap schedule-date-cell">
+                        <div className="flex flex-col">
+                          <span className="font-medium text-sm">{dateKey.slice(5)}</span>
+                          <span className="text-xs text-muted-foreground opacity-70">
+                            周{weekdayLabel} {isPH ? '(公假)' : ''}
+                          </span>
+                        </div>
+                      </td>
+                      <td>
+                        <select
+                          value={entry.type}
+                          onChange={(event) => handleDayChange(dateKey, 'type', event.target.value)}
                           disabled={isRowDisabled}
-                          className="text-sm w-full min-w-[5rem]"
-                        />
-                      ) : (
-                        <span className="time-placeholder">--:--</span>
-                      )}
-                    </td>
-                    <td>
-                      {canEditWorkTime ? (
-                        <input
-                          type="time"
-                          value={displayEndTime}
-                          onChange={(event) =>
-                            handleDayChange(dateKey, 'plannedEndTime', event.target.value)
-                          }
-                          disabled={isRowDisabled}
-                          className="text-sm w-full min-w-[5rem]"
-                        />
-                      ) : (
-                        <span className="time-placeholder">--:--</span>
-                      )}
-                    </td>
-                    <td className="text-center">
-                      <input
-                        type="checkbox"
-                        checked={entry.isStatutoryRestDay}
-                        onChange={(event) =>
-                          handleDayChange(dateKey, 'isStatutoryRestDay', event.target.checked)
-                        }
-                        disabled={isRowDisabled || !isStatutoryApplicable}
-                        className="w-4 h-4 accent-brand-600"
-                        title="是否法定休息日"
-                      />
-                    </td>
-                    <td>
-                      <div className="schedule-notes">
-                        {isConfirmed ? (
-                          <span className="schedule-confirmed-tag">已确认</span>
-                        ) : (
+                          className="text-sm schedule-type-select"
+                        >
+                          {scheduleOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td>
+                        {canEditWorkTime ? (
                           <input
-                            type="text"
-                            value={entry.notes ?? ''}
-                            placeholder="备注"
+                            type="time"
+                            value={displayStartTime}
                             onChange={(event) =>
-                              handleDayChange(dateKey, 'notes', event.target.value)
+                              handleDayChange(dateKey, 'plannedStartTime', event.target.value)
                             }
                             disabled={isRowDisabled}
-                            maxLength={20}
-                            title={entry.notes ?? ''}
-                            className="text-sm w-full min-w-[6rem]"
+                            className="text-sm w-full min-w-[5rem]"
                           />
+                        ) : (
+                          <span className="time-placeholder">--:--</span>
                         )}
-                      </div>
-                    </td>
-                    <td>
-                      <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          className="p-1.5 text-neutral-500 hover:text-brand-600 hover:bg-brand-50 rounded transition"
-                          onClick={() => handleCopy(entry)}
-                          disabled={disabled || isSaving}
-                          title="复制"
-                        >
-                          <Copy className="w-4 h-4" />
-                        </button>
-                        <button
-                          type="button"
-                          className={`p-1.5 rounded transition ${clipboard ? 'text-neutral-500 hover:text-brand-600 hover:bg-brand-50' : 'text-neutral-300 cursor-not-allowed'}`}
-                          onClick={() => handlePaste(dateKey)}
-                          disabled={isRowDisabled || !clipboard}
-                          title={clipboard ? '粘贴' : '请先复制'}
-                        >
-                          <ClipboardPaste className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
+                      </td>
+                      <td>
+                        {canEditWorkTime ? (
+                          <input
+                            type="time"
+                            value={displayEndTime}
+                            onChange={(event) =>
+                              handleDayChange(dateKey, 'plannedEndTime', event.target.value)
+                            }
+                            disabled={isRowDisabled}
+                            className="text-sm w-full min-w-[5rem]"
+                          />
+                        ) : (
+                          <span className="time-placeholder">--:--</span>
+                        )}
+                      </td>
+                      <td className="text-center">
+                        <input
+                          type="checkbox"
+                          checked={entry.isStatutoryRestDay}
+                          onChange={(event) =>
+                            handleDayChange(dateKey, 'isStatutoryRestDay', event.target.checked)
+                          }
+                          disabled={isRowDisabled || !isStatutoryApplicable}
+                          className="w-4 h-4 accent-brand-600"
+                          title="是否法定休息日"
+                        />
+                      </td>
+                      <td>
+                        <div className="schedule-notes">
+                          {isConfirmed ? (
+                            <span className="schedule-confirmed-tag">已确认</span>
+                          ) : (
+                            <input
+                              type="text"
+                              value={entry.notes ?? ''}
+                              placeholder="备注"
+                              onChange={(event) =>
+                                handleDayChange(dateKey, 'notes', event.target.value)
+                              }
+                              disabled={isRowDisabled}
+                              maxLength={20}
+                              title={entry.notes ?? ''}
+                              className="text-sm w-full min-w-[6rem]"
+                            />
+                          )}
+                        </div>
+                      </td>
+                      <td>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            className="p-1.5 text-neutral-500 hover:text-brand-600 hover:bg-brand-50 rounded transition"
+                            onClick={() => handleCopy(entry)}
+                            disabled={disabled || isSaving}
+                            title="复制"
+                          >
+                            <Copy className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            className={`p-1.5 rounded transition ${clipboard ? 'text-neutral-500 hover:text-brand-600 hover:bg-brand-50' : 'text-neutral-300 cursor-not-allowed'}`}
+                            onClick={() => handlePaste(dateKey)}
+                            disabled={isRowDisabled || !clipboard}
+                            title={clipboard ? '粘贴' : '请先复制'}
+                          >
+                            <ClipboardPaste className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
 
-        <footer className="manual-actions mt-6 flex justify-end">
-          <button type="submit" disabled={disabled || isSaving} className="btn-primary">
-            {isSaving ? '保存中…' : '保存排班'}
-          </button>
-        </footer>
-      </form>
+          <footer className="manual-actions mt-6 flex justify-end">
+            <button type="submit" disabled={disabled || isSaving} className="btn-primary">
+              {isSaving ? '保存中…' : '保存排班'}
+            </button>
+          </footer>
+        </form>
+      </div>
     </section>
   )
 }

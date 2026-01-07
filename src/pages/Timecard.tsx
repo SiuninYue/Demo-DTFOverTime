@@ -207,8 +207,8 @@ function TimecardPage() {
               }}
               disabled={interactionDisabled}
             >
-              <option value={DayType.NORMAL_WORK_DAY}>正常工作日</option>
-              <option value={DayType.REST_DAY}>休息日</option>
+              <option value={DayType.NORMAL_WORK_DAY}>正常工作</option>
+              <option value={DayType.REST_DAY}>休息</option>
               <option value={DayType.OFF_DAY}>补休/调休</option>
               <option value={DayType.PUBLIC_HOLIDAY}>公假</option>
               <option value={DayType.ANNUAL_LEAVE}>年假（带薪）</option>
@@ -269,7 +269,7 @@ function TimecardPage() {
             </>
           ) : (
             <p className="text-muted" style={{ gridColumn: '1 / -1', marginTop: '0.25rem' }}>
-              休息日无需填写工时信息，勾选「雇主要求加班」后才需要填写。
+              休息无需填写工时信息，勾选「雇主要求加班」后才需要填写。
             </p>
           )}
 

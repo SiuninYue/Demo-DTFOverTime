@@ -21,8 +21,8 @@ const typeColors: Record<ScheduleType, string> = {
 
 // 排班类型标签
 const typeLabels: Record<ScheduleType, string> = {
-  work: '工作日',
-  rest: '休息日',
+  work: '工作',
+  rest: '休息',
   off: 'OFF',
   overtime_on_off_day: '加班',
   leave: '请假',

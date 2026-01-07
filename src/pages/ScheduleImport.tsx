@@ -86,15 +86,18 @@ function ScheduleImportPage() {
   }
 
   return (
-    <section className="schedule-import">
-      <header className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight text-neutral-900 dark:text-white mb-2">手动录入排班</h1>
-        <p className="text-muted mb-4">
+    <section className="schedule-import md:pb-0 pb-safe">
+      <header className="mb-4 md:mb-6 flex flex-row items-center justify-between md:block px-2 md:px-0">
+        <h1 className="text-xl md:text-3xl font-bold tracking-tight text-neutral-900 dark:text-white mb-0 md:mb-2 text-center md:text-left">
+          <span className="md:hidden">排班录入</span>
+          <span className="hidden md:inline">手动录入排班</span>
+        </h1>
+        <p className="text-muted mb-4 hidden md:block">
           在下方录入或编辑排班，可使用“复制”快速复用班次。
         </p>
-        <div className="form-control">
-          <label htmlFor="month-input" className="text-sm font-medium mb-1">目标月份</label>
-          <div className="month-switcher">
+        <div className="form-control mb-0 md:mb-0">
+          <label htmlFor="month-input" className="text-sm font-medium mb-1 hidden md:block">目标月份</label>
+          <div className="month-switcher bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl">
             <button
               type="button"
               className="ghost month-switcher__button"
