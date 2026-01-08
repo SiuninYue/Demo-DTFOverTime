@@ -46,6 +46,8 @@ const mapRowToEmployee = (row: EmployeeRow): Employee => ({
   workScheduleType: (row.work_schedule_type as WorkScheduleType) ?? WorkScheduleType.FIVE_DAY,
   normalWorkHours: row.normal_work_hours ?? 8,
   defaultRestHours: row.default_rest_hours ?? 1,
+  defaultStartTime: row.default_start_time ?? undefined,
+  defaultEndTime: row.default_end_time ?? undefined,
   isWorkman: row.is_workman ?? true,
   isPartIVApplicable: row.is_part_iv_applicable ?? true,
   payDay: row.pay_day ?? 7,
@@ -67,6 +69,8 @@ const buildEmployeeInsert = (input: EmployeeUpsertInput): EmployeeInsert => ({
   work_schedule_type: input.workScheduleType,
   normal_work_hours: input.normalWorkHours ?? 8,
   default_rest_hours: input.defaultRestHours ?? 1,
+  default_start_time: input.defaultStartTime ?? null,
+  default_end_time: input.defaultEndTime ?? null,
   is_workman: input.isWorkman,
   pay_day: input.payDay ?? 7,
   start_date: input.startDate ?? null,
@@ -86,6 +90,8 @@ const buildEmployeeUpdate = (input: EmployeeUpdateInput): EmployeeUpdate => {
   if (input.workScheduleType !== undefined) payload.work_schedule_type = input.workScheduleType
   if (input.normalWorkHours !== undefined) payload.normal_work_hours = input.normalWorkHours
   if (input.defaultRestHours !== undefined) payload.default_rest_hours = input.defaultRestHours
+  if (input.defaultStartTime !== undefined) payload.default_start_time = input.defaultStartTime ?? null
+  if (input.defaultEndTime !== undefined) payload.default_end_time = input.defaultEndTime ?? null
   if (input.isWorkman !== undefined) payload.is_workman = input.isWorkman
   if (input.payDay !== undefined) payload.pay_day = input.payDay
   if (input.startDate !== undefined) payload.start_date = input.startDate ?? null

@@ -37,6 +37,8 @@ const buildDefaultProfile = (identity?: AuthIdentity): DraftProfile => ({
   workScheduleType: WorkScheduleType.FIVE_DAY,
   normalWorkHours: 8,
   defaultRestHours: 1,
+  defaultStartTime: undefined,
+  defaultEndTime: undefined,
   isWorkman: true,
   isPartIVApplicable: true,
   payDay: 7,
@@ -103,6 +105,7 @@ function SettingsPage() {
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
   const [recalcReport, setRecalcReport] = useState<SettingsPropagationResult | null>(null)
   const lastLoadedIdRef = useRef<string | null>(null)
+  const skipNextSyncRef = useRef(false)
 
   const employeeId = user?.id ?? draft.id ?? DEMO_EMPLOYEE_ID
 
@@ -112,6 +115,10 @@ function SettingsPage() {
   }
 
   useEffect(() => {
+    if (skipNextSyncRef.current) {
+      skipNextSyncRef.current = false
+      return
+    }
     setDraft(toDraft(profile, user))
   }, [profile, user])
 
@@ -188,6 +195,7 @@ function SettingsPage() {
     }
 
     const committedProfile = persistedProfile ?? toEmployee(payload)
+    skipNextSyncRef.current = true
     setProfile(committedProfile)
     setDraft(toDraft(committedProfile))
     setLastSavedAt(new Date().toISOString())
