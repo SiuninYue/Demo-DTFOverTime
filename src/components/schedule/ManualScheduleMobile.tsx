@@ -66,7 +66,7 @@ function ManualScheduleMobile({
         const current = schedule[date] ?? buildDefaultDay(userProfile?.defaultStartTime, userProfile?.defaultEndTime)
         const updated = { ...current, ...updates }
 
-        if (updated.type !== ScheduleType.WORK && updated.type !== ScheduleType.OFF) {
+        if (updated.type !== ScheduleType.WORK) {
             updated.plannedStartTime = null
             updated.plannedEndTime = null
         }

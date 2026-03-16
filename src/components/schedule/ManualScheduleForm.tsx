@@ -99,8 +99,7 @@ function ManualScheduleForm({
       const existing = current[date] ?? buildDefaultDay(defaultStartTime, defaultEndTime)
       const shouldClearTimes =
         field === 'type' &&
-        value !== ScheduleType.WORK &&
-        value !== ScheduleType.OFF
+        value !== ScheduleType.WORK
       const shouldClearStatutory =
         field === 'type' &&
         value !== ScheduleType.REST &&
