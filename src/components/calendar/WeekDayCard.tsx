@@ -125,9 +125,14 @@ function WeekDayCard({
                   <span className="truncate">{dayTypeLabels[timeRecord.dayType] ?? '已记录'}</span>
                 </div>
                 {showRecordedTimes && (
-                  <div className="text-xs text-neutral-500 dark:text-neutral-400 font-medium tabular-nums px-0.5">
-                    {formatTimeShort(timeRecord.actualStartTime)}
-                    {timeRecord.actualEndTime ? ` - ${formatTimeShort(timeRecord.actualEndTime)}` : ''}
+                  <div className="text-xs text-neutral-500 dark:text-neutral-400 font-medium tabular-nums px-0.5 flex items-center gap-1">
+                    <span className="whitespace-nowrap">
+                      {formatTimeShort(timeRecord.actualStartTime)}
+                      {timeRecord.actualEndTime ? ` - ${formatTimeShort(timeRecord.actualEndTime)}` : ''}
+                    </span>
+                    {timeRecord.spansMidnight && (
+                      <span className="text-[10px] whitespace-nowrap" title="跨夜班次">🌙</span>
+                    )}
                   </div>
                 )}
               </>

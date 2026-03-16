@@ -125,15 +125,17 @@ function DayCell({
           // Recorded Timecard State
           <div className={`text-xs p-1 rounded font-medium truncate ${timeRecordColors[timeRecord.dayType]}`}>
             <div className="flex items-center gap-1">
-              <span className="font-bold">✓</span>
+              <span className="font-bold">{timeRecord.spansMidnight ? '🌙' : '✓'}</span>
               <span className="truncate">
                 {dayTypeLabels[timeRecord.dayType] ?? '已记录'}
               </span>
             </div>
             {showRecordedTimes && (
-              <div className="text-[9px] opacity-80 mt-0.5">
-                {formatTimeShort(timeRecord.actualStartTime)}
-                {timeRecord.actualEndTime ? ` / ${formatTimeShort(timeRecord.actualEndTime)}` : ''}
+              <div className="text-[9px] opacity-80 mt-0.5 flex items-center gap-1 flex-wrap">
+                <span className="whitespace-nowrap">
+                  {formatTimeShort(timeRecord.actualStartTime)}
+                  {timeRecord.actualEndTime ? ` / ${formatTimeShort(timeRecord.actualEndTime)}` : ''}
+                </span>
               </div>
             )}
           </div>
